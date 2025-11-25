@@ -8,5 +8,6 @@ namespace DAL.Entities.Community
 {
     public class CommunityPost
     {
+        
     }
 }

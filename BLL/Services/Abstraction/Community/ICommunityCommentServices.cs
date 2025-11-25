@@ -8,5 +8,6 @@ namespace BLL.Services.Abstraction.Community
 {
     public interface ICommunityCommentServices
     {
+        
     }
 }
