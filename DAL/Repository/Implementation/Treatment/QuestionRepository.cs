@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Implementation.Treatment
 {
-    public class QuestionRepository : GenericRepository<Question>, IQuestionRepository
+    internal class QuestionRepository : GenericRepository<Question>, IQuestionRepository
     {
     }
 }

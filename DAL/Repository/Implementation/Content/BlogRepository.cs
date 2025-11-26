@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Implementation.Content
 {
-    public class BlogRepository: GenericRepository<Blog>, IBlogRepository
+    internal class BlogRepository: GenericRepository<Blog>, IBlogRepository
     {
     }
 }

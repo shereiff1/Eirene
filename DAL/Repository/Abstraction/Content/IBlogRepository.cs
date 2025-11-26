@@ -10,5 +10,6 @@ namespace DAL.Repository.Abstraction.Content
 {
     public interface IBlogRepository: IGenericRepository<Blog>
     {
+        
     }
 }

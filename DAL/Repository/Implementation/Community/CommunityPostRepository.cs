@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Implementation.Community
 {
-    public class CommunityPostRepository: GenericRepository<CommunityPost>, ICommunityPostRepository
+    internal class CommunityPostRepository: GenericRepository<CommunityPost>, ICommunityPostRepository
     {
     }
 }

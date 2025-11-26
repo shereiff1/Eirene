@@ -3,6 +3,6 @@ using DAL.Repository.Abstraction.Core;
 
 namespace DAL.Repository.Implementation.Core;
 
-public class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoctorProfileRepository
+internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoctorProfileRepository
 {
 }

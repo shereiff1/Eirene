@@ -3,7 +3,7 @@ using DAL.Repository.Abstraction.Core;
 
 namespace DAL.Repository.Implementation.Core;
 
-public class PatientProfileRepository :  GenericRepository<PatientProfile>, IPatientProfileRepository
+internal class PatientProfileRepository :  GenericRepository<PatientProfile>, IPatientProfileRepository
 {
     
 }

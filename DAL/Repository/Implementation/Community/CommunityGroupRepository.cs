@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Implementation.Community
 {
-    public class CommunityGroupRepository: GenericRepository<CommunityGroup>, ICommunityGroupRepository
+    internal class CommunityGroupRepository: GenericRepository<CommunityGroup>, ICommunityGroupRepository
     {
     }
 }

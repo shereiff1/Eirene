@@ -8,5 +8,6 @@ namespace DAL.Entities.Treatment
 {
     public class Question
     {
+        
     }
 }

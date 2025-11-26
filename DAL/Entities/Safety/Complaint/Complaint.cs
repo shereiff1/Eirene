@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BLL.Services.Abstraction.Safety
+namespace DAL.Entities.Safety.Complaint
 {
-    public interface IComplaintServices
+    public class Complaint
     {
     }
 }

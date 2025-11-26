@@ -3,7 +3,7 @@ using DAL.Repository.Abstraction.Core;
 
 namespace DAL.Repository.Implementation.Core;
 
-public class AdminProfileRepository : GenericRepository<AdminProfile>, IAdminProfileRepository
+internal class AdminProfileRepository : GenericRepository<AdminProfile>, IAdminProfileRepository
 {
     
 }
