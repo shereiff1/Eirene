@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Implementation.Core
 {
-    public class UserRepository: GenericRepository<User>, IUserRepository
+    public class ApplicationUserRepository: GenericRepository<ApplicationUser>, IApplicationUserRepository
     {
     }
 }

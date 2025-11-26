@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Abstraction.Core
 {
-    public interface IUserRepository : IGenericRepository<User>
+    public interface IApplicationUserRepository : IGenericRepository<ApplicationUser>
     {
     }
 }
