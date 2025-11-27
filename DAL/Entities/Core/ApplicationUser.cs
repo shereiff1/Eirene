@@ -11,7 +11,6 @@ public class ApplicationUser : IdentityUser
     public int FailedLoginAttempts { get; set; }
     public bool IsEmailVerified { get; set; }
 
-
     public DoctorProfile? DoctorProfile { get; set; }
     public PatientProfile? PatientProfile { get; set; }
     public ModeratorProfile? ModeratorProfile { get; set; }
