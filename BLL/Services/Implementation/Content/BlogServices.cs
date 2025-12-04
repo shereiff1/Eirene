@@ -75,14 +75,13 @@ namespace BLL.Services.Implementation.Content
             }
         }
 
-
-        public async Task<bool> UpdateAsync(int id, EditBlog model)
+        public async Task<bool> UpdateAsync(EditBlog model)
         {
             try
             {
-                var blog = await _blogRepository.GetByIdAsync(id);
+                var blog = await _blogRepository.GetByIdAsync(model.Id);
                 if (blog == null) return false;
-
+                if (blog.DoctorId != model.DoctorId) return false;
                 _mapper.Map(model, blog);
 
                 var result = await _blogRepository.UpdateAsync(blog);

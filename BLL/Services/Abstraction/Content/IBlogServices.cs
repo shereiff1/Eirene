@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+
 using BLL.ModelVMs.Content;
-using DAL.Entities.Content;
 
 namespace BLL.Services.Abstraction.Content
 {
@@ -16,7 +12,7 @@ namespace BLL.Services.Abstraction.Content
 
         Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model);
 
-        Task<bool> UpdateAsync(int id, EditBlog model);
+        Task<bool> UpdateAsync(EditBlog model);
 
         Task<bool> DeleteAsync(int id);
     }

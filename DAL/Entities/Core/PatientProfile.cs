@@ -1,21 +1,19 @@
 using DAL.Entities.Tracking;
 
-namespace DAL.Entities.Core;
-
-public class PatientProfile
+namespace DAL.Entities.Core
 {
-    public string Id { get; set; }
-    public ApplicationUser User { get; set; }
+    public class PatientProfile
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string UserId { get; set; } = string.Empty;
 
-    public string? CurrentTreatmentPlan { get; set; }
-    public bool WantsSupervision { get; set; }
-    public string? AssignedDoctorId { get; set; }
-    public int DoctorRating { get; set; }
-    public string? AnonymousTag { get; set; }
-    public bool HasMoodTrackerEnabled { get; set; }
-    public bool HighSeverityFlag { get; set; }
+        public ApplicationUser User { get; set; } = null!;
 
-    // public string? HabitDataJson { get; set; } 
+        public DateTime DateOfBirth { get; set; }
+        public string Address { get; set; } = string.Empty;
+        public string EmergencyContact { get; set; } = string.Empty;
+        public string MedicalHistory { get; set; } = string.Empty;
 
-    public ICollection<Journal> Journals { get; set; }
+        public ICollection<Journal> Journals { get; set; } = new List<Journal>();
+    }
 }

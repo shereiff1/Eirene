@@ -8,11 +8,11 @@ namespace DAL.Entities.Content
     public class Blog
     {
         [Key] public int Id { get; set; }
-        [Required] public string DoctorId { get; set; }
+        [Required] public string DoctorId { get; set; } = string.Empty;
 
-        [ForeignKey(nameof(DoctorId))] public ApplicationUser Doctor { get; set; }
+        [ForeignKey(nameof(DoctorId))] public ApplicationUser Doctor { get; set; } = new ApplicationUser();
 
-        [Required] public string BlogContent { get; set; }
+        [Required] public string BlogContent { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }

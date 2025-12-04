@@ -7,7 +7,7 @@ using BLL.Services.Abstraction.Tracking;
 
 namespace BLL.Services.Implementation.Tracking
 {
-    public class MoodTrackerServices : IMoodTrackerServices
+    internal class MoodTrackerServices : IMoodTrackerServices
     {
     }
 }

@@ -8,7 +8,7 @@ using DAL.Database;
 
 namespace DAL.Repository.Implementation
 {
-    internal class UnitOfWork : IUnitOfWork
+    public class UnitOfWork : IUnitOfWork
     {
         private readonly EireneDBContext _context;
 

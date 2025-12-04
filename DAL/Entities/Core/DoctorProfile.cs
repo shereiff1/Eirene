@@ -1,15 +1,19 @@
-namespace DAL.Entities.Core;
-
-public class DoctorProfile
+namespace DAL.Entities.Core
 {
-    public string Id { get; set; }
-    public ApplicationUser User { get; set; }
+    public class DoctorProfile
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public string? Qualifications { get; set; }
-    public double Rating { get; set; }
-    public int PatientsCount { get; set; }
-    public string PhoneNumber { get; set; }
-    
-    
-    public ICollection<PatientProfile> Patients { get; set; }
+        // Foreign Key
+        public string UserId { get; set; } = string.Empty;
+
+        public ApplicationUser User { get; set; } = null!;
+
+        public string Specialization { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public int YearsOfExperience { get; set; }
+        public string Qualifications { get; set; } = string.Empty;
+        public DateTime? AvailableFrom { get; set; }
+        public DateTime? AvailableTo { get; set; }
+    }
 }

@@ -1,16 +1,17 @@
 ﻿using DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using DAL.Database;
 
 namespace DAL.Repository.Implementation
 {
-    internal class GenericRepository<T> : IGenericRepository<T> where T : class
+    public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected readonly DbContext _context;
         protected readonly IUnitOfWork _unitOfWork;
         private readonly DbSet<T> _dbSet;
 
-        public GenericRepository(DbContext context, IUnitOfWork unitOfWork)
+        public GenericRepository(EireneDBContext context, IUnitOfWork unitOfWork)
         {
             _context = context;
             _unitOfWork = unitOfWork;
@@ -21,7 +22,6 @@ namespace DAL.Repository.Implementation
         {
             return await _dbSet.ToListAsync();
         }
-
         public async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.Where(predicate).ToListAsync();

@@ -52,10 +52,10 @@ public class BlogController : ControllerBase
         );
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] EditBlog blog)
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] EditBlog blog)
     {
-        var updated = await _blogServices.UpdateAsync(id, blog);
+        var updated = await _blogServices.UpdateAsync(blog);
 
         if (!updated)
             return NotFound("Blog not found.");
@@ -73,5 +73,5 @@ public class BlogController : ControllerBase
 
         return NoContent();
     }
-    
+
 }

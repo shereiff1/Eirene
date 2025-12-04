@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DAL.Database;
 using DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +15,7 @@ namespace DAL.Repository.Implementation.Treatment
 {
     internal class QuestionRepository : GenericRepository<Question>, IQuestionRepository
     {
-        public QuestionRepository(DbContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        public QuestionRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
         {
         }
     }

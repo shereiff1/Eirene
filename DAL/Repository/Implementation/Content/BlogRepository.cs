@@ -7,14 +7,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DAL.Database;
 using DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repository.Implementation.Content
 {
-    internal class BlogRepository: GenericRepository<Blog>, IBlogRepository
+    public class BlogRepository: GenericRepository<Blog>, IBlogRepository
     {
-        public BlogRepository(DbContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        public BlogRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
         {
         }
     }
