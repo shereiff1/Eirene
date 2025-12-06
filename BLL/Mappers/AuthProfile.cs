@@ -9,7 +9,7 @@ namespace BLL.Mappers
         public AuthProfile()
         {
             CreateMap<RegisterDTO, ApplicationUser>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender))
@@ -35,15 +35,20 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.AdminProfile, opt => opt.Ignore())
 
                 .ForMember(dest => dest.EmailVerificationCode, opt => opt.Ignore())
-                .ForMember(dest => dest.EmailVerificationExpiry, opt => opt.Ignore());
+                .ForMember(dest => dest.EmailVerificationExpiry, opt => opt.Ignore())
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.Ignore()); 
 
 
 
             CreateMap<ApplicationUser, AuthResultDTO>()
                  .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
                  .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed))
 
                  .ForMember(dest => dest.Token, opt => opt.Ignore())
+                 .ForMember(dest => dest.Role, opt => opt.Ignore()) 
                  .ForMember(dest => dest.Success, opt => opt.Ignore())
                  .ForMember(dest => dest.Message, opt => opt.Ignore())
                  .ForMember(dest => dest.Errors, opt => opt.Ignore())
@@ -76,7 +81,8 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
 
                 .ForMember(dest => dest.EmailVerificationCode, opt => opt.Ignore())
-                .ForMember(dest => dest.EmailVerificationExpiry, opt => opt.Ignore());
+                .ForMember(dest => dest.EmailVerificationExpiry, opt => opt.Ignore())
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.Ignore());
         }
     }
 }

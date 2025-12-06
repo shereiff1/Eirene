@@ -13,7 +13,6 @@ namespace DAL.Repository.Abstraction
 
         Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate);
 
-
         Task<T?> GetByIdAsync(object id);
 
         Task<T?> AddAsync(T entity);

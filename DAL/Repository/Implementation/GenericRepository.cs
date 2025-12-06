@@ -7,7 +7,7 @@ namespace DAL.Repository.Implementation
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
-        protected readonly DbContext _context;
+        protected readonly EireneDBContext _context;
         protected readonly IUnitOfWork _unitOfWork;
         private readonly DbSet<T> _dbSet;
 

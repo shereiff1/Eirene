@@ -16,6 +16,7 @@ namespace BLL.Services.Implementation.identity
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IEmailSender _emailSender;
@@ -23,12 +24,14 @@ namespace BLL.Services.Implementation.identity
         public AuthServices(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
             IMapper mapper,
             IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _configuration = configuration;
             _mapper = mapper;
             _emailSender = emailSender;
@@ -60,6 +63,15 @@ namespace BLL.Services.Implementation.identity
                         Errors = result.Errors.Select(e => e.Description).ToArray()
                     };
                 }
+
+                string role = registerDto.Role ?? "Patient";
+
+                if (!await _roleManager.RoleExistsAsync(role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+                }
+
+                await _userManager.AddToRoleAsync(user, role);
 
                 var code = new Random().Next(100000, 999999).ToString();
 
@@ -118,10 +130,12 @@ namespace BLL.Services.Implementation.identity
                 if (result.Succeeded)
                 {
                     var token = await GenerateJwtToken(user);
+                    var roles = await _userManager.GetRolesAsync(user);
 
                     var authResult = _mapper.Map<AuthResultDTO>(user);
                     authResult.Success = true;
                     authResult.Token = token;
+                    authResult.Role = roles.FirstOrDefault();
                     authResult.Message = "Login successful";
 
                     return authResult;
@@ -237,6 +251,5 @@ namespace BLL.Services.Implementation.identity
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
     }
 }

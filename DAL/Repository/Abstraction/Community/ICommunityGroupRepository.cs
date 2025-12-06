@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 
 namespace DAL.Repository.Abstraction.Community
 {
-    internal interface ICommunityGroupRepository : IGenericRepository<CommunityGroup>
+    public interface ICommunityGroupRepository : IGenericRepository<CommunityGroup>
     {
+        Task<List<CommunityGroup>> GetAllWithDetailsAsync();
+        Task<CommunityGroup?> GetByIdWithDetailsAsync(int id);
+        Task<CommunityGroup?> GetByNameAsync(string name);
+        Task<List<CommunityGroup>> GetByUserIdAsync(string userId);
     }
 }

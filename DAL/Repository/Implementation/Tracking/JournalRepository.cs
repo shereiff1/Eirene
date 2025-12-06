@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repository.Implementation.Tracking;
 
-internal class JournalRepository : GenericRepository<Journal>, IJournalRepository
+public class JournalRepository : GenericRepository<Journal>, IJournalRepository
 {
     public JournalRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
     {

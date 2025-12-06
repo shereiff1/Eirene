@@ -1,11 +1,14 @@
+using BLL.Enumerators;
 using BLL.ModelVMs.Content;
 using BLL.Services.Abstraction.Content;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eirene.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BlogController : ControllerBase
 {
     private readonly ILogger<BlogController> _logger;
@@ -18,6 +21,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _blogServices.GetAllAsync();
@@ -28,6 +32,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _blogServices.GetByIdAsync(id);
@@ -38,6 +43,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Create([FromBody] AddBlog blog)
     {
         var result = await _blogServices.CreateAsync(blog);
@@ -53,6 +59,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Update([FromBody] EditBlog blog)
     {
         var updated = await _blogServices.UpdateAsync(blog);
@@ -64,6 +71,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _blogServices.DeleteAsync(id);

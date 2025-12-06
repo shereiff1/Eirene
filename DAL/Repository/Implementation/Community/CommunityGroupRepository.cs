@@ -1,20 +1,51 @@
 ﻿using DAL.Entities.Community;
 using DAL.Repository.Abstraction.Community;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DAL.Database;
 using DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repository.Implementation.Community
 {
-    internal class CommunityGroupRepository: GenericRepository<CommunityGroup>, ICommunityGroupRepository
+    public class CommunityGroupRepository : GenericRepository<CommunityGroup>, ICommunityGroupRepository
     {
-        public CommunityGroupRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        public CommunityGroupRepository(EireneDBContext context, IUnitOfWork unitOfWork)
+            : base(context, unitOfWork)
         {
+        }
+
+        public async Task<List<CommunityGroup>> GetAllWithDetailsAsync()
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.CreatedBy)
+                .Include(g => g.Posts)
+                .Include(g => g.Members)
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<CommunityGroup?> GetByIdWithDetailsAsync(int id)
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.CreatedBy)
+                .Include(g => g.Posts)
+                .Include(g => g.Members)
+                .FirstOrDefaultAsync(g => g.Id == id);
+        }
+
+        public async Task<CommunityGroup?> GetByNameAsync(string name)
+        {
+            return await _context.CommunityGroups
+                .FirstOrDefaultAsync(g => g.Name == name);
+        }
+
+        public async Task<List<CommunityGroup>> GetByUserIdAsync(string userId)
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.CreatedBy)
+                .Include(g => g.Posts)
+                .Where(g => g.CreatedByUserId == userId)
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
         }
     }
 }

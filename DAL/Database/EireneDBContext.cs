@@ -1,3 +1,4 @@
+using DAL.Entities.Community;
 using DAL.Entities.Content;
 using DAL.Entities.Core;
 using DAL.Entities.Tracking;
@@ -18,6 +19,9 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<AdminProfile> AdminProfiles { get; set; }
     public DbSet<Journal> Journals { get; set; }
     public DbSet<Blog> Blogs { get; set; }
+    public DbSet<CommunityComment> CommunityComments { get; set; }
+    public DbSet<CommunityGroup> CommunityGroups { get; set; }
+    public DbSet<CommunityPost> CommunityPosts { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -48,6 +52,45 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .HasOne(u => u.ModeratorProfile)
             .WithOne(p => p.User)
             .HasForeignKey<ModeratorProfile>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        // CommunityGroup configuration
+        builder.Entity<CommunityGroup>()
+            .HasOne(g => g.CreatedBy)
+            .WithMany()
+            .HasForeignKey(g => g.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // CommunityPost configuration
+        builder.Entity<CommunityPost>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CommunityPost>()
+            .HasOne(p => p.CommunityGroup)
+            .WithMany(g => g.Posts)
+            .HasForeignKey(p => p.CommunityGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // CommunityComment configuration
+        builder.Entity<CommunityComment>()
+            .HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<CommunityComment>()
+            .HasOne(c => c.Post)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Self-referential relationship for comment replies
+        builder.Entity<CommunityComment>()
+            .HasOne(c => c.ParentComment)
+            .WithMany(c => c.Replies)
+            .HasForeignKey(c => c.ParentCommentId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 

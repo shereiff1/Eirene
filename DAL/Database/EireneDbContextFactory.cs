@@ -8,8 +8,6 @@ namespace DAL.Database
         public EireneDBContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<EireneDBContext>();
-
-            // IMPORTANT: same connection string you use in Program.cs
             optionsBuilder.UseSqlServer("Server=SHERIF\\SQLEXPRESS;Database=EireneDB;Trusted_Connection=True;MultipleActiveResultsets=true;TrustServerCertificate=true");
 
             return new EireneDBContext(optionsBuilder.Options);

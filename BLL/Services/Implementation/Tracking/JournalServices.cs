@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Tracking
 {
-    internal class JournalServices : IJournalServices
+    public class JournalServices : IJournalServices
     {
         private readonly IJournalRepository _journalRepository;
         private readonly ILogger<JournalServices> _logger;

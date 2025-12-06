@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DAL.Entities.Community;
+using Microsoft.AspNetCore.Identity;
 
 namespace DAL.Entities.Core
 {
@@ -14,5 +15,6 @@ namespace DAL.Entities.Core
         public PatientProfile? PatientProfile { get; set; }
         public ModeratorProfile? ModeratorProfile { get; set; }
         public AdminProfile? AdminProfile { get; set; }
+        public ICollection<CommunityGroup>? Groups { get; set; } = new List<CommunityGroup>();
     }
 }
