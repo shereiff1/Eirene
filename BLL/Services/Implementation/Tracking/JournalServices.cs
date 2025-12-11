@@ -2,8 +2,8 @@
 using BLL.Models.Tracking;
 using BLL.Services.Abstraction.Tracking;
 using DAL.Entities.Tracking;
-using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Tracking;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Tracking
@@ -13,17 +13,23 @@ namespace BLL.Services.Implementation.Tracking
         private readonly IJournalRepository _journalRepository;
         private readonly ILogger<JournalServices> _logger;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public JournalServices(IJournalRepository journalRepository, ILogger<JournalServices> logger, IMapper mapper)
+        public JournalServices(IJournalRepository journalRepository, ILogger<JournalServices> logger, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor)
         {
             _journalRepository = journalRepository;
             _logger = logger;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public Task<bool> CanCreateToday()
+        public async Task<bool> CanCreateToday()
         {
-            throw new NotImplementedException();
+            var userId = GetCurrentUserId();
+            var today = DateTime.UtcNow.Date;
+            var existingJournal = await _journalRepository.GetTodayJournalAsync(userId, today);
+            return existingJournal == null;
         }
 
         public async Task<(bool IsSuccess, JournalDTO? AddedJournal)> CreateAsync(AddJournal model)
@@ -31,6 +37,12 @@ namespace BLL.Services.Implementation.Tracking
             try
             {
                 var journalEntity = _mapper.Map<Journal>(model);
+                journalEntity.PatientId = GetCurrentUserId();
+                if (!await CanCreateToday())
+                {
+                    _logger.LogError("The patient has already created a journal today");
+                    return (false, null);
+                }
 
                 var result = await _journalRepository.AddAsync(journalEntity);
 
@@ -54,11 +66,13 @@ namespace BLL.Services.Implementation.Tracking
         {
             try
             {
-                var journalEntities = await _journalRepository.GetAllAsync();
+                var userId = GetCurrentUserId();
+                var journalEntities = await _journalRepository.GetAllForUserAsync(userId);
                 if (journalEntities == null || !journalEntities.Any())
                 {
                     return (false, null);
                 }
+
                 var journalDtos = _mapper.Map<List<JournalDTO>>(journalEntities);
                 return (true, journalDtos);
             }
@@ -66,9 +80,9 @@ namespace BLL.Services.Implementation.Tracking
             {
                 _logger.LogError(ex, "Error occurred while retrieving all journal entries.");
                 return (false, null);
-
             }
         }
+
         public async Task<(bool IsSuccess, JournalDTO? journal)> GetByIdAsync(int id)
         {
             try
@@ -78,6 +92,7 @@ namespace BLL.Services.Implementation.Tracking
                 {
                     return (false, null);
                 }
+
                 var journalDto = _mapper.Map<JournalDTO>(journalEntity);
                 return (true, journalDto);
             }
@@ -85,19 +100,30 @@ namespace BLL.Services.Implementation.Tracking
             {
                 _logger.LogError(ex, "Error occurred while retrieving a journal entry by ID.");
                 return (false, null);
-
             }
         }
-        public async Task<bool> UpdateAsync(int id, EditJournal model)
+
+        public async Task<bool> UpdateAsync(EditJournal model)
         {
             try
             {
-                var journalEntity = await _journalRepository.GetByIdAsync(id);
-                if (journalEntity == null)
-                {
+                var userId = GetCurrentUserId();
+
+                var journal = await _journalRepository.GetByIdAsync(model.Id);
+
+                if (journal == null)
                     return false;
-                }
-                return true;
+
+                if (journal.PatientId != userId)
+                    return false;
+
+                if (journal.CreatedAt.Date != DateTime.UtcNow.Date)
+                    return false;
+
+                journal.Content = model.Content;
+                journal.Mood = model.Mood;
+
+                return await _journalRepository.UpdateAsync(journal);
             }
             catch (Exception ex)
             {
@@ -108,8 +134,12 @@ namespace BLL.Services.Implementation.Tracking
 
         private string GetCurrentUserId()
         {
+            var user = _httpContextAccessor.HttpContext?.User;
 
-            throw new NotImplementedException("Implement GetCurrentUserId");
+            if (user == null || !user.Identity!.IsAuthenticated)
+                throw new Exception("User is not authenticated.");
+
+            return user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
         }
     }
 }

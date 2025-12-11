@@ -1,0 +1,95 @@
+﻿using BLL.AIModel;
+using BLL.Services.Abstraction.Treatment;
+using DAL.Entities.Treatment;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Text;
+
+namespace Eirene.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class DiagnosisController : ControllerBase
+    {
+        private readonly IAIModelService _modelService;
+        private readonly ILogger<DiagnosisController> _logger;
+        private readonly IQuestionAnswerServices _questionAnswerServices;
+        private readonly IQuestionServices _questionServices;
+
+        public DiagnosisController(
+            IAIModelService chatGPTService,
+            ILogger<DiagnosisController> logger,
+            IQuestionAnswerServices questionAnswerServices,
+            IQuestionServices questionServices)
+        {
+            _modelService = chatGPTService;
+            _logger = logger;
+            _questionAnswerServices = questionAnswerServices;
+            _questionServices = questionServices;
+        }
+
+        [HttpPost("analyze")]
+        public async Task<IActionResult> AnalyzeUserAnswers()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User not authenticated.");
+                }
+
+                var answersResult = await _questionAnswerServices.GetAnswersForUserAsync(userId);
+
+                if (!answersResult.IsSuccess || answersResult.Answers == null || !answersResult.Answers.Any())
+                {
+                    return BadRequest("No answers found for this user. Please submit your answers first.");
+                }
+
+                var formattedQA = await FormatQuestionsAndAnswers(answersResult.Answers);
+
+                var analysisResult = await _modelService.AnalyzeUserAnswersAsync(formattedQA);
+
+                return Ok(new
+                {
+                    userId = userId,
+                    analysis = analysisResult,
+                    answersCount = answersResult.Answers.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error analyzing user answers. Details: {Message}", ex.Message);
+                return StatusCode(500, new
+                {
+                    error = "An error occurred while analyzing answers.",
+                    details = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
+            }
+        }
+        private async Task<string> FormatQuestionsAndAnswers(IEnumerable<QuestionAnswer> answers)
+        {
+            var sb = new StringBuilder();
+            int index = 1;
+
+            foreach (var answer in answers)
+            {
+                var questionResult = await _questionServices.GetByIdAsync(answer.QuestionId);
+
+                if (questionResult.IsSuccess && questionResult.question != null)
+                {
+                    sb.AppendLine($"Q{index}: {questionResult.question.QuestionContent}");
+                    sb.AppendLine($"A{index}: {answer.Answer}");
+                    sb.AppendLine();
+                    index++;
+                }
+            }
+
+            return sb.ToString();
+        }
+    }
+}

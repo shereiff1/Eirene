@@ -1,4 +1,5 @@
-﻿using BLL.Models.Tracking;
+﻿using BLL.Enumerators;
+using BLL.Models.Tracking;
 using BLL.Services.Abstraction.Tracking;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +19,8 @@ namespace Eirene.Controllers
             _journalService = journalService;
             _logger = logger;
         }
-
         [HttpPost]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> AddJournal([FromBody] AddJournal journal)
         {
             if (!ModelState.IsValid)
@@ -28,7 +29,8 @@ namespace Eirene.Controllers
             var result = await _journalService.CreateAsync(journal);
 
             if (!result.IsSuccess || result.AddedJournal == null)
-                return BadRequest(new { message = "Failed to create the journal. You may have already created a journal today." });
+                return BadRequest(new
+                    { message = "Failed to create the journal. You may have already created a journal today." });
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -38,6 +40,7 @@ namespace Eirene.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> GetAll()
         {
             var result = await _journalService.GetAllAsync();
@@ -49,6 +52,7 @@ namespace Eirene.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _journalService.GetByIdAsync(id);
@@ -60,25 +64,19 @@ namespace Eirene.Controllers
         }
 
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateJournal(int id, [FromBody] EditJournal journal)
+        [HttpPut]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> UpdateJournal([FromBody] EditJournal journal)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var isSuccess = await _journalService.UpdateAsync(id, journal);
+            var isSuccess = await _journalService.UpdateAsync(journal);
 
             if (!isSuccess)
                 return BadRequest(new { message = "Failed to update journal. Only today's journal can be edited." });
 
             return NoContent();
-        }
-
-        [HttpGet("can-create-today")]
-        public async Task<IActionResult> CanCreateToday()
-        {
-            var canCreate = await _journalService.CanCreateToday();
-            return Ok(new { canCreate });
         }
     }
 }

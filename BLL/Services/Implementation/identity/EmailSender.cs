@@ -1,11 +1,7 @@
-﻿using BLL.Models.Identity;
-using BLL.Services.Abstraction.Identity;
-using Microsoft.Extensions.Configuration;
+﻿using BLL.Services.Abstraction.Identity;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using System.Threading.Tasks;
-
 public class EmailSender : IEmailSender
 {
     private readonly SmtpSettings _settings;

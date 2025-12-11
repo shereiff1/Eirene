@@ -1,6 +1,5 @@
 ﻿using BLL.Models.Community.Comment;
 using BLL.Services.Abstraction.Community;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eirene.Controllers

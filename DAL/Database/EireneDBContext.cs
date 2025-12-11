@@ -2,8 +2,10 @@ using DAL.Entities.Community;
 using DAL.Entities.Content;
 using DAL.Entities.Core;
 using DAL.Entities.Tracking;
+using DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace DAL.Database;
 
@@ -22,6 +24,8 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<CommunityComment> CommunityComments { get; set; }
     public DbSet<CommunityGroup> CommunityGroups { get; set; }
     public DbSet<CommunityPost> CommunityPosts { get; set; }
+    public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
+    public DbSet<Question> Questions { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

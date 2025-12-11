@@ -46,6 +46,8 @@ public class BlogController : ControllerBase
     [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Create([FromBody] AddBlog blog)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
         var result = await _blogServices.CreateAsync(blog);
 
         if (!result.IsSuccess || result.CreatedPost == null)
@@ -62,6 +64,8 @@ public class BlogController : ControllerBase
     [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> Update([FromBody] EditBlog blog)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
         var updated = await _blogServices.UpdateAsync(blog);
 
         if (!updated)

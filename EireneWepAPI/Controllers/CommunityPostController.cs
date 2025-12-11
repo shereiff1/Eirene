@@ -1,6 +1,7 @@
 ﻿using BLL.Models.Community.Post;
 using BLL.Services.Abstraction.Community;
 using BLL.Services.Implementation.Community;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +9,7 @@ namespace Eirene.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CommunityPostController : ControllerBase
     {
         private readonly ILogger<CommunityPostController> _logger;

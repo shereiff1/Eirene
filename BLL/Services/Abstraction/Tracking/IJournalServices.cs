@@ -10,7 +10,7 @@ namespace BLL.Services.Abstraction.Tracking
 
         Task<(bool IsSuccess, JournalDTO? AddedJournal)> CreateAsync(AddJournal model);
 
-        Task<bool> UpdateAsync(int id, EditJournal model);
+        Task<bool> UpdateAsync(EditJournal model);
         Task<bool> CanCreateToday();
     }
 }

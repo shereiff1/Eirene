@@ -6,18 +6,13 @@ namespace DAL.Entities.Community;
 
 public class CommunityPost
 {
-    [Key]
-    public int Id { get; set; }
+    [Key] public int Id { get; set; }
 
-    [Required]
-    public int CommunityGroupId { get; set; }
+    [Required] public int CommunityGroupId { get; set; }
 
-    [Required]
-    public string UserId { get; set; } = string.Empty;
+    [Required] public string UserId { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(5000)]
-    public string Content { get; set; } = string.Empty;
+    [Required] [MaxLength(5000)] public string Content { get; set; } = string.Empty;
 
     public DateTime PostedOn { get; set; } = DateTime.UtcNow;
 
@@ -29,12 +24,9 @@ public class CommunityPost
 
     public int CommentsCount { get; set; } = 0;
 
-    [ForeignKey(nameof(CommunityGroupId))]
-    public CommunityGroup? CommunityGroup { get; set; }
+    [ForeignKey(nameof(CommunityGroupId))] public CommunityGroup? CommunityGroup { get; set; }
 
-    [ForeignKey(nameof(UserId))]
-    public ApplicationUser? User { get; set; }
+    [ForeignKey(nameof(UserId))] public ApplicationUser? User { get; set; }
 
     public ICollection<CommunityComment> Comments { get; set; } = new List<CommunityComment>();
 }
-
