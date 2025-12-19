@@ -27,6 +27,7 @@ public static class DalServicesExtensions
         services.AddScoped<ICommunityPostRepository, CommunityPostRepository>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();
         services.AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         return services;
     }

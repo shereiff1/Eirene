@@ -236,12 +236,6 @@ namespace DAL.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("EmailVerificationCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("EmailVerificationExpiry")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -386,6 +380,45 @@ namespace DAL.Migrations
                     b.ToTable("PatientProfiles");
                 });
 
+            modelBuilder.Entity("DAL.Entities.Core.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JwtId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("DAL.Entities.Tracking.Journal", b =>
                 {
                     b.Property<int>("Id")
@@ -401,9 +434,6 @@ namespace DAL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("Mood")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("PatientId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -418,6 +448,71 @@ namespace DAL.Migrations
                     b.HasIndex("PatientProfileId");
 
                     b.ToTable("Journals");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Tracking.MoodTracker", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MoodLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatientProfileId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MoodTracker");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Treatment.Diagnosis", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiagnosisName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PatientProfileId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.ToTable("Diagnosis");
                 });
 
             modelBuilder.Entity("DAL.Entities.Treatment.Question", b =>
@@ -449,20 +544,38 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
+                    b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("QuestionAnswers");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Treatment.TreatmentPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("PatientProfileId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("QuestionId");
+                    b.HasIndex("PatientProfileId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("QuestionAnswers");
+                    b.ToTable("TreatmentPlan");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -724,6 +837,17 @@ namespace DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DAL.Entities.Core.RefreshToken", b =>
+                {
+                    b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DAL.Entities.Tracking.Journal", b =>
                 {
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "Patient")
@@ -739,23 +863,60 @@ namespace DAL.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("DAL.Entities.Tracking.MoodTracker", b =>
+                {
+                    b.HasOne("DAL.Entities.Core.PatientProfile", null)
+                        .WithMany("MoodTrackers")
+                        .HasForeignKey("PatientProfileId");
+
+                    b.HasOne("DAL.Entities.Core.ApplicationUser", "Patient")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Treatment.Diagnosis", b =>
+                {
+                    b.HasOne("DAL.Entities.Core.ApplicationUser", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.Core.PatientProfile", null)
+                        .WithMany("Diagnoses")
+                        .HasForeignKey("PatientProfileId");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("DAL.Entities.Treatment.QuestionAnswer", b =>
                 {
+                    b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("DAL.Entities.Treatment.Question", "Question")
                         .WithMany()
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Question");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Treatment.TreatmentPlan", b =>
+                {
+                    b.HasOne("DAL.Entities.Core.PatientProfile", null)
+                        .WithMany("TreatmentPlans")
+                        .HasForeignKey("PatientProfileId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -837,7 +998,13 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.PatientProfile", b =>
                 {
+                    b.Navigation("Diagnoses");
+
                     b.Navigation("Journals");
+
+                    b.Navigation("MoodTrackers");
+
+                    b.Navigation("TreatmentPlans");
                 });
 #pragma warning restore 612, 618
         }

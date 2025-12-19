@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DAL.Entities.Tracking
+﻿using DAL.Entities.Core;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace DAL.Entities.Tracking;
+public class MoodTracker
 {
-    public class MoodTracker
-    {
-    }
+    public int Id { get; set; }
+    public string UserId { get; set; } = string.Empty;
+    [ForeignKey(nameof(UserId))]
+    public ApplicationUser Patient { get; set; } = null!;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public int MoodLevel { get; set; }
+    public string? Notes { get; set; }
 }

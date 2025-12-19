@@ -10,7 +10,8 @@ namespace BLL.Services.Implementation.Treatment
         private readonly ILogger<QuestionAnswerServices> _logger;
         private readonly IQuestionAnswerRepository _questionAnswerRepository;
 
-        public QuestionAnswerServices(ILogger<QuestionAnswerServices> logger, IQuestionAnswerRepository questionAnswerRepository)
+        public QuestionAnswerServices(ILogger<QuestionAnswerServices> logger,
+            IQuestionAnswerRepository questionAnswerRepository)
         {
             _logger = logger;
             _questionAnswerRepository = questionAnswerRepository;
@@ -23,7 +24,7 @@ namespace BLL.Services.Implementation.Treatment
                 if (string.IsNullOrWhiteSpace(userId))
                 {
                     _logger.LogError("UserId cannot be null or empty");
-                    return (false, Enumerable.Empty<QuestionAnswer>());
+                    return (false, null!);
                 }
 
                 var answers = await _questionAnswerRepository.GetAnswersByUserIdAsync(userId);
@@ -31,7 +32,7 @@ namespace BLL.Services.Implementation.Treatment
                 if (answers == null || !answers.Any())
                 {
                     _logger.LogWarning("No answers found for user {UserId}", userId);
-                    return (false, Enumerable.Empty<QuestionAnswer>());
+                    return (false, null!);
                 }
 
                 return (true, answers);
@@ -39,23 +40,22 @@ namespace BLL.Services.Implementation.Treatment
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while retrieving answers for user {UserId}", userId);
-                return (false, Enumerable.Empty<QuestionAnswer>());
+                return (false, null!);
             }
         }
 
-        public async Task<(bool IsSuccess, QuestionAnswer Answer)> AddAnswerAsync(string userId, int questionId, string answer)
+        public async Task<(bool IsSuccess, QuestionAnswer Answer)> AddAnswerAsync(string userId, int questionId,
+            string answer)
         {
             try
             {
                 var questionAnswer = new QuestionAnswer
                 {
-                    UserId = userId,
+                    PatientId = userId,
                     QuestionId = questionId,
                     Answer = answer
                 };
-
                 var addedAnswer = await _questionAnswerRepository.AddAsync(questionAnswer);
-
                 if (addedAnswer == null)
                 {
                     _logger.LogError("Failed to add answer for user {UserId}", userId);
@@ -71,13 +71,14 @@ namespace BLL.Services.Implementation.Treatment
             }
         }
 
-        public async Task<(bool IsSuccess, IEnumerable<QuestionAnswer> Answers)> AddMultipleAnswersAsync(string userId, List<(int QuestionId, string Answer)> answers)
+        public async Task<(bool IsSuccess, IEnumerable<QuestionAnswer> Answers)> AddMultipleAnswersAsync(string userId,
+            List<(int QuestionId, string Answer)> answers)
         {
             try
             {
                 var questionAnswers = answers.Select(a => new QuestionAnswer
                 {
-                    UserId = userId,
+                    PatientId = userId,
                     QuestionId = a.QuestionId,
                     Answer = a.Answer
                 }).ToList();
@@ -98,7 +99,7 @@ namespace BLL.Services.Implementation.Treatment
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while adding multiple answers for user {UserId}", userId);
-                return (false, Enumerable.Empty<QuestionAnswer>());
+                return (false, null!);
             }
         }
     }

@@ -1,6 +1,5 @@
 ﻿using DAL.Entities.Core;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection.Metadata.Ecma335;
 namespace DAL.Entities.Treatment;
 
 public class QuestionAnswer
@@ -10,8 +9,8 @@ public class QuestionAnswer
     public int QuestionId { get; set; }
     [ForeignKey(nameof(QuestionId))]
     public Question Question { get; set; } = null!;
-    public string UserId { get; set; } = string.Empty;
-    [ForeignKey(nameof(UserId))]
+    public string PatientId { get; set; } = string.Empty;
+    [ForeignKey(nameof(PatientId))]
     public ApplicationUser User { get; set; } = null!;
 
 }

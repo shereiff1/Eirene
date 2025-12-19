@@ -16,7 +16,8 @@ namespace BLL.Services.Implementation.Tracking
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public JournalServices(IJournalRepository journalRepository, ILogger<JournalServices> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor
+        )
         {
             _journalRepository = journalRepository;
             _logger = logger;
@@ -68,7 +69,7 @@ namespace BLL.Services.Implementation.Tracking
             {
                 var userId = GetCurrentUserId();
                 var journalEntities = await _journalRepository.GetAllForUserAsync(userId);
-                if (journalEntities == null || !journalEntities.Any())
+                if (!journalEntities.Any())
                 {
                     return (false, null);
                 }
@@ -121,7 +122,6 @@ namespace BLL.Services.Implementation.Tracking
                     return false;
 
                 journal.Content = model.Content;
-                journal.Mood = model.Mood;
 
                 return await _journalRepository.UpdateAsync(journal);
             }

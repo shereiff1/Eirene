@@ -13,7 +13,7 @@ public class QuestionAnswerRepository : GenericRepository<QuestionAnswer>, IQues
     public async Task<IEnumerable<QuestionAnswer>> GetAnswersByUserIdAsync(string userId)
     {
         return await _context.QuestionAnswers
-            .Where(qa => qa.UserId == userId)
+            .Where(qa => qa.PatientId == userId)
             .Include(qa => qa.Question)
             .ToListAsync();
     }

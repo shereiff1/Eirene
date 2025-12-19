@@ -2,6 +2,6 @@ namespace BLL.Models.Identity;
 
 public class ConfirmEmailCode
 {
-    public string Code { get; set; } = string.Empty;
+    public bool IsConfirmed { get; set; }
     public string Email { get; set; } = string.Empty;
 }

@@ -1,6 +1,7 @@
 using BLL.AIModel;
 using BLL.Extensions;
 using BLL.Mappers;
+using BLL.Models.Identity;
 using DAL.Database;
 using DAL.Entities.Core;
 using DAL.Extensions;

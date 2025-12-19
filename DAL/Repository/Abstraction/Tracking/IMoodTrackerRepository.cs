@@ -1,14 +1,8 @@
-﻿using DAL.Entities.Content;
-using DAL.Entities.Tracking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DAL.Entities.Tracking;
 
-namespace DAL.Repository.Abstraction.Tracking
+
+namespace DAL.Repository.Abstraction.Tracking;
+
+public interface IMoodTrackerRepository : IGenericRepository<MoodTracker>
 {
-    public interface IMoodTrackerRepository : IGenericRepository<MoodTracker>
-    {
-    }
 }

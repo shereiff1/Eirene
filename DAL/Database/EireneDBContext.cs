@@ -26,6 +26,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<CommunityPost> CommunityPosts { get; set; }
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
     public DbSet<Question> Questions { get; set; }
+    public DbSet<RefreshToken>  RefreshTokens { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

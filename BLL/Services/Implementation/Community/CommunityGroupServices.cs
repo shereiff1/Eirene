@@ -108,7 +108,7 @@ namespace BLL.Services.Implementation.Community
                     _logger.LogWarning("Invalid community group data: Name or CreatedByUserId is empty");
                     return (false, null);
                 }
-                 
+
                 var existingGroup = await _communityGroupRepository.GetByNameAsync(model.Name);
                 if (existingGroup != null)
                 {
@@ -120,11 +120,12 @@ namespace BLL.Services.Implementation.Community
                 var createdGroup = await _communityGroupRepository.AddAsync(group);
 
                 if (createdGroup != null)
-                { 
+                {
                     var groupWithDetails = await _communityGroupRepository.GetByIdWithDetailsAsync(createdGroup.Id);
                     var groupDTO = _mapper.Map<CommunityGroupDTO>(groupWithDetails);
 
-                    _logger.LogInformation("Community group '{GroupName}' created successfully with ID: {GroupId} by user {UserId}",
+                    _logger.LogInformation(
+                        "Community group '{GroupName}' created successfully with ID: {GroupId} by user {UserId}",
                         model.Name, createdGroup.Id, model.CreatedByUserId);
                     return (true, groupDTO);
                 }
@@ -150,14 +151,14 @@ namespace BLL.Services.Implementation.Community
                     _logger.LogWarning("Community group with ID {GroupId} not found", model.Id);
                     return false;
                 }
-                 
+
                 var groupWithSameName = await _communityGroupRepository.GetByNameAsync(model.Name);
                 if (groupWithSameName != null && groupWithSameName.Id != model.Id)
                 {
                     _logger.LogWarning("Another community group with name '{GroupName}' already exists", model.Name);
                     return false;
                 }
-                 
+
                 existingGroup.Name = model.Name;
                 existingGroup.Description = model.Description;
 
@@ -176,6 +177,7 @@ namespace BLL.Services.Implementation.Community
                 return false;
             }
         }
+
         public async Task<(bool IsSuccess, CommunityGroupWithDetails? Group)> GetByIdWithFullDetailsAsync(int id)
         {
             try

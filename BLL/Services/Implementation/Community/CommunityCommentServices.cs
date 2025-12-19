@@ -32,7 +32,7 @@ namespace BLL.Services.Implementation.Community
             {
                 var comments = await _communityCommentRepository.GetByPostIdWithDetailsAsync(postId);
 
-                if (comments == null || !comments.Any())
+                if (!comments.Any())
                 {
                     _logger.LogInformation("No comments found for post with ID: {PostId}", postId);
                     return (true, new List<CommunityCommentDTO>());
@@ -73,7 +73,8 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(int commentId)
+        public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(
+            int commentId)
         {
             try
             {
@@ -105,7 +106,8 @@ namespace BLL.Services.Implementation.Community
                 var post = await _communityPostRepository.GetByIdAsync(model.PostId);
                 if (post == null || post.IsDeleted)
                 {
-                    _logger.LogWarning("Cannot create comment: Post with ID {PostId} not found or deleted", model.PostId);
+                    _logger.LogWarning("Cannot create comment: Post with ID {PostId} not found or deleted",
+                        model.PostId);
                     return (false, null);
                 }
 
@@ -114,13 +116,16 @@ namespace BLL.Services.Implementation.Community
                     var parentComment = await _communityCommentRepository.GetByIdAsync(model.ParentCommentId.Value);
                     if (parentComment == null || parentComment.IsDeleted)
                     {
-                        _logger.LogWarning("Cannot create reply: Parent comment with ID {ParentCommentId} not found or deleted", model.ParentCommentId.Value);
+                        _logger.LogWarning(
+                            "Cannot create reply: Parent comment with ID {ParentCommentId} not found or deleted",
+                            model.ParentCommentId.Value);
                         return (false, null);
                     }
 
                     if (parentComment.PostId != model.PostId)
                     {
-                        _logger.LogWarning("Parent comment {ParentCommentId} does not belong to post {PostId}", model.ParentCommentId.Value, model.PostId);
+                        _logger.LogWarning("Parent comment {ParentCommentId} does not belong to post {PostId}",
+                            model.ParentCommentId.Value, model.PostId);
                         return (false, null);
                     }
                 }
@@ -143,10 +148,12 @@ namespace BLL.Services.Implementation.Community
                         }
                     }
 
-                    var commentWithDetails = await _communityCommentRepository.GetByIdWithDetailsAsync(createdComment.Id);
+                    var commentWithDetails =
+                        await _communityCommentRepository.GetByIdWithDetailsAsync(createdComment.Id);
                     var commentDTO = _mapper.Map<CommunityCommentDTO>(commentWithDetails);
 
-                    _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}", createdComment.Id, model.UserId);
+                    _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}",
+                        createdComment.Id, model.UserId);
                     return (true, commentDTO);
                 }
 
@@ -174,7 +181,8 @@ namespace BLL.Services.Implementation.Community
 
                 if (existingComment.UserId != model.UserId)
                 {
-                    _logger.LogWarning("User {UserId} is not authorized to edit comment {CommentId}", model.UserId, model.Id);
+                    _logger.LogWarning("User {UserId} is not authorized to edit comment {CommentId}", model.UserId,
+                        model.Id);
                     return false;
                 }
 
@@ -186,7 +194,8 @@ namespace BLL.Services.Implementation.Community
 
                 if (result)
                 {
-                    _logger.LogInformation("Comment {CommentId} updated successfully by user {UserId}", model.Id, model.UserId);
+                    _logger.LogInformation("Comment {CommentId} updated successfully by user {UserId}", model.Id,
+                        model.UserId);
                 }
 
                 return result;
@@ -224,7 +233,8 @@ namespace BLL.Services.Implementation.Community
 
                     if (comment.ParentCommentId.HasValue)
                     {
-                        var parentComment = await _communityCommentRepository.GetByIdAsync(comment.ParentCommentId.Value);
+                        var parentComment =
+                            await _communityCommentRepository.GetByIdAsync(comment.ParentCommentId.Value);
                         if (parentComment != null && parentComment.RepliesCount > 0)
                         {
                             parentComment.RepliesCount--;

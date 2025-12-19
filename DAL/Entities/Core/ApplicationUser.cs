@@ -8,8 +8,6 @@ namespace DAL.Entities.Core
         public string FullName { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public string? EmailVerificationCode { get; set; }
-        public DateTime? EmailVerificationExpiry { get; set; }
         public bool IsEmailVerified { get; set; } = false;
         public DoctorProfile? DoctorProfile { get; set; }
         public PatientProfile? PatientProfile { get; set; }

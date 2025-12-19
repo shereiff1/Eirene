@@ -56,7 +56,7 @@ namespace Eirene.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
-        [HttpGet("confirm-email")]
+        [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(ConfirmEmailCode confirmEmailCode)
         {
             var result = await _authService.ConfirmEmailCodeAsync(confirmEmailCode);
