@@ -66,5 +66,16 @@ namespace Eirene.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("get-code")]
+        public async Task<IActionResult> GetCode([FromBody] ResendCodeDTO resendCodeDTO)
+        {
+            var result = await _authService.ResendVerificationCodeAsync(resendCodeDTO.Email);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
     }
 }

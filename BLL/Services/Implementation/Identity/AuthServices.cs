@@ -123,7 +123,7 @@ namespace BLL.Services.Implementation.Identity
 
                     return Fail("Invalid email or password");
                 }
-                
+
                 var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
                 var roles = await _userManager.GetRolesAsync(user);
 
@@ -155,33 +155,34 @@ namespace BLL.Services.Implementation.Identity
             }
         }
 
-        public async Task<AuthResultDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto)
+        public async Task<ConfirmMailDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto)
         {
             try
             {
                 var user = await _userManager.FindByEmailAsync(dto.Email);
                 if (user == null)
                 {
-                    return new AuthResultDTO
+                    return new ConfirmMailDTO
                     {
                         Success = false,
-                        Errors = new[] { "User not found" }
+                        Message =   "User not found"
                     };
                 }
 
                 if (!dto.IsConfirmed)
                 {
-                    return new AuthResultDTO
+                    return new ConfirmMailDTO
                     {
                         Success = false,
-                        Errors = new[] { "The confirmation code is not correct" }
+                        Message = "The confirmation code is not correct" 
                     };
                 }
 
                 user.EmailConfirmed = true;
+                user.IsEmailVerified = true;
                 await _userManager.UpdateAsync(user);
 
-                return new AuthResultDTO
+                return new ConfirmMailDTO
                 {
                     Success = true,
                     Message = "Email confirmed successfully"
@@ -190,10 +191,10 @@ namespace BLL.Services.Implementation.Identity
             catch (Exception ex)
             {
                 _logger.LogError(ex, "ConfirmEmailCodeAsync failed");
-                return new AuthResultDTO
+                return new ConfirmMailDTO
                 {
                     Success = false,
-                    Errors = new[] { $"An error occurred during email confirmation: {ex.Message}" }
+                    Message = $"An error occurred during email confirmation: {ex.Message}" 
                 };
             }
         }
@@ -253,6 +254,7 @@ namespace BLL.Services.Implementation.Identity
 
                     return Fail("Invalid refresh token");
                 }
+
                 storedToken.IsUsed = true;
                 await _refreshTokenRepository.UpdateAsync(storedToken);
 
@@ -291,6 +293,44 @@ namespace BLL.Services.Implementation.Identity
             }
         }
 
+        public async Task<AuthResultDTO> ResendVerificationCodeAsync(string email)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                    return Fail("User not found");
+
+                if (user.EmailConfirmed)
+                    return Fail("Email is already confirmed");
+
+                var code = new Random().Next(100000, 999999).ToString();
+
+                await _emailSender.SendEmailAsync(
+                    user.Email,
+                    "Email Verification Code",
+                    $"Your verification code is: {code}"
+                );
+
+                return new AuthResultDTO
+                {
+                    Success = true,
+                    Code = code,
+                    Message = "Verification code sent successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ResendVerificationCodeAsync failed");
+                return new AuthResultDTO
+                {
+                    Success = false,
+                    Errors = new[] { "Failed to send verification code" }
+                };
+            }
+        }
+
+
         private async Task RevokeAllRefreshTokensForUser(string userId)
         {
             try
@@ -309,6 +349,7 @@ namespace BLL.Services.Implementation.Identity
                 _logger.LogWarning(ex, "RevokeAllRefreshTokensForUser failed for user {UserId}", userId);
             }
         }
+
         private static AuthResultDTO Fail(string error) =>
             new() { Success = false, Errors = new[] { error } };
     }

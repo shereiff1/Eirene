@@ -6,8 +6,9 @@ namespace BLL.Services.Abstraction.Identity
     {
         Task<AuthResultDTO> RegisterAsync(RegisterDTO registerDto);
         Task<AuthResultDTO> LoginAsync(LoginDTO loginDto);
-        Task<AuthResultDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto);
+        Task<ConfirmMailDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto);
         Task LogoutAsync(string userId);
-        Task<AuthResultDTO> RefreshTokenAsync(string accessToken, string refreshToken); // Added
+        Task<AuthResultDTO> RefreshTokenAsync(string accessToken, string refreshToken); 
+        Task<AuthResultDTO> ResendVerificationCodeAsync(string email);
     }
 }
