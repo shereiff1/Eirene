@@ -69,8 +69,7 @@ namespace Eirene
                         ClockSkew = TimeSpan.Zero
                     };
                 });
-
-            // Add Authorization
+            
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
@@ -96,8 +95,9 @@ namespace Eirene
                 app.MapOpenApi();
             }
 
+            app.UseAuthentication(); 
             app.UseAuthorization();
-
+            
             app.MapControllers();
 
             app.Run();

@@ -4,7 +4,7 @@ namespace BLL.Services.Abstraction.Identity
 {
     public interface IAuthServices
     {
-        Task<AuthResultDTO> RegisterAsync(RegisterDTO registerDto);
+        Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto);
         Task<AuthResultDTO> LoginAsync(LoginDTO loginDto);
         Task<ConfirmMailDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto);
         Task LogoutAsync(string userId);

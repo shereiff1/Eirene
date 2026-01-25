@@ -38,7 +38,6 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.AdminProfile, opt => opt.Ignore());
 
             CreateMap<ApplicationUser, AuthResultDTO>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
@@ -48,9 +47,8 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.Role, opt => opt.Ignore())
                 .ForMember(dest => dest.Success, opt => opt.Ignore())
                 .ForMember(dest => dest.Message, opt => opt.Ignore())
-                .ForMember(dest => dest.Errors, opt => opt.Ignore())
-                .ForMember(dest => dest.Code, opt => opt.Ignore())
-                .ForMember(dest => dest.EmailVerificationExpiry, opt => opt.Ignore());
+                .ForMember(dest => dest.Error, opt => opt.Ignore());
+
 
             CreateMap<ResetPasswordDTO, ApplicationUser>()
                 .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())

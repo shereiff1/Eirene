@@ -9,9 +9,12 @@ namespace DAL.Entities.Core
         public string Gender { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsEmailVerified { get; set; } = false;
+        public  string EmailVerificationCode { get; set; } = string.Empty;
+        public DateTime EmailVerificationCodeExpiration { get; set; }
         public DoctorProfile? DoctorProfile { get; set; }
         public PatientProfile? PatientProfile { get; set; }
         public ModeratorProfile? ModeratorProfile { get; set; }
+        public ICollection<RefreshToken>? RefreshTokens { get; set; }
         public AdminProfile? AdminProfile { get; set; }
         public ICollection<CommunityGroup>? Groups { get; set; } = new List<CommunityGroup>();
     }
