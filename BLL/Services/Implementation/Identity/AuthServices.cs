@@ -2,9 +2,14 @@
 using BLL.Models.Identity;
 using BLL.Services.Abstraction.Identity;
 using DAL.Entities.Core;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using DAL.Repository.Abstraction.Core;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
+using System.Text;
+
 
 namespace BLL.Services.Implementation.Identity;
 
@@ -18,6 +23,7 @@ public class AuthServices : IAuthServices
     private readonly IEmailSender _emailSender;
     private readonly ILogger<AuthServices> _logger;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly string _otpSecret;
 
     public AuthServices(
         UserManager<ApplicationUser> userManager,
@@ -27,6 +33,7 @@ public class AuthServices : IAuthServices
         IMapper mapper,
         IEmailSender emailSender,
         IRefreshTokenRepository refreshTokenRepository,
+        IConfiguration configuration,
         ILogger<AuthServices> logger)
     {
         _userManager = userManager;
@@ -37,6 +44,7 @@ public class AuthServices : IAuthServices
         _emailSender = emailSender;
         _refreshTokenRepository = refreshTokenRepository;
         _logger = logger;
+        _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
     }
 
     public async Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto)
@@ -54,7 +62,9 @@ public class AuthServices : IAuthServices
             }
 
             var user = _mapper.Map<ApplicationUser>(registerDto);
-
+            var code = GenerateOtp();
+            user.EmailVerificationCode = HashOtp(code, _otpSecret);
+            user.EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(20);
             var result = await _userManager.CreateAsync(user, registerDto.Password);
 
             if (!result.Succeeded)
@@ -75,9 +85,6 @@ public class AuthServices : IAuthServices
 
             await _userManager.AddToRoleAsync(user, role);
 
-            var code = new Random().Next(100000, 999999).ToString();
-            user.EmailVerificationCode = code;
-            await _userManager.UpdateAsync(user);
             await _emailSender.SendEmailAsync(user.Email, "Verification Code",
                 $"Your verification code is: {code}");
             var Registrationdto = new RegistrationDTO
@@ -165,11 +172,12 @@ public class AuthServices : IAuthServices
         }
     }
 
-    public async Task<ConfirmMailDTO> ConfirmEmailCodeAsync(ConfirmEmailCode dto)
+    public async Task<ConfirmMailDTO> ConfirmEmailCodeAsync(string Email, string ComfirmationCode)
     {
         try
         {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByEmailAsync(Email);
+            string hashedCode = HashOtp(ComfirmationCode, _otpSecret);
             if (user == null)
             {
                 return new ConfirmMailDTO
@@ -179,17 +187,17 @@ public class AuthServices : IAuthServices
                 };
             }
 
-            if (user.EmailVerificationCodeExpiration <= DateTime.UtcNow)
+            if (user.EmailVerificationCodeExpiration >= DateTime.UtcNow)
             {
-                if (dto.Code != user.EmailVerificationCode)
+                if (user.EmailConfirmed)
                 {
                     return new ConfirmMailDTO
                     {
-                        Success = false,
-                        Message = "The confirmation code is not correct"
+                        Success = true,
+                        Message = "Email is already confirmed"
                     };
                 }
-                else
+                else if (hashedCode == user.EmailVerificationCode)
                 {
                     user.IsEmailVerified = true;
                     user.EmailConfirmed = true;
@@ -200,6 +208,15 @@ public class AuthServices : IAuthServices
                         Message = "Email confirmed successfully"
                     };
 
+                }
+                else
+                {
+
+                    return new ConfirmMailDTO
+                    {
+                        Success = false,
+                        Message = "The confirmation code is not correct"
+                    };
 
                 }
             }
@@ -327,18 +344,21 @@ public class AuthServices : IAuthServices
         }
     }
 
-    public async Task<AuthResultDTO> ResendVerificationCodeAsync(string email)
+    public async Task<AuthResultDTO> ResendVerificationCodeAsync(string Email)
     {
         try
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByEmailAsync(Email);
             if (user == null)
                 return Fail("User not found");
 
             if (user.EmailConfirmed)
                 return Fail("Email is already confirmed");
 
-            var code = new Random().Next(100000, 999999).ToString();
+            var code = GenerateOtp();
+            user.EmailVerificationCode = HashOtp(code, _otpSecret);
+            user.EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(20);
+            await _userManager.UpdateAsync(user);
 
             await _emailSender.SendEmailAsync(
                 user.Email,
@@ -382,7 +402,17 @@ public class AuthServices : IAuthServices
             _logger.LogWarning(ex, "RevokeAllRefreshTokensForUser failed for user {UserId}", userId);
         }
     }
-
+    private static string GenerateOtp()
+    {
+        int code = RandomNumberGenerator.GetInt32(0, 1_000_000);
+        return code.ToString("D6");
+    }
+    private static string HashOtp(string otp, string secretKey)
+    {
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secretKey));
+        byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(otp));
+        return Convert.ToBase64String(hash);
+    }
     private static AuthResultDTO Fail(string error) =>
         new() { Success = false, Error = error };
 }

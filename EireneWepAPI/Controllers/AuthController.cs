@@ -1,6 +1,9 @@
 ﻿using BLL.Models.Identity;
 using BLL.Services.Abstraction.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
+using System.Security.Claims;
 
 namespace Eirene.Controllers
 {
@@ -59,7 +62,7 @@ namespace Eirene.Controllers
         [HttpPost("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(ConfirmEmailCode confirmEmailCode)
         {
-            var result = await _authService.ConfirmEmailCodeAsync(confirmEmailCode);
+            var result = await _authService.ConfirmEmailCodeAsync(confirmEmailCode.Email, confirmEmailCode.Code);
 
             if (!result.Success)
                 return BadRequest(result);

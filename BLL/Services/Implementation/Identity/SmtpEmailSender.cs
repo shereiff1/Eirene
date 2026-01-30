@@ -16,7 +16,7 @@ public class SmtpEmailSender : IEmailSender
         _settings = settings.Value;
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body)
+    public async Task SendEmailAsync(string? to, string subject, string body)
     {
         using var client = new SmtpClient
         {

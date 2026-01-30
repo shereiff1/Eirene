@@ -29,7 +29,7 @@ public class TokenService : ITokenService
         _configuration = configuration;
         _logger = logger;
         _key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]));
+            Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"] ?? throw new InvalidOperationException("JwtSettings:Secret is missing")));
     }
 
     public async Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user)
