@@ -11,7 +11,7 @@ namespace DAL.Repository.Implementation.Treatment;
 
 public class QuestionRepository : GenericRepository<Question>, IQuestionRepository
 {
-    public QuestionRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public QuestionRepository(EireneDBContext context) : base(context)
     {
     }
 }

@@ -2,6 +2,7 @@
 using BLL.Models.Tracking;
 using BLL.Services.Abstraction.Tracking;
 using DAL.Entities.Tracking;
+using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Tracking;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -14,15 +15,17 @@ namespace BLL.Services.Implementation.Tracking
         private readonly ILogger<JournalServices> _logger;
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUnitOfWork _unitOfWork;
 
         public JournalServices(IJournalRepository journalRepository, ILogger<JournalServices> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork
         )
         {
             _journalRepository = journalRepository;
             _logger = logger;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<bool> CanCreateToday()
@@ -46,6 +49,7 @@ namespace BLL.Services.Implementation.Tracking
                 }
 
                 var result = await _journalRepository.AddAsync(journalEntity);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result == null)
                 {
@@ -123,7 +127,9 @@ namespace BLL.Services.Implementation.Tracking
 
                 journal.Content = model.Content;
 
-                return await _journalRepository.UpdateAsync(journal);
+                var result = await _journalRepository.UpdateAsync(journal);
+                await _unitOfWork.SaveChangesAsync();
+                return result;
             }
             catch (Exception ex)
             {

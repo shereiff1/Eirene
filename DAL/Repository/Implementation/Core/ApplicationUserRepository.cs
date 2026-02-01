@@ -8,8 +8,8 @@ namespace DAL.Repository.Implementation.Core
 {
     public class ApplicationUserRepository : GenericRepository<ApplicationUser>, IApplicationUserRepository
     {
-        public ApplicationUserRepository(EireneDBContext context, IUnitOfWork unitOfWork)
-            : base(context, unitOfWork)
+        public ApplicationUserRepository(EireneDBContext context)
+            : base(context)
         {
         }
 

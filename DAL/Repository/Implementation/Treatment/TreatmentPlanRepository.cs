@@ -9,7 +9,7 @@ namespace DAL.Repository.Implementation.Treatment;
 
 public class TreatmentPlanRepository : GenericRepository<TreatmentPlan>, ITreatmentPlanRepository
 {
-    public TreatmentPlanRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public TreatmentPlanRepository(EireneDBContext context) : base(context)
     {
     }
 }

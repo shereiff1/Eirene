@@ -8,7 +8,7 @@ namespace DAL.Repository.Implementation.Community
 {
     public class CommunityCommentRepository : GenericRepository<CommunityComment>, ICommunityCommentRepository
     {
-        public CommunityCommentRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        public CommunityCommentRepository(EireneDBContext context) : base(context)
         {
         }
         public async Task<CommunityComment?> GetByIdWithDetailsAsync(int id)

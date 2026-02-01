@@ -8,8 +8,8 @@ namespace DAL.Repository.Implementation.Community
 {
     public class CommunityGroupRepository : GenericRepository<CommunityGroup>, ICommunityGroupRepository
     {
-        public CommunityGroupRepository(EireneDBContext context, IUnitOfWork unitOfWork)
-            : base(context, unitOfWork)
+        public CommunityGroupRepository(EireneDBContext context)
+            : base(context)
         {
         }
 

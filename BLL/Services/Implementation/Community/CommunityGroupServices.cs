@@ -2,6 +2,7 @@
 using BLL.Models.Community.Group;
 using BLL.Services.Abstraction.Community;
 using DAL.Entities.Community;
+using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Community;
 using Microsoft.Extensions.Logging;
 
@@ -12,15 +13,18 @@ namespace BLL.Services.Implementation.Community
         private readonly ILogger<CommunityGroupServices> _logger;
         private readonly IMapper _mapper;
         private readonly ICommunityGroupRepository _communityGroupRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
             IMapper mapper,
-            ICommunityGroupRepository communityGroupRepository)
+            ICommunityGroupRepository communityGroupRepository,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _communityGroupRepository = communityGroupRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
@@ -118,6 +122,7 @@ namespace BLL.Services.Implementation.Community
 
                 var group = _mapper.Map<CommunityGroup>(model);
                 var createdGroup = await _communityGroupRepository.AddAsync(group);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (createdGroup != null)
                 {
@@ -163,6 +168,7 @@ namespace BLL.Services.Implementation.Community
                 existingGroup.Description = model.Description;
 
                 var result = await _communityGroupRepository.UpdateAsync(existingGroup);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result)
                 {
@@ -220,6 +226,7 @@ namespace BLL.Services.Implementation.Community
                 }
 
                 var result = await _communityGroupRepository.DeleteAsync(group);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result)
                 {

@@ -7,7 +7,7 @@ namespace DAL.Repository.Implementation.Core;
 
 public class RefreshTokenRepository : GenericRepository<RefreshToken>, IRefreshTokenRepository
 {
-    public RefreshTokenRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public RefreshTokenRepository(EireneDBContext context) : base(context)
     {
     }
 }

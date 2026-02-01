@@ -1,6 +1,7 @@
 ﻿using BLL.Services.Abstraction.Treatment;
 using DAL.Entities.Treatment;
 using DAL.Repository.Abstraction.Treatment;
+using DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Treatment
@@ -9,12 +10,14 @@ namespace BLL.Services.Implementation.Treatment
     {
         private readonly ILogger<QuestionAnswerServices> _logger;
         private readonly IQuestionAnswerRepository _questionAnswerRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public QuestionAnswerServices(ILogger<QuestionAnswerServices> logger,
-            IQuestionAnswerRepository questionAnswerRepository)
+            IQuestionAnswerRepository questionAnswerRepository, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _questionAnswerRepository = questionAnswerRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<(bool IsSuccess, IEnumerable<QuestionAnswer> Answers)> GetAnswersForUserAsync(string userId)
@@ -56,6 +59,7 @@ namespace BLL.Services.Implementation.Treatment
                     Answer = answer
                 };
                 var addedAnswer = await _questionAnswerRepository.AddAsync(questionAnswer);
+                await _unitOfWork.SaveChangesAsync();
                 if (addedAnswer == null)
                 {
                     _logger.LogError("Failed to add answer for user {UserId}", userId);
@@ -93,6 +97,7 @@ namespace BLL.Services.Implementation.Treatment
                         addedAnswers.Add(added);
                     }
                 }
+                await _unitOfWork.SaveChangesAsync();
 
                 return (addedAnswers.Count == questionAnswers.Count, addedAnswers);
             }

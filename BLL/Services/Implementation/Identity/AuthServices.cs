@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
+using DAL.Repository.Abstraction;
 
 
 namespace BLL.Services.Implementation.Identity;
@@ -23,6 +24,7 @@ public class AuthServices : IAuthServices
     private readonly IEmailSender _emailSender;
     private readonly ILogger<AuthServices> _logger;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly string _otpSecret;
 
     public AuthServices(
@@ -33,6 +35,7 @@ public class AuthServices : IAuthServices
         IMapper mapper,
         IEmailSender emailSender,
         IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork,
         IConfiguration configuration,
         ILogger<AuthServices> logger)
     {
@@ -43,6 +46,7 @@ public class AuthServices : IAuthServices
         _mapper = mapper;
         _emailSender = emailSender;
         _refreshTokenRepository = refreshTokenRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
     }
@@ -151,6 +155,7 @@ public class AuthServices : IAuthServices
             };
 
             await _refreshTokenRepository.AddAsync(dbToken);
+            await _unitOfWork.SaveChangesAsync();
 
             var authResult = _mapper.Map<AuthResultDTO>(user);
             authResult.RefreshToken = refreshToken;
@@ -256,6 +261,7 @@ public class AuthServices : IAuthServices
                 token.RevokedDate = DateTime.UtcNow;
                 await _refreshTokenRepository.UpdateAsync(token);
             }
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -302,6 +308,7 @@ public class AuthServices : IAuthServices
             storedToken.IsRevoked = true;
             storedToken.RevokedDate = DateTime.UtcNow;
             await _refreshTokenRepository.UpdateAsync(storedToken);
+            await _unitOfWork.SaveChangesAsync();
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -323,6 +330,7 @@ public class AuthServices : IAuthServices
             };
 
             await _refreshTokenRepository.AddAsync(newDbToken);
+            await _unitOfWork.SaveChangesAsync();
 
             return new AuthResultDTO
             {
@@ -396,6 +404,7 @@ public class AuthServices : IAuthServices
                 token.IsRevoked = true;
                 await _refreshTokenRepository.UpdateAsync(token);
             }
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (Exception ex)
         {

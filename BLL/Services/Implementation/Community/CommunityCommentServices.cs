@@ -3,6 +3,7 @@ using BLL.Models.Community.Comment;
 using BLL.Services.Abstraction.Community;
 using DAL.Entities.Community;
 using DAL.Repository.Abstraction.Community;
+using DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Community
@@ -13,17 +14,20 @@ namespace BLL.Services.Implementation.Community
         private readonly IMapper _mapper;
         private readonly ICommunityCommentRepository _communityCommentRepository;
         private readonly ICommunityPostRepository _communityPostRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public CommunityCommentServices(
             ILogger<CommunityCommentServices> logger,
             IMapper mapper,
             ICommunityCommentRepository communityCommentRepository,
-            ICommunityPostRepository communityPostRepository)
+            ICommunityPostRepository communityPostRepository,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _communityCommentRepository = communityCommentRepository;
             _communityPostRepository = communityPostRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(int postId)
@@ -132,6 +136,7 @@ namespace BLL.Services.Implementation.Community
 
                 var comment = _mapper.Map<CommunityComment>(model);
                 var createdComment = await _communityCommentRepository.AddAsync(comment);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (createdComment != null)
                 {
@@ -147,6 +152,7 @@ namespace BLL.Services.Implementation.Community
                             await _communityCommentRepository.UpdateAsync(parentComment);
                         }
                     }
+                    await _unitOfWork.SaveChangesAsync();
 
                     var commentWithDetails =
                         await _communityCommentRepository.GetByIdWithDetailsAsync(createdComment.Id);
@@ -191,6 +197,7 @@ namespace BLL.Services.Implementation.Community
                 existingComment.IsEdited = true;
 
                 var result = await _communityCommentRepository.UpdateAsync(existingComment);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result)
                 {
@@ -244,6 +251,7 @@ namespace BLL.Services.Implementation.Community
 
                     _logger.LogInformation("Comment {CommentId} deleted successfully", id);
                 }
+                await _unitOfWork.SaveChangesAsync();
 
                 return result;
             }

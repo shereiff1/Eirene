@@ -7,7 +7,7 @@ namespace DAL.Repository.Implementation.Tracking;
 
 internal class MoodTrackerRepository : GenericRepository<MoodTracker>, IMoodTrackerRepository
 {
-    public MoodTrackerRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public MoodTrackerRepository(EireneDBContext context) : base(context)
     {
     }
 }

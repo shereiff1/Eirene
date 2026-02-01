@@ -2,6 +2,7 @@
 using BLL.Models.Community.Post;
 using BLL.Services.Abstraction.Community;
 using DAL.Entities.Community;
+using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Community;
 using Microsoft.Extensions.Logging;
 
@@ -13,17 +14,20 @@ namespace BLL.Services.Implementation.Community
         private readonly IMapper _mapper;
         private readonly ICommunityPostRepository _communityPostRepository;
         private readonly ICommunityGroupRepository _communityGroupRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public CommunityPostServices(
             ILogger<CommunityPostServices> logger,
             IMapper mapper,
             ICommunityPostRepository communityPostRepository,
-            ICommunityGroupRepository communityGroupRepository)
+            ICommunityGroupRepository communityGroupRepository,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _communityPostRepository = communityPostRepository;
             _communityGroupRepository = communityGroupRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetAllAsync()
@@ -139,7 +143,7 @@ namespace BLL.Services.Implementation.Community
                     return (false, null);
                 }
 
-                 
+
                 var group = await _communityGroupRepository.GetByIdAsync(model.CommunityGroupId);
                 if (group == null)
                 {
@@ -149,10 +153,11 @@ namespace BLL.Services.Implementation.Community
 
                 var post = _mapper.Map<CommunityPost>(model);
                 var createdPost = await _communityPostRepository.AddAsync(post);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (createdPost != null)
                 {
-                
+
                     var postWithDetails = await _communityPostRepository.GetByIdWithDetailsAsync(createdPost.Id);
                     var postDTO = _mapper.Map<CommunityPostDTO>(postWithDetails);
 
@@ -182,18 +187,19 @@ namespace BLL.Services.Implementation.Community
                     _logger.LogWarning("Post with ID {PostId} not found or deleted", model.Id);
                     return false;
                 }
-                 
+
                 if (existingPost.UserId != model.UserId)
                 {
                     _logger.LogWarning("User {UserId} is not authorized to edit post {PostId}", model.UserId, model.Id);
                     return false;
                 }
-                 
+
                 existingPost.Content = model.Content;
                 existingPost.UpdatedOn = DateTime.UtcNow;
                 existingPost.IsEdited = true;
 
                 var result = await _communityPostRepository.UpdateAsync(existingPost);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result)
                 {
@@ -220,9 +226,10 @@ namespace BLL.Services.Implementation.Community
                     _logger.LogWarning("Post with ID {PostId} not found or already deleted", id);
                     return false;
                 }
-                 
+
                 post.IsDeleted = true;
                 var result = await _communityPostRepository.UpdateAsync(post);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (result)
                 {

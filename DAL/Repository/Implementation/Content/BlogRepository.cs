@@ -7,7 +7,7 @@ namespace DAL.Repository.Implementation.Content
 {
     public class BlogRepository: GenericRepository<Blog>, IBlogRepository
     {
-        public BlogRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+        public BlogRepository(EireneDBContext context) : base(context)
         {
         }
     }

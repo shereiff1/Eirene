@@ -1,9 +1,7 @@
 ﻿using BLL.Models.Identity;
 using BLL.Services.Abstraction.Identity;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.FileProviders;
-using System.Security.Claims;
+
 
 namespace Eirene.Controllers
 {

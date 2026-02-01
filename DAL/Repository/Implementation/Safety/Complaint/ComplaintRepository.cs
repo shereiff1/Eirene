@@ -8,7 +8,7 @@ namespace DAL.Repository.Implementation.Safety.Complaint;
 
 internal class ComplaintRepository : GenericRepository<ComplaintEntity>, IComplaintRepository
 {
-    public ComplaintRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public ComplaintRepository(EireneDBContext context) : base(context)
     {
     }
 }

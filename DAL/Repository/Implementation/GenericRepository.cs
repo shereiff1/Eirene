@@ -8,13 +8,11 @@ namespace DAL.Repository.Implementation
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected readonly EireneDBContext _context;
-        protected readonly IUnitOfWork _unitOfWork;
         private readonly DbSet<T> _dbSet;
 
-        public GenericRepository(EireneDBContext context, IUnitOfWork unitOfWork)
+        public GenericRepository(EireneDBContext context)
         {
             _context = context;
-            _unitOfWork = unitOfWork;
             _dbSet = _context.Set<T>();
         }
 
@@ -35,22 +33,19 @@ namespace DAL.Repository.Implementation
         public async Task<T?> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
-            await _unitOfWork.SaveChangesAsync();
             return entity;
         }
 
         public async Task<bool> UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
-            var affected = await _unitOfWork.SaveChangesAsync();
-            return affected > 0;
+            return true;
         }
 
         public async Task<bool> DeleteAsync(T entity)
         {
             _dbSet.Remove(entity);
-            var affected = await _unitOfWork.SaveChangesAsync();
-            return affected > 0;
+            return true;
         }
     }
 }

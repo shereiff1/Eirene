@@ -7,7 +7,7 @@ namespace DAL.Repository.Implementation.Treatment;
 
 public class QuestionAnswerRepository : GenericRepository<QuestionAnswer>, IQuestionAnswerRepository
 {
-    public QuestionAnswerRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public QuestionAnswerRepository(EireneDBContext context) : base(context)
     {
     }
     public async Task<IEnumerable<QuestionAnswer>> GetAnswersByUserIdAsync(string userId)

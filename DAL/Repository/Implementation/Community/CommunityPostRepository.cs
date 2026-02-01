@@ -9,8 +9,8 @@ namespace DAL.Repository.Implementation.Community
 {
     public class CommunityPostRepository : GenericRepository<CommunityPost>, ICommunityPostRepository
     {
-        public CommunityPostRepository(EireneDBContext context, IUnitOfWork unitOfWork)
-            : base(context, unitOfWork)
+        public CommunityPostRepository(EireneDBContext context)
+            : base(context)
         {
         }
         private IQueryable<CommunityPost> IncludePostDetails()

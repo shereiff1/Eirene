@@ -4,6 +4,7 @@ using BLL.ModelVMs.Treatment;
 using BLL.Services.Abstraction.Treatment;
 using DAL.Entities.Treatment;
 using DAL.Repository.Abstraction.Treatment;
+using DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Treatment
@@ -13,11 +14,13 @@ namespace BLL.Services.Implementation.Treatment
         private readonly ILogger<QuestionServices> _logger;
         private readonly IMapper _mapper;
         private readonly IQuestionRepository _questionRepository;
-        public QuestionServices(ILogger<QuestionServices> logger, IMapper mapper, IQuestionRepository questionRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        public QuestionServices(ILogger<QuestionServices> logger, IMapper mapper, IQuestionRepository questionRepository, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _questionRepository = questionRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<(bool IsSuccess, QuestionDTO? AddedQuestion)> CreateAsync(AddQuestion model)
         {
@@ -25,6 +28,7 @@ namespace BLL.Services.Implementation.Treatment
             {
                 var questionEntity = _mapper.Map<Question>(model);
                 var addedQuestion = await _questionRepository.AddAsync(questionEntity);
+                await _unitOfWork.SaveChangesAsync();
                 if (addedQuestion == null)
                 {
                     _logger.LogError("Failed to add question");
@@ -51,6 +55,7 @@ namespace BLL.Services.Implementation.Treatment
                     return false;
                 }
                 await _questionRepository.DeleteAsync(questionEntity);
+                await _unitOfWork.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -113,6 +118,7 @@ namespace BLL.Services.Implementation.Treatment
                 _mapper.Map(model, existingQuestion);
 
                 var result = await _questionRepository.UpdateAsync(existingQuestion);
+                await _unitOfWork.SaveChangesAsync();
                 if (!result)
                 {
                     _logger.LogError("Failed to update question");

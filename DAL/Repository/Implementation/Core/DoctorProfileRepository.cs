@@ -8,7 +8,7 @@ namespace DAL.Repository.Implementation.Core;
 
 internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoctorProfileRepository
 {
-    public DoctorProfileRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public DoctorProfileRepository(EireneDBContext context) : base(context)
     {
     }
 }

@@ -8,7 +8,7 @@ namespace DAL.Repository.Implementation.Core;
 
 internal class AdminProfileRepository : GenericRepository<AdminProfile>, IAdminProfileRepository
 {
-    public AdminProfileRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public AdminProfileRepository(EireneDBContext context) : base(context)
     {
     }
 }

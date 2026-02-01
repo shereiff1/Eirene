@@ -2,6 +2,7 @@
 using BLL.ModelVMs.Content;
 using BLL.Services.Abstraction.Content;
 using DAL.Entities.Content;
+using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Content;
 using Microsoft.Extensions.Logging;
 
@@ -12,12 +13,14 @@ namespace BLL.Services.Implementation.Content
         private readonly IBlogRepository _blogRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<BlogServices> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public BlogServices(IBlogRepository blogRepository, ILogger<BlogServices> logger, IMapper mapper)
+        public BlogServices(IBlogRepository blogRepository, ILogger<BlogServices> logger, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _blogRepository = blogRepository;
             _logger = logger;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetAllAsync()
@@ -60,6 +63,7 @@ namespace BLL.Services.Implementation.Content
                 var blog = _mapper.Map<Blog>(model);
 
                 var created = await _blogRepository.AddAsync(blog);
+                await _unitOfWork.SaveChangesAsync();
 
                 if (created == null)
                     return (false, null);
@@ -85,6 +89,7 @@ namespace BLL.Services.Implementation.Content
                 _mapper.Map(model, blog);
 
                 var result = await _blogRepository.UpdateAsync(blog);
+                await _unitOfWork.SaveChangesAsync();
 
                 return result;
             }
@@ -103,6 +108,7 @@ namespace BLL.Services.Implementation.Content
                 if (blog == null) return false;
 
                 var deleted = await _blogRepository.DeleteAsync(blog);
+                await _unitOfWork.SaveChangesAsync();
 
                 return deleted;
             }

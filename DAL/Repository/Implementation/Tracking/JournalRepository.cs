@@ -9,7 +9,7 @@ namespace DAL.Repository.Implementation.Tracking;
 
 public class JournalRepository : GenericRepository<Journal>, IJournalRepository
 {
-    public JournalRepository(EireneDBContext context, IUnitOfWork unitOfWork) : base(context, unitOfWork)
+    public JournalRepository(EireneDBContext context) : base(context)
     {
     }
 
