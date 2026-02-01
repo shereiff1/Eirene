@@ -17,17 +17,20 @@ namespace Eirene.Controllers
         private readonly ILogger<DiagnosisController> _logger;
         private readonly IQuestionAnswerServices _questionAnswerServices;
         private readonly IQuestionServices _questionServices;
+        private readonly IPatientTaskServices _taskServices;
 
         public DiagnosisController(
-            IAIModelService chatGPTService,
+            IAIModelService ModelService,
             ILogger<DiagnosisController> logger,
             IQuestionAnswerServices questionAnswerServices,
-            IQuestionServices questionServices)
+            IQuestionServices questionServices,
+            IPatientTaskServices taskServices)
         {
-            _modelService = chatGPTService;
+            _modelService = ModelService;
             _logger = logger;
             _questionAnswerServices = questionAnswerServices;
             _questionServices = questionServices;
+            _taskServices = taskServices;
         }
 
         [HttpPost("analyze")]
@@ -52,10 +55,15 @@ namespace Eirene.Controllers
                 var formattedQA = await FormatQuestionsAndAnswers(answersResult.Answers);
 
                 var analysisResult = await _modelService.AnalyzeUserAnswersAsync(formattedQA);
+                var IsAdded = await _taskServices.AddTasksFromModelAsync(analysisResult, userId);
+
+                if (!IsAdded)
+                {
+                    _logger.LogWarning("Failed to add tasks for user {UserId} based on analysis.", userId);
+                }
 
                 return Ok(new
                 {
-                    userId = userId,
                     analysis = analysisResult,
                     answersCount = answersResult.Answers.Count()
                 });

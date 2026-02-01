@@ -13,6 +13,7 @@ namespace Eirene.Controllers
         private readonly IQuestionAnswerServices _questionAnswerServices;
         private readonly IQuestionServices _questionServices;
 
+
         public QuestionsAnswerController(
             ILogger<QuestionsAnswerController> logger,
             IQuestionAnswerServices questionAnswerServices,

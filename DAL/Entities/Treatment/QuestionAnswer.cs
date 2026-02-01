@@ -7,10 +7,10 @@ public class QuestionAnswer
     public int Id { get; set; }
     public string Answer { get; set; } = string.Empty;
     public int QuestionId { get; set; }
-    [ForeignKey(nameof(QuestionId))]
+    [ForeignKey("QuestionId")]
     public Question Question { get; set; } = null!;
     public string PatientId { get; set; } = string.Empty;
-    [ForeignKey(nameof(PatientId))]
+    [ForeignKey("PatientId")]
     public ApplicationUser User { get; set; } = null!;
 
 }

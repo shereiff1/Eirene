@@ -2,8 +2,7 @@
 using DAL.Entities.Treatment;
 using DAL.Repository.Abstraction.Treatment;
 using DAL.Database;
-using DAL.Repository.Abstraction;
-
+ 
 
 namespace DAL.Repository.Implementation.Treatment;
 

@@ -27,6 +27,8 @@ public static class BllServicesExtensions
         services.AddScoped<IQuestionAnswerServices, QuestionAnswerServices>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthServices, AuthServices>();
+        services.AddScoped<ITreatmentPlanServices, TreatmentPlanServices>();
+        services.AddScoped<IPatientTaskServices, PatientTaskServices>();
         return services;
     }
 }

@@ -28,6 +28,8 @@ public static class DalServicesExtensions
         services.AddScoped<IQuestionRepository, QuestionRepository>();
         services.AddScoped<IQuestionAnswerRepository, QuestionAnswerRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ITreatmentPlanRepository, TreatmentPlanRepository>();
+        services.AddScoped<IPatientTaskRepository, PatientTaskRepository>();
 
         return services;
     }
