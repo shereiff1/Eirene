@@ -1,5 +1,6 @@
 using BLL.AIModel;
 using BLL.Extensions;
+using BLL.Hubs;
 using BLL.Mappers;
 using BLL.Models.Identity;
 using DAL.Database;
@@ -11,96 +12,94 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace Eirene
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection("Smtp"));
+builder.Services.AddAutoMapper(typeof(AuthProfile));
+builder.Services.AddDbContext<EireneDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    public class Program
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = false;
+    options.SignIn.RequireConfirmedEmail = false;
+})
+    .AddEntityFrameworkStores<EireneDBContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
     {
-        public static async Task Main(string[] args)
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials()
+              .WithOrigins("http://localhost:5056");
+    });
+});
+builder.Services.AddDataAccessServices().AddBusinessLogicServices();
+builder.Services.AddHttpContextAccessor();
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secret = jwtSettings["Secret"];
+builder.Services.Configure<AIModelSettings>(
+    builder.Configuration.GetSection("AIModel"));
+builder.Services.AddHttpClient<IAIModelService, AIModelService>();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.SaveToken = true;
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            var builder = WebApplication.CreateBuilder(args);
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
-            builder.Services.AddControllers();
-            builder.Services.AddOpenApi();
-            builder.Services.Configure<SmtpSettings>(
-                builder.Configuration.GetSection("Smtp"));
-            builder.Services.AddAutoMapper(typeof(AuthProfile));
-            builder.Services.AddDbContext<EireneDBContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddAuthorization();
+builder.Services.AddSignalR();
+var app = builder.Build();
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-                {
-                    options.Password.RequireDigit = false;
-                    options.Password.RequireLowercase = false;
-                    options.Password.RequireUppercase = false;
-                    options.Password.RequireNonAlphanumeric = false;
-                    options.Password.RequiredLength = 6;
-                    options.User.RequireUniqueEmail = false;
-                    options.SignIn.RequireConfirmedEmail = false;
-                })
-                .AddEntityFrameworkStores<EireneDBContext>()
-                .AddDefaultTokenProviders();
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { "Patient", "Doctor", "Moderator", "Admin" };
 
-            builder.Services.AddDataAccessServices().AddBusinessLogicServices();
-            builder.Services.AddHttpContextAccessor();
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-            var secret = jwtSettings["Secret"];
-            builder.Services.Configure<AIModelSettings>(
-                builder.Configuration.GetSection("AIModel"));
-            builder.Services.AddHttpClient<IAIModelService, AIModelService>();
-            builder.Services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(options =>
-                {
-                    options.SaveToken = true;
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSettings["Issuer"],
-                        ValidAudience = jwtSettings["Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
-                        ClockSkew = TimeSpan.Zero
-                    };
-                });
-            
-            builder.Services.AddAuthorization();
-
-            var app = builder.Build();
-
-            // Seed roles on startup
-            using (var scope = app.Services.CreateScope())
-            {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                var roles = new[] { "Patient", "Doctor", "Moderator", "Admin" };
-
-                foreach (var role in roles)
-                {
-                    if (!await roleManager.RoleExistsAsync(role))
-                    {
-                        await roleManager.CreateAsync(new IdentityRole(role));
-                    }
-                }
-            }
-
-
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-            }
-
-            app.UseAuthentication(); 
-            app.UseAuthorization();
-            
-            app.MapControllers();
-
-            app.Run();
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
+app.Run();

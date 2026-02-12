@@ -1,3 +1,4 @@
+using DAL.Entities.Communication;
 using DAL.Entities.Community;
 using DAL.Entities.Content;
 using DAL.Entities.Core;
@@ -5,14 +6,12 @@ using DAL.Entities.Tracking;
 using DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace DAL.Database;
 
 public class EireneDBContext : IdentityDbContext<ApplicationUser>
 {
-    public EireneDBContext(DbContextOptions<EireneDBContext> options)
-        : base(options)
+    public EireneDBContext(DbContextOptions options) : base(options)
     {
     }
 
@@ -29,7 +28,8 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<Question> Questions { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<PatientTask> PatientTasks { get; set; }
-
+    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

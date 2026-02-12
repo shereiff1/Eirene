@@ -1,10 +1,12 @@
 ﻿using DAL.Repository.Abstraction;
+using DAL.Repository.Abstraction.Communication;
 using DAL.Repository.Abstraction.Community;
 using DAL.Repository.Abstraction.Content;
 using DAL.Repository.Abstraction.Core;
 using DAL.Repository.Abstraction.Tracking;
 using DAL.Repository.Abstraction.Treatment;
 using DAL.Repository.Implementation;
+using DAL.Repository.Implementation.Communication;
 using DAL.Repository.Implementation.Community;
 using DAL.Repository.Implementation.Content;
 using DAL.Repository.Implementation.Core;
@@ -30,6 +32,7 @@ public static class DalServicesExtensions
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<ITreatmentPlanRepository, TreatmentPlanRepository>();
         services.AddScoped<IPatientTaskRepository, PatientTaskRepository>();
+        services.AddScoped<IChatRepository, ChatRepository>();
 
         return services;
     }
