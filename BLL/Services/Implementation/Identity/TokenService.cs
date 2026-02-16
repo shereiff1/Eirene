@@ -148,6 +148,6 @@ public class TokenService : ITokenService
         {
             return minutes;
         }
-        return 15;
+        return 1000;
     }
 }
