@@ -1,5 +1,7 @@
 ﻿using DAL.Entities.Core;
+using System.Globalization;
 namespace DAL.Entities.Tracking;
+
 public class Journal
 {
     public int Id { get; set; }
@@ -7,4 +9,5 @@ public class Journal
     public ApplicationUser Patient { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string Content { get; set; } = string.Empty;
+    public float Mood { get; set; } = 1;
 }

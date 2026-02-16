@@ -47,6 +47,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddDataAccessServices().AddBusinessLogicServices();
 builder.Services.AddHttpContextAccessor();
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = jwtSettings["Secret"];
 builder.Services.Configure<AIModelSettings>(

@@ -66,6 +66,36 @@ namespace BLL.Services.Implementation.Tracking
                 return (false, null);
             }
         }
+        public async Task<bool> DeleteAsync(int id)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+
+                var journal = await _journalRepository.GetByIdAsync(id);
+                if (userId != journal?.PatientId)
+                {
+                    _logger.LogError("Unauthorized attempt to delete a journal entry.");
+                    return false;
+                }
+
+                if (journal == null)
+                {
+                    _logger.LogError("Journal entry not found for deletion.");
+                    return false;
+                }
+
+                await _journalRepository.DeleteAsync(journal);
+                await _unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting a journal entry.");
+                return false;
+            }
+        }
+
 
         public async Task<(bool IsSuccess, List<JournalDTO>? journals)> GetAllAsync()
         {
@@ -73,11 +103,6 @@ namespace BLL.Services.Implementation.Tracking
             {
                 var userId = GetCurrentUserId();
                 var journalEntities = await _journalRepository.GetAllForUserAsync(userId);
-                if (!journalEntities.Any())
-                {
-                    return (false, null);
-                }
-
                 var journalDtos = _mapper.Map<List<JournalDTO>>(journalEntities);
                 return (true, journalDtos);
             }
@@ -126,6 +151,7 @@ namespace BLL.Services.Implementation.Tracking
                     return false;
 
                 journal.Content = model.Content;
+                journal.Mood = model.Mood;
 
                 var result = await _journalRepository.UpdateAsync(journal);
                 await _unitOfWork.SaveChangesAsync();

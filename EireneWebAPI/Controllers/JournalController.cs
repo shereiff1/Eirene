@@ -19,6 +19,7 @@ namespace Eirene.Controllers
             _journalService = journalService;
             _logger = logger;
         }
+
         [HttpPost]
         [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> AddJournal([FromBody] AddJournal journal)
@@ -51,6 +52,16 @@ namespace Eirene.Controllers
             return Ok(result.journals);
         }
 
+        [HttpGet("Can-create-today")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> CanCreateToday()
+        {
+            var canCreate = await _journalService.CanCreateToday();
+
+            if (!canCreate)
+                return Ok(false);
+            return Ok(true);
+        }
         [HttpGet("{id}")]
         [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> GetById(int id)
@@ -61,6 +72,16 @@ namespace Eirene.Controllers
                 return NotFound(new { message = "Journal not found" });
 
             return Ok(result.journal);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> DeleteJournal(int id)
+        {
+            var isSuccess = await _journalService.DeleteAsync(id);
+            if (!isSuccess)
+                return BadRequest(new { message = "Failed to delete journal." });
+            return NoContent();
         }
 
 
