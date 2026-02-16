@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+.idea/.idea.Eirene/.idea/discord.xml
+.idea/.idea.Eirene/.idea/projectSettingsUpdater.xml
+.idea/.idea.Eirene/.idea/workspace.xml
+global.json
+appsettings.Development.json
