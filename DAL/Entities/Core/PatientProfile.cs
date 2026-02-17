@@ -9,6 +9,9 @@ public class PatientProfile
     public string UserId { get; set; } = string.Empty;
 
     public ApplicationUser User { get; set; } = null!;
+    
+    public string? DoctorProfileId { get; set; }
+    public DoctorProfile? Doctor { get; set; }
 
     public DateTime DateOfBirth { get; set; }
     public string Address { get; set; } = string.Empty;

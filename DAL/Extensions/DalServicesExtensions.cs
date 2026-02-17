@@ -33,6 +33,8 @@ public static class DalServicesExtensions
         services.AddScoped<ITreatmentPlanRepository, TreatmentPlanRepository>();
         services.AddScoped<IPatientTaskRepository, PatientTaskRepository>();
         services.AddScoped<IChatRepository, ChatRepository>();
+        services.AddScoped<IDoctorProfileRepository, DoctorProfileRepository>();
+
 
         return services;
     }
