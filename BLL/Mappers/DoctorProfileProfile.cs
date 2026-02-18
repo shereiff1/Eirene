@@ -14,9 +14,9 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.User.Gender))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.JoinedAt))
+                .ForMember(dest => dest.JoinedAt, opt => opt.MapFrom(src => src.JoinedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
                 .ForMember(dest => dest.PatientCount, opt => opt.MapFrom(src => src.Patients.Count));
-                // .ForMember(dest => dest.Id, opt => opt.Ignore());
 
             // Map AddModel -> Entity (creation)
             CreateMap<AddDoctorProfile, DoctorProfile>()
@@ -35,7 +35,8 @@ namespace BLL.Mappers
                 .ForMember(dest => dest.Rating, opt => opt.Ignore())
                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
                 .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

@@ -2,7 +2,6 @@ namespace BLL.Models.Core.Doctor;
 
 public class DoctorModel
 {
-    // public string Id { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -16,7 +15,7 @@ public class DoctorModel
     public int ReviewCount { get; set; } = 0;
     public int PatientCount { get; set; } = 0;
     public string? ProfilePhotoUrl { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime JoinedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
     public string ExperienceLevel => YearsOfExperience switch
