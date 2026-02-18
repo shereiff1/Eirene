@@ -4,7 +4,7 @@ namespace BLL.Models.Tracking;
 
 public class EditJournal
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [Required(ErrorMessage = "Content is required")]
     [StringLength(10000, ErrorMessage = "Content cannot exceed 10000 characters")]

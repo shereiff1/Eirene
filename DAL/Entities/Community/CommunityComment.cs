@@ -7,9 +7,9 @@ namespace DAL.Entities.Community;
 public class CommunityComment
 {
     [Key]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     [Required]
-    public int PostId { get; set; }
+    public Guid PostId { get; set; }
     [Required]
     public string UserId { get; set; } = string.Empty;
     [Required]
@@ -19,7 +19,7 @@ public class CommunityComment
     public DateTime? UpdatedOn { get; set; }
     public bool IsEdited { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
-    public int? ParentCommentId { get; set; }
+    public Guid? ParentCommentId { get; set; }
     public int LikesCount { get; set; } = 0;
     public int RepliesCount { get; set; } = 0;
     [ForeignKey(nameof(PostId))]

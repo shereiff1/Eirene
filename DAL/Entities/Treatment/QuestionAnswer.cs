@@ -4,9 +4,9 @@ namespace DAL.Entities.Treatment;
 
 public class QuestionAnswer
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Answer { get; set; } = string.Empty;
-    public int QuestionId { get; set; }
+    public Guid QuestionId { get; set; }
     [ForeignKey("QuestionId")]
     public Question Question { get; set; } = null!;
     public string PatientId { get; set; } = string.Empty;

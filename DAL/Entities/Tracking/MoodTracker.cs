@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace DAL.Entities.Tracking;
 public class MoodTracker
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string UserId { get; set; } = string.Empty;
     [ForeignKey(nameof(UserId))]
     public ApplicationUser Patient { get; set; } = null!;

@@ -4,6 +4,7 @@ using BLL.Services.Abstraction.Community;
 using DAL.Entities.Community;
 using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Community;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.Services.Implementation.Community
@@ -15,19 +16,22 @@ namespace BLL.Services.Implementation.Community
         private readonly ICommunityPostRepository _communityPostRepository;
         private readonly ICommunityGroupRepository _communityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public CommunityPostServices(
             ILogger<CommunityPostServices> logger,
             IMapper mapper,
             ICommunityPostRepository communityPostRepository,
             ICommunityGroupRepository communityGroupRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _mapper = mapper;
             _communityPostRepository = communityPostRepository;
             _communityGroupRepository = communityGroupRepository;
             _unitOfWork = unitOfWork;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetAllAsync()
@@ -137,12 +141,17 @@ namespace BLL.Services.Implementation.Community
         {
             try
             {
-                if (string.IsNullOrEmpty(model.Content) || string.IsNullOrEmpty(model.UserId))
+                var userId = _httpContextAccessor
+                    ?.HttpContext
+                    ?.User
+                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+                if (string.IsNullOrWhiteSpace(model.Content) || string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("Invalid post data: Content or UserId is empty");
                     return (false, null);
                 }
-
 
                 var group = await _communityGroupRepository.GetByIdAsync(model.CommunityGroupId);
                 if (group == null)
@@ -152,22 +161,24 @@ namespace BLL.Services.Implementation.Community
                 }
 
                 var post = _mapper.Map<CommunityPost>(model);
+                post.UserId = userId;
+
                 var createdPost = await _communityPostRepository.AddAsync(post);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (createdPost != null)
+                if (createdPost == null)
                 {
-
-                    var postWithDetails = await _communityPostRepository.GetByIdWithDetailsAsync(createdPost.Id);
-                    var postDTO = _mapper.Map<CommunityPostDTO>(postWithDetails);
-
-                    _logger.LogInformation("Post created successfully with ID: {PostId} by user {UserId} in group {GroupId}",
-                        createdPost.Id, model.UserId, model.CommunityGroupId);
-                    return (true, postDTO);
+                    _logger.LogWarning("Failed to create post in group {GroupId}", model.CommunityGroupId);
+                    return (false, null);
                 }
 
-                _logger.LogWarning("Failed to create post in group {GroupId}", model.CommunityGroupId);
-                return (false, null);
+                var postWithDetails = await _communityPostRepository.GetByIdWithDetailsAsync(createdPost.Id);
+                var postDTO = _mapper.Map<CommunityPostDTO>(postWithDetails);
+
+                _logger.LogInformation("Post created successfully with ID: {PostId} by user {UserId} in group {GroupId}",
+                    createdPost.Id, userId, model.CommunityGroupId);
+
+                return (true, postDTO);
             }
             catch (Exception ex)
             {
@@ -176,10 +187,29 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
+
         public async Task<bool> UpdateAsync(EditCommunityPost model)
         {
             try
             {
+                var userId = _httpContextAccessor
+                    ?.HttpContext
+                    ?.User
+                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to update post {PostId}", model.Id);
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Content))
+                {
+                    _logger.LogWarning("Invalid content for post {PostId}", model.Id);
+                    return false;
+                }
+
                 var existingPost = await _communityPostRepository.GetByIdAsync(model.Id);
 
                 if (existingPost == null || existingPost.IsDeleted)
@@ -188,9 +218,9 @@ namespace BLL.Services.Implementation.Community
                     return false;
                 }
 
-                if (existingPost.UserId != model.UserId)
+                if (existingPost.UserId != userId)
                 {
-                    _logger.LogWarning("User {UserId} is not authorized to edit post {PostId}", model.UserId, model.Id);
+                    _logger.LogWarning("User {UserId} is not authorized to edit post {PostId}", userId, model.Id);
                     return false;
                 }
 
@@ -203,7 +233,7 @@ namespace BLL.Services.Implementation.Community
 
                 if (result)
                 {
-                    _logger.LogInformation("Post {PostId} updated successfully by user {UserId}", model.Id, model.UserId);
+                    _logger.LogInformation("Post {PostId} updated successfully by user {UserId}", model.Id, userId);
                 }
 
                 return result;
@@ -214,6 +244,7 @@ namespace BLL.Services.Implementation.Community
                 return false;
             }
         }
+
 
         public async Task<bool> DeleteAsync(int id)
         {

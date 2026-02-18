@@ -1,8 +1,6 @@
 ﻿using DAL.Database;
 using DAL.Entities.Community;
-using DAL.Repository.Abstraction;
 using DAL.Repository.Abstraction.Community;
-using DAL.Repository.Abstraction.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repository.Implementation.Community
@@ -38,7 +36,7 @@ namespace DAL.Repository.Implementation.Community
         public async Task<List<CommunityPost>> GetByGroupIdWithDetailsAsync(int groupId)
         {
             return await IncludePostDetails()
-                .Where(p => p.CommunityGroupId == groupId)
+                .Where(p => p.CommunityGroupId.Equals(groupId))
                 .OrderByDescending(p => p.PostedOn)
                 .ToListAsync();
         }
@@ -46,7 +44,7 @@ namespace DAL.Repository.Implementation.Community
         public async Task<CommunityPost?> GetByIdWithDetailsAsync(int id)
         {
             return await IncludePostDetails()
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id.Equals(id));
         }
 
         public async Task<List<CommunityPost>> GetByUserIdWithDetailsAsync(string userId)

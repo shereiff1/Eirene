@@ -5,6 +5,7 @@ using DAL.Entities.Community;
 using DAL.Repository.Abstraction.Community;
 using DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
 
 namespace BLL.Services.Implementation.Community
 {
@@ -15,19 +16,22 @@ namespace BLL.Services.Implementation.Community
         private readonly ICommunityCommentRepository _communityCommentRepository;
         private readonly ICommunityPostRepository _communityPostRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public CommunityCommentServices(
             ILogger<CommunityCommentServices> logger,
             IMapper mapper,
             ICommunityCommentRepository communityCommentRepository,
             ICommunityPostRepository communityPostRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _mapper = mapper;
             _communityCommentRepository = communityCommentRepository;
             _communityPostRepository = communityPostRepository;
             _unitOfWork = unitOfWork;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(int postId)
@@ -103,15 +107,27 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
+
         public async Task<(bool IsSuccess, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model)
         {
             try
             {
+                var userId = _httpContextAccessor
+                    ?.HttpContext
+                    ?.User
+                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(model.Content))
+                {
+                    _logger.LogWarning("Invalid comment data: Content or UserId is empty");
+                    return (false, null);
+                }
+
                 var post = await _communityPostRepository.GetByIdAsync(model.PostId);
                 if (post == null || post.IsDeleted)
                 {
-                    _logger.LogWarning("Cannot create comment: Post with ID {PostId} not found or deleted",
-                        model.PostId);
+                    _logger.LogWarning("Cannot create comment: Post with ID {PostId} not found or deleted", model.PostId);
                     return (false, null);
                 }
 
@@ -135,36 +151,41 @@ namespace BLL.Services.Implementation.Community
                 }
 
                 var comment = _mapper.Map<CommunityComment>(model);
+                comment.UserId = userId; 
+
                 var createdComment = await _communityCommentRepository.AddAsync(comment);
                 await _unitOfWork.SaveChangesAsync();
 
-                if (createdComment != null)
+                if (createdComment == null)
                 {
-                    post.CommentsCount++;
-                    await _communityPostRepository.UpdateAsync(post);
+                    _logger.LogWarning("Failed to create comment for post {PostId}", model.PostId);
+                    return (false, null);
+                }
+                 
+                post.CommentsCount++;
+                await _communityPostRepository.UpdateAsync(post);
 
-                    if (model.ParentCommentId.HasValue)
+                if (model.ParentCommentId.HasValue)
+                {
+                    var parentComment = await _communityCommentRepository.GetByIdAsync(model.ParentCommentId.Value);
+                    if (parentComment != null)
                     {
-                        var parentComment = await _communityCommentRepository.GetByIdAsync(model.ParentCommentId.Value);
-                        if (parentComment != null)
-                        {
-                            parentComment.RepliesCount++;
-                            await _communityCommentRepository.UpdateAsync(parentComment);
-                        }
+                        parentComment.RepliesCount++;
+                        await _communityCommentRepository.UpdateAsync(parentComment);
                     }
-                    await _unitOfWork.SaveChangesAsync();
-
-                    var commentWithDetails =
-                        await _communityCommentRepository.GetByIdWithDetailsAsync(createdComment.Id);
-                    var commentDTO = _mapper.Map<CommunityCommentDTO>(commentWithDetails);
-
-                    _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}",
-                        createdComment.Id, model.UserId);
-                    return (true, commentDTO);
                 }
 
-                _logger.LogWarning("Failed to create comment for post {PostId}", model.PostId);
-                return (false, null);
+                await _unitOfWork.SaveChangesAsync();
+
+                var commentWithDetails =
+                    await _communityCommentRepository.GetByIdWithDetailsAsync(createdComment.Id);
+
+                var commentDTO = _mapper.Map<CommunityCommentDTO>(commentWithDetails);
+
+                _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}",
+                    createdComment.Id, userId);
+
+                return (true, commentDTO);
             }
             catch (Exception ex)
             {
@@ -177,6 +198,24 @@ namespace BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = _httpContextAccessor
+                    ?.HttpContext
+                    ?.User
+                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                    ?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to update comment {CommentId}", model.Id);
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(model.Content))
+                {
+                    _logger.LogWarning("Invalid content for comment {CommentId}", model.Id);
+                    return false;
+                }
+
                 var existingComment = await _communityCommentRepository.GetByIdAsync(model.Id);
 
                 if (existingComment == null || existingComment.IsDeleted)
@@ -185,10 +224,10 @@ namespace BLL.Services.Implementation.Community
                     return false;
                 }
 
-                if (existingComment.UserId != model.UserId)
+                // Authorization check
+                if (existingComment.UserId != userId)
                 {
-                    _logger.LogWarning("User {UserId} is not authorized to edit comment {CommentId}", model.UserId,
-                        model.Id);
+                    _logger.LogWarning("User {UserId} is not authorized to edit comment {CommentId}", userId, model.Id);
                     return false;
                 }
 
@@ -201,8 +240,7 @@ namespace BLL.Services.Implementation.Community
 
                 if (result)
                 {
-                    _logger.LogInformation("Comment {CommentId} updated successfully by user {UserId}", model.Id,
-                        model.UserId);
+                    _logger.LogInformation("Comment {CommentId} updated successfully by user {UserId}", model.Id, userId);
                 }
 
                 return result;
@@ -213,6 +251,7 @@ namespace BLL.Services.Implementation.Community
                 return false;
             }
         }
+
 
         public async Task<bool> DeleteAsync(int id)
         {

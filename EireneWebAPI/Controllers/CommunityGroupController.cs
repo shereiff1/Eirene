@@ -38,6 +38,7 @@ namespace Eirene.Controllers
                 return NotFound();
             return Ok(result.Group);
         }
+
         [HttpPost]
         [Authorize(Roles = Roles.Admin)]
         public async Task<IActionResult> Create([FromBody] AddCommunityGroup group)

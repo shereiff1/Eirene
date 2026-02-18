@@ -10,4 +10,5 @@ public static class Roles
     public const string AdminOrModerator = "Admin,Moderator";
     public const string AllUsers = "Patient,Doctor,Moderator,Admin";
     public const string DoctorOrAdmin = "Doctor,Admin";
+    public const string AllExceptDoctor = "Patient,Moderator,Admin";
 }

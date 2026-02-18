@@ -6,8 +6,8 @@ namespace DAL.Entities.Community;
 
 public class CommunityPost
 {
-    [Key] public int Id { get; set; }
-    [Required] public int CommunityGroupId { get; set; }
+    [Key] public Guid Id { get; set; }
+    [Required] public Guid CommunityGroupId { get; set; }
     [Required] public string UserId { get; set; } = string.Empty;
     [Required][MaxLength(5000)] public string Content { get; set; } = string.Empty;
     public DateTime PostedOn { get; set; } = DateTime.UtcNow;

@@ -5,11 +5,11 @@ namespace DAL.Entities.Treatment;
 
 public class PatientTask
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string Description { get; set; } = string.Empty;
 
-    public int TreatmentPlanId { get; set; }
+    public Guid TreatmentPlanId { get; set; }
     public TreatmentPlan TreatmentPlan { get; set; } = null!;
 
 

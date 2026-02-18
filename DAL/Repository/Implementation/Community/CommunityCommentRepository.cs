@@ -15,14 +15,14 @@ namespace DAL.Repository.Implementation.Community
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .FirstOrDefaultAsync(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id.Equals(id));
         }
 
         public async Task<IEnumerable<CommunityComment>> GetByPostIdWithDetailsAsync(int postId)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .Where(c => c.PostId == postId)
+                .Where(c => c.PostId.Equals(postId))
                 .OrderByDescending(c => c.PostedOn)
                 .ToListAsync();
         }
@@ -31,7 +31,7 @@ namespace DAL.Repository.Implementation.Community
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .Where(c => c.ParentCommentId == commentId)
+                .Where(c => c.ParentCommentId.Equals(commentId))
                 .OrderBy(c => c.PostedOn)
                 .ToListAsync();
         }

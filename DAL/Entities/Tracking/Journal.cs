@@ -4,7 +4,7 @@ namespace DAL.Entities.Tracking;
 
 public class Journal
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string PatientId { get; set; } = string.Empty;
     public ApplicationUser Patient { get; set; } = null!;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

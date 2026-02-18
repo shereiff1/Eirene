@@ -29,7 +29,7 @@ namespace DAL.Repository.Implementation.Community
                 .Include(g => g.CreatedBy)
                 .Include(g => g.Posts)
                 .Include(g => g.Members)
-                .FirstOrDefaultAsync(g => g.Id == id);
+                .FirstOrDefaultAsync(g => g.Id.Equals(id));
         }
 
         public async Task<CommunityGroup?> GetByNameAsync(string name)

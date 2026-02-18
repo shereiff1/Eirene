@@ -6,7 +6,6 @@ using DAL.Repository.Abstraction.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text;
 using DAL.Repository.Abstraction;

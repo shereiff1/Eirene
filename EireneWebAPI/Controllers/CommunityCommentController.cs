@@ -1,11 +1,14 @@
-﻿using BLL.Models.Community.Comment;
+﻿using BLL.Enumerators;
+using BLL.Models.Community.Comment;
 using BLL.Services.Abstraction.Community;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eirene.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CommunityCommentController : ControllerBase
     {
         private readonly ILogger<CommunityCommentController> _logger;
@@ -16,6 +19,7 @@ namespace Eirene.Controllers
             _communityCommentServices = communityCommentServices;
         }
         [HttpGet("post/{postId}")]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> GetByPostId(int postId)
         {
             var result = await _communityCommentServices.GetByPostIdAsync(postId);
@@ -25,6 +29,7 @@ namespace Eirene.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _communityCommentServices.GetByIdAsync(id);
@@ -33,7 +38,8 @@ namespace Eirene.Controllers
             return Ok(result.Comment);
         }
 
-        [HttpGet("{commentId}/replies")]
+        [HttpGet("replies/{commentId}")]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> GetReplies(int commentId)
         {
             var result = await _communityCommentServices.GetRepliesByCommentIdAsync(commentId);
@@ -43,6 +49,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> Create([FromBody] AddCommunityComment comment)
         {
             var result = await _communityCommentServices.CreateAsync(comment);
@@ -56,6 +63,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> Update([FromBody] EditCommunityComment comment)
         {
             var updated = await _communityCommentServices.UpdateAsync(comment);
@@ -65,6 +73,7 @@ namespace Eirene.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _communityCommentServices.DeleteAsync(id);
