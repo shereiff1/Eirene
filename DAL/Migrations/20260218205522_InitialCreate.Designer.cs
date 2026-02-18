@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(EireneDBContext))]
-    [Migration("20260217154719_DoctorProfileUpdate")]
-    partial class DoctorProfileUpdate
+    [Migration("20260218205522_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,8 +27,8 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("ApplicationUserCommunityGroup", b =>
                 {
-                    b.Property<int>("GroupsId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("GroupsId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MembersId")
                         .HasColumnType("nvarchar(450)");
@@ -89,11 +89,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Community.CommunityComment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -109,11 +107,11 @@ namespace DAL.Migrations
                     b.Property<int>("LikesCount")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ParentCommentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ParentCommentId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("PostedOn")
                         .HasColumnType("datetime2");
@@ -141,11 +139,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Community.CommunityGroup", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -173,17 +169,15 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Community.CommunityPost", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("CommentsCount")
                         .HasColumnType("int");
 
-                    b.Property<int>("CommunityGroupId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("CommunityGroupId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -217,11 +211,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Content.Blog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BlogContent")
                         .IsRequired()
@@ -360,7 +352,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.DoctorProfile", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Biography")
@@ -394,20 +386,13 @@ namespace DAL.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("YearsOfExperience")
                         .HasColumnType("int");
 
                     b.Property<bool>("isActive")
                         .HasColumnType("bit");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasKey("UserId");
 
                     b.ToTable("DoctorProfiles");
                 });
@@ -441,6 +426,9 @@ namespace DAL.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DoctorProfileId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("EmergencyContact")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -454,6 +442,8 @@ namespace DAL.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DoctorProfileId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -505,11 +495,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Tracking.Journal", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -539,11 +527,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Tracking.MoodTracker", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -572,11 +558,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Treatment.Diagnosis", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -604,11 +588,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Treatment.PatientTask", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -624,8 +606,8 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("TreatmentPlanId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("TreatmentPlanId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -638,11 +620,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Treatment.Question", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("QuestionContent")
                         .IsRequired()
@@ -655,11 +635,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Treatment.QuestionAnswer", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Answer")
                         .IsRequired()
@@ -669,8 +647,8 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -683,11 +661,9 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Treatment.TreatmentPlan", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PatientProfileId")
                         .HasColumnType("nvarchar(450)");
@@ -955,11 +931,18 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.PatientProfile", b =>
                 {
+                    b.HasOne("DAL.Entities.Core.DoctorProfile", "Doctor")
+                        .WithMany("Patients")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithOne("PatientProfile")
                         .HasForeignKey("DAL.Entities.Core.PatientProfile", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Doctor");
 
                     b.Navigation("User");
                 });
@@ -1150,6 +1133,11 @@ namespace DAL.Migrations
                     b.Navigation("PatientProfile");
 
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Core.DoctorProfile", b =>
+                {
+                    b.Navigation("Patients");
                 });
 
             modelBuilder.Entity("DAL.Entities.Core.PatientProfile", b =>

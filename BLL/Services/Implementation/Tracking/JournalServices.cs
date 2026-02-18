@@ -66,7 +66,7 @@ namespace BLL.Services.Implementation.Tracking
                 return (false, null);
             }
         }
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace BLL.Services.Implementation.Tracking
             }
         }
 
-        public async Task<(bool IsSuccess, JournalDTO? journal)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, JournalDTO? journal)> GetByIdAsync(Guid id)
         {
             try
             {

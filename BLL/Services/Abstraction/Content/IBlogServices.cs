@@ -8,12 +8,12 @@ namespace BLL.Services.Abstraction.Content
     {
         Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetAllAsync();
 
-        Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(int id);
+        Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(Guid id);
 
         Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model);
 
         Task<bool> UpdateAsync(EditBlog model);
 
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

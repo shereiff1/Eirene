@@ -40,7 +40,7 @@ namespace BLL.Services.Implementation.Content
             }
         }
 
-        public async Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(Guid id)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace BLL.Services.Implementation.Content
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {

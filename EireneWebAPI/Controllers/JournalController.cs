@@ -64,7 +64,7 @@ namespace Eirene.Controllers
         }
         [HttpGet("{id}")]
         [Authorize(Roles = Roles.Patient)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _journalService.GetByIdAsync(id);
 
@@ -76,7 +76,7 @@ namespace Eirene.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = Roles.Patient)]
-        public async Task<IActionResult> DeleteJournal(int id)
+        public async Task<IActionResult> DeleteJournal(Guid id)
         {
             var isSuccess = await _journalService.DeleteAsync(id);
             if (!isSuccess)

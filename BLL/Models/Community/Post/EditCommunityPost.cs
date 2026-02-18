@@ -2,6 +2,6 @@ namespace BLL.Models.Community.Post;
 
 public class EditCommunityPost
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Content { get; set; } = string.Empty;
 }

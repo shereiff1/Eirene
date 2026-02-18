@@ -31,4 +31,3 @@ public class CommunityComment
     public ICollection<CommunityComment> Replies { get; set; } = new List<CommunityComment>();
 
 }
-

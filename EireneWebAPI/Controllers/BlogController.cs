@@ -33,7 +33,7 @@ public class BlogController : ControllerBase
 
     [HttpGet("{id}")]
     [Authorize(Roles = Roles.AllUsers)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _blogServices.GetByIdAsync(id);
         if (!result.IsSuccess || result.Post == null)
@@ -76,7 +76,7 @@ public class BlogController : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Roles = Roles.Doctor)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _blogServices.DeleteAsync(id);
 

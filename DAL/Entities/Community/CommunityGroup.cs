@@ -22,4 +22,3 @@ public class CommunityGroup
     public ICollection<CommunityPost> Posts { get; set; } = new List<CommunityPost>();
 
 }
-

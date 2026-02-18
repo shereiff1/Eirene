@@ -151,7 +151,7 @@ namespace BLL.Services.Implementation.Community
                 }
 
                 var comment = _mapper.Map<CommunityComment>(model);
-                comment.UserId = userId; 
+                comment.UserId = userId;
 
                 var createdComment = await _communityCommentRepository.AddAsync(comment);
                 await _unitOfWork.SaveChangesAsync();
@@ -161,7 +161,7 @@ namespace BLL.Services.Implementation.Community
                     _logger.LogWarning("Failed to create comment for post {PostId}", model.PostId);
                     return (false, null);
                 }
-                 
+
                 post.CommentsCount++;
                 await _communityPostRepository.UpdateAsync(post);
 
