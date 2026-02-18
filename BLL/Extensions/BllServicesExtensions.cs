@@ -1,12 +1,14 @@
 using BLL.Services.Abstraction.Communication;
 using BLL.Services.Abstraction.Community;
 using BLL.Services.Abstraction.Content;
+using BLL.Services.Abstraction.Core;
 using BLL.Services.Abstraction.Identity;
 using BLL.Services.Abstraction.Tracking;
 using BLL.Services.Abstraction.Treatment;
 using BLL.Services.Implementation.Communication;
 using BLL.Services.Implementation.Community;
 using BLL.Services.Implementation.Content;
+using BLL.Services.Implementation.Core;
 using BLL.Services.Implementation.identity;
 using BLL.Services.Implementation.Identity;
 using BLL.Services.Implementation.Tracking;
@@ -32,6 +34,8 @@ public static class BllServicesExtensions
         services.AddScoped<ITreatmentPlanServices, TreatmentPlanServices>();
         services.AddScoped<IPatientTaskServices, PatientTaskServices>();
         services.AddScoped<IChatServices, ChatServices>();
+        services.AddScoped<IDoctorServices, DoctorServices>();
+        services.AddScoped<IPatientServices, PatientServices>();
         return services;
     }
 }

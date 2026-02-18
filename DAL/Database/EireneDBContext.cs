@@ -52,6 +52,12 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey<PatientProfile>(p => p.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Entity<PatientProfile>()
+            .HasOne(p => p.Doctor)
+            .WithMany(d => d.Patients)
+            .HasForeignKey(p => p.DoctorProfileId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Entity<ApplicationUser>()
             .HasOne(u => u.ModeratorProfile)
             .WithOne(p => p.User)

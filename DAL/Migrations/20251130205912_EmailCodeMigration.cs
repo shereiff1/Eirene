@@ -10,9 +10,9 @@ namespace DAL.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            //migrationBuilder.DropColumn(
-            //    name: "IsActive",
-            //    table: "AspNetUsers");
+            migrationBuilder.DropColumn(
+                name: "IsActive",
+                table: "AspNetUsers");
         }
 
         /// <inheritdoc />
