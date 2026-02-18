@@ -30,7 +30,7 @@ namespace Eirene.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _questionServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.question == null)
@@ -64,7 +64,7 @@ namespace Eirene.Controllers
             return Ok(result.editedQuestion);
         }
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _questionServices.DeleteAsync(id);
             if (!result)

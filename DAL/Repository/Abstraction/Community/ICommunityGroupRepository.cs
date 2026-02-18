@@ -10,7 +10,7 @@ namespace DAL.Repository.Abstraction.Community
     public interface ICommunityGroupRepository : IGenericRepository<CommunityGroup>
     {
         Task<List<CommunityGroup>> GetAllWithDetailsAsync();
-        Task<CommunityGroup?> GetByIdWithDetailsAsync(int id);
+        Task<CommunityGroup?> GetByIdWithDetailsAsync(Guid id);
         Task<CommunityGroup?> GetByNameAsync(string name);
         Task<List<CommunityGroup>> GetByUserIdAsync(string userId);
     }

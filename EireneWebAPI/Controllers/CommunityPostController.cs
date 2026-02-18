@@ -29,7 +29,7 @@ public class CommunityPostController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _communityPostServices.GetByIdAsync(id);
         if (!result.IsSuccess || result.Post == null)
@@ -38,7 +38,7 @@ public class CommunityPostController : ControllerBase
     }
 
     [HttpGet("group/{groupId}")]
-    public async Task<IActionResult> GetByGroupId(int groupId)
+    public async Task<IActionResult> GetByGroupId(Guid groupId)
     {
         var result = await _communityPostServices.GetByGroupIdAsync(groupId);
         if (!result.IsSuccess)
@@ -81,7 +81,7 @@ public class CommunityPostController : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Roles = Roles.Patient)]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _communityPostServices.DeleteAsync(id);
         if (!deleted)

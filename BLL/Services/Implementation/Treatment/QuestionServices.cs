@@ -44,7 +44,7 @@ namespace BLL.Services.Implementation.Treatment
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {
@@ -84,7 +84,7 @@ namespace BLL.Services.Implementation.Treatment
             }
         }
 
-        public async Task<(bool IsSuccess, QuestionDTO? question)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, QuestionDTO? question)> GetByIdAsync(Guid id)
         {
             try
             {

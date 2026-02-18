@@ -31,7 +31,7 @@ namespace Eirene.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = Roles.AllUsers)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _communityGroupServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.Group == null)
@@ -66,7 +66,7 @@ namespace Eirene.Controllers
 
         [HttpGet("details/{id}")]
         [Authorize(Roles = Roles.AllUsers)]
-        public async Task<IActionResult> GetByIdWithDetails(int id)
+        public async Task<IActionResult> GetByIdWithDetails(Guid id)
         {
             var result = await _communityGroupServices.GetByIdWithFullDetailsAsync(id);
             if (!result.IsSuccess || result.Group == null)
@@ -77,7 +77,7 @@ namespace Eirene.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = Roles.Admin)]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var deleted = await _communityGroupServices.DeleteAsync(id);
             if (!deleted)

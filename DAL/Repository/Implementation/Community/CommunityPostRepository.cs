@@ -33,7 +33,7 @@ namespace DAL.Repository.Implementation.Community
                 .ToListAsync();
         }
 
-        public async Task<List<CommunityPost>> GetByGroupIdWithDetailsAsync(int groupId)
+        public async Task<List<CommunityPost>> GetByGroupIdWithDetailsAsync(Guid groupId)
         {
             return await IncludePostDetails()
                 .Where(p => p.CommunityGroupId.Equals(groupId))
@@ -41,7 +41,7 @@ namespace DAL.Repository.Implementation.Community
                 .ToListAsync();
         }
 
-        public async Task<CommunityPost?> GetByIdWithDetailsAsync(int id)
+        public async Task<CommunityPost?> GetByIdWithDetailsAsync(Guid id)
         {
             return await IncludePostDetails()
                 .FirstOrDefaultAsync(p => p.Id.Equals(id));

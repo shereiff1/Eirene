@@ -11,14 +11,14 @@ namespace DAL.Repository.Implementation.Community
         public CommunityCommentRepository(EireneDBContext context) : base(context)
         {
         }
-        public async Task<CommunityComment?> GetByIdWithDetailsAsync(int id)
+        public async Task<CommunityComment?> GetByIdWithDetailsAsync(Guid id)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
                 .FirstOrDefaultAsync(c => c.Id.Equals(id));
         }
 
-        public async Task<IEnumerable<CommunityComment>> GetByPostIdWithDetailsAsync(int postId)
+        public async Task<IEnumerable<CommunityComment>> GetByPostIdWithDetailsAsync(Guid postId)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
@@ -27,7 +27,7 @@ namespace DAL.Repository.Implementation.Community
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<CommunityComment>> GetRepliesByCommentIdAsync(int commentId)
+        public async Task<IEnumerable<CommunityComment>> GetRepliesByCommentIdAsync(Guid commentId)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)

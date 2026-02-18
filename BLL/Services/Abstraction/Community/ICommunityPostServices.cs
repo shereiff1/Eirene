@@ -10,11 +10,11 @@ namespace BLL.Services.Abstraction.Community
     public interface ICommunityPostServices
     {
         Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetAllAsync();
-        Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(int groupId);
-        Task<(bool IsSuccess, CommunityPostDTO? Post)> GetByIdAsync(int id);
+        Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(Guid groupId);
+        Task<(bool IsSuccess, CommunityPostDTO? Post)> GetByIdAsync(Guid id);
         Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByUserIdAsync(string userId);
         Task<(bool IsSuccess, CommunityPostDTO? CreatedPost)> CreateAsync(AddCommunityPost model);
         Task<bool> UpdateAsync(EditCommunityPost model);
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

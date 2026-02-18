@@ -20,7 +20,7 @@ namespace Eirene.Controllers
         }
         [HttpGet("post/{postId}")]
         [Authorize(Roles = Roles.AllExceptDoctor)]
-        public async Task<IActionResult> GetByPostId(int postId)
+        public async Task<IActionResult> GetByPostId(Guid postId)
         {
             var result = await _communityCommentServices.GetByPostIdAsync(postId);
             if (!result.IsSuccess)
@@ -30,7 +30,7 @@ namespace Eirene.Controllers
 
         [HttpGet("{id}")]
         [Authorize(Roles = Roles.AllExceptDoctor)]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _communityCommentServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.Comment == null)
@@ -40,7 +40,7 @@ namespace Eirene.Controllers
 
         [HttpGet("replies/{commentId}")]
         [Authorize(Roles = Roles.AllExceptDoctor)]
-        public async Task<IActionResult> GetReplies(int commentId)
+        public async Task<IActionResult> GetReplies(Guid commentId)
         {
             var result = await _communityCommentServices.GetRepliesByCommentIdAsync(commentId);
             if (!result.IsSuccess)
@@ -74,7 +74,7 @@ namespace Eirene.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = Roles.AllExceptDoctor)]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var deleted = await _communityCommentServices.DeleteAsync(id);
             if (!deleted)

@@ -47,7 +47,7 @@ namespace BLL.Services.Implementation.Treatment
             }
         }
 
-        public async Task<(bool IsSuccess, QuestionAnswer Answer)> AddAnswerAsync(string userId, int questionId,
+        public async Task<(bool IsSuccess, QuestionAnswer Answer)> AddAnswerAsync(string userId, Guid questionId,
             string answer)
         {
             try
@@ -76,7 +76,7 @@ namespace BLL.Services.Implementation.Treatment
         }
 
         public async Task<(bool IsSuccess, IEnumerable<QuestionAnswer> Answers)> AddMultipleAnswersAsync(string userId,
-            List<(int QuestionId, string Answer)> answers)
+            List<(Guid QuestionId, string Answer)> answers)
         {
             try
             {

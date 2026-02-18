@@ -59,7 +59,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(int groupId)
+        public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(Guid groupId)
         {
             try
             {
@@ -84,7 +84,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, CommunityPostDTO? Post)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, CommunityPostDTO? Post)> GetByIdAsync(Guid id)
         {
             try
             {
@@ -246,7 +246,7 @@ namespace BLL.Services.Implementation.Community
         }
 
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {

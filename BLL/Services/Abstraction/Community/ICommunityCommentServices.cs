@@ -9,11 +9,11 @@ namespace BLL.Services.Abstraction.Community
 {
     public interface ICommunityCommentServices
     {
-        Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(int postId);
-        Task<(bool IsSuccess, CommunityCommentDTO? Comment)> GetByIdAsync(int id);
-        Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(int commentId);
+        Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(Guid postId);
+        Task<(bool IsSuccess, CommunityCommentDTO? Comment)> GetByIdAsync(Guid id);
+        Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(Guid commentId);
         Task<(bool IsSuccess, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model);
         Task<bool> UpdateAsync(EditCommunityComment model);
-        Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

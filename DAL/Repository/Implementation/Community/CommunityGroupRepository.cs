@@ -23,7 +23,7 @@ namespace DAL.Repository.Implementation.Community
                 .ToListAsync();
         }
 
-        public async Task<CommunityGroup?> GetByIdWithDetailsAsync(int id)
+        public async Task<CommunityGroup?> GetByIdWithDetailsAsync(Guid id)
         {
             return await _context.CommunityGroups
                 .Include(g => g.CreatedBy)

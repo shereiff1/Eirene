@@ -51,7 +51,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, CommunityGroupDTO? Group)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, CommunityGroupDTO? Group)> GetByIdAsync(Guid id)
         {
             try
             {
@@ -184,7 +184,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, CommunityGroupWithDetails? Group)> GetByIdWithFullDetailsAsync(int id)
+        public async Task<(bool IsSuccess, CommunityGroupWithDetails? Group)> GetByIdWithFullDetailsAsync(Guid id)
         {
             try
             {
@@ -206,7 +206,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {

@@ -34,7 +34,7 @@ namespace BLL.Services.Implementation.Community
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(int postId)
+        public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(Guid postId)
         {
             try
             {
@@ -59,7 +59,7 @@ namespace BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, CommunityCommentDTO? Comment)> GetByIdAsync(int id)
+        public async Task<(bool IsSuccess, CommunityCommentDTO? Comment)> GetByIdAsync(Guid id)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace BLL.Services.Implementation.Community
         }
 
         public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(
-            int commentId)
+            Guid commentId)
         {
             try
             {
@@ -253,7 +253,7 @@ namespace BLL.Services.Implementation.Community
         }
 
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             try
             {
