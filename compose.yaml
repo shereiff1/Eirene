@@ -1,0 +1,25 @@
+﻿services:
+  bll:
+    image: bll
+    build:
+      context: .
+      dockerfile: BLL/Dockerfile
+
+  dal:
+    image: dal
+    build:
+      context: .
+      dockerfile: DAL/Dockerfile
+
+  eirenemvc:
+    image: eirenemvc
+    build:
+      context: .
+      dockerfile: EireneMVC/Dockerfile
+
+  eirenewebapi:
+    image: eirenewebapi
+    build:
+      context: .
+      dockerfile: EireneWebAPI/Dockerfile
+
