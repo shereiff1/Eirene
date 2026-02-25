@@ -15,11 +15,13 @@ using BLL.Services.Implementation.Tracking;
 using BLL.Services.Implementation.Treatment;
 using Microsoft.Extensions.DependencyInjection;
 
+using Microsoft.Extensions.Configuration;
+
 namespace BLL.Extensions;
 
 public static class BllServicesExtensions
 {
-    public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services)
+    public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IBlogServices, BlogServices>();
@@ -36,6 +38,17 @@ public static class BllServicesExtensions
         services.AddScoped<IChatServices, ChatServices>();
         services.AddScoped<IDoctorServices, DoctorServices>();
         services.AddScoped<IPatientServices, PatientServices>();
+
+        var storageProvider = configuration["Storage:Provider"];
+        if (storageProvider == "Azure")
+        {
+            services.AddScoped<IPictureService, AzureBlobPictureService>();
+        }
+        else
+        {
+            services.AddScoped<IPictureService, LocalPictureService>();
+        }
+
         return services;
     }
 }

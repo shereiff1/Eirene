@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
               .WithOrigins("http://localhost:5056");
     });
 });
-builder.Services.AddDataAccessServices().AddBusinessLogicServices();
+builder.Services.AddDataAccessServices().AddBusinessLogicServices(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -99,6 +99,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

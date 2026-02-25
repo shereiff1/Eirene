@@ -30,6 +30,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<PatientTask> PatientTasks { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<SupervisionRequest> SupervisionRequests { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -43,13 +44,13 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>()
             .HasOne(u => u.DoctorProfile)
             .WithOne(p => p.User)
-            .HasForeignKey<DoctorProfile>(p => p.UserId)
+            .HasForeignKey<DoctorProfile>(p => p.Id)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<ApplicationUser>()
             .HasOne(u => u.PatientProfile)
             .WithOne(p => p.User)
-            .HasForeignKey<PatientProfile>(p => p.UserId)
+            .HasForeignKey<PatientProfile>(p => p.Id)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<PatientProfile>()
@@ -116,6 +117,18 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .HasOne(t => t.User)
             .WithMany()
             .HasForeignKey(t => t.PatientId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<SupervisionRequest>()
+            .HasOne(r => r.Patient)
+            .WithMany(p => p.SupervisionRequests)
+            .HasForeignKey(r => r.PatientProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SupervisionRequest>()
+            .HasOne(r => r.Doctor)
+            .WithMany(d => d.SupervisionRequests)
+            .HasForeignKey(r => r.DoctorProfileId)
             .OnDelete(DeleteBehavior.NoAction);
     }
 }

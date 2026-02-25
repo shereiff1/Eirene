@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using DAL.Enumerators;
+using BLL.Models.Core;
 using BLL.Models.Core.Doctor;
 using BLL.Services.Abstraction.Core;
+using BLL.Services.Abstraction.Identity;
+using DAL.Entities.Core;
 using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Community;
 using DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Logging;
 
@@ -18,14 +20,27 @@ namespace BLL.Services.Implementation.Core
         private readonly ILogger<DoctorServices> _logger;
         private readonly IMapper _mapper;
         private readonly IDoctorProfileRepository _doctorProfileRepository;
+        private readonly IPatientProfileRepository _patientProfileRepository;
+        private readonly ISupervisionRequestRepository _requestRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailSender _emailSender;
         
-        public DoctorServices(ILogger<DoctorServices> logger, IMapper mapper, IDoctorProfileRepository doctorProfileRepository, IUnitOfWork unitOfWork)
+        public DoctorServices(
+            ILogger<DoctorServices> logger,
+            IMapper mapper,
+            IDoctorProfileRepository doctorProfileRepository,
+            IPatientProfileRepository patientProfileRepository,
+            ISupervisionRequestRepository requestRepository,
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender)
         {
             _logger = logger;
             _mapper = mapper;
             _doctorProfileRepository = doctorProfileRepository;
+            _patientProfileRepository = patientProfileRepository;
+            _requestRepository = requestRepository;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
         }
 
         public async Task<(bool IsSuccess, List<DoctorModel>? Doctors)> GetAllAsync()
@@ -77,7 +92,7 @@ namespace BLL.Services.Implementation.Core
             try
             {
                 var existingProfile = (await _doctorProfileRepository.GetAllAsync())
-                    .FirstOrDefault(d => d.UserId == userId);
+                    .FirstOrDefault(d => d.Id == userId);
 
                 if (existingProfile != null)
                 {
@@ -85,12 +100,12 @@ namespace BLL.Services.Implementation.Core
                 }
 
                 var doctorEntity = _mapper.Map<DAL.Entities.Core.DoctorProfile>(model);
-                doctorEntity.UserId = userId;
+                doctorEntity.Id = userId;
                 doctorEntity.JoinedAt = DateTime.UtcNow;
 
                 await _doctorProfileRepository.AddAsync(doctorEntity);
                 await _unitOfWork.SaveChangesAsync();
-                var createdDoctor = await _doctorProfileRepository.GetByIdAsync(doctorEntity.UserId);
+                var createdDoctor = await _doctorProfileRepository.GetByIdAsync(doctorEntity.Id);
                 var doctorDto = _mapper.Map<DoctorModel>(createdDoctor);
 
                 return (true, null, doctorDto);
@@ -107,7 +122,7 @@ namespace BLL.Services.Implementation.Core
             try
             {
                 var existingProfile = (await _doctorProfileRepository.GetAllAsync())
-                    .FirstOrDefault(d => d.UserId == userId);
+                    .FirstOrDefault(d => d.Id == userId);
 
                 if (existingProfile == null)
                 {
@@ -127,6 +142,140 @@ namespace BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "Error updating doctor profile for user {UserId}", userId);
                 return (false, "An error occurred while updating the profile.", null);
+            }
+        }
+        public async Task<(bool IsSuccess, string? Error)> RespondToSupervisionRequestAsync(string requestId, bool accept, string doctorUserId)
+        {
+            try
+            {
+                var request = await _requestRepository.GetByIdAsync(requestId);
+                if (request == null)
+                    return (false, "Supervision request not found.");
+                
+                if (request.DoctorProfileId != doctorUserId)
+                    return (false, "You are not authorized to respond to this request.");
+                
+                if (request.Status != SupervisionRequestStatus.Pending)
+                    return (false, "This request has already been responded to.");
+                
+                request.Status = accept ? SupervisionRequestStatus.Accepted : SupervisionRequestStatus.Declined;
+                request.RespondedAt = DateTime.UtcNow;
+
+                if (accept)
+                {
+                    var patient = await _patientProfileRepository.GetByIdAsync(request.PatientProfileId);
+                    if (patient == null)
+                        return (false, "Patient profile not found.");
+                    
+                    patient.DoctorProfileId = doctorUserId;
+                    await _patientProfileRepository.UpdateAsync(patient);
+                    var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
+                    var doctorFullName = doctor?.User?.FullName ?? string.Empty;
+                    var patientFullName = patient?.User?.FullName ?? string.Empty;
+                    await _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted.");
+                    await _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor.");
+                    var otherRequests = await _requestRepository.FindAsync(
+                        r => r.PatientProfileId == request.PatientProfileId &&
+                             r.Id != requestId &&
+                             r.Status == SupervisionRequestStatus.Pending);
+
+                    foreach (var other in otherRequests)
+                        await _requestRepository.DeleteAsync(other);
+                }
+
+                await _requestRepository.UpdateAsync(request);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error responding to supervision request {RequestId}", requestId);
+                return (false, "An error occurred while responding to the request.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, List<SupervisionRequest>? Requests)> GetSupervisionRequestsAsync(string doctorUserId)
+        {
+            try
+            {
+                var requests = await _requestRepository.FindAsync(
+                    r => r.DoctorProfileId == doctorUserId);
+
+                var models = requests.Select(r => new SupervisionRequest
+                {
+                    Id = r.Id,
+                    PatientProfileId = r.PatientProfileId,
+                    DoctorProfileId = r.DoctorProfileId,
+                    Status = r.Status,
+                    CreatedAt = r.CreatedAt,
+                    RespondedAt = r.RespondedAt
+                }).ToList();
+
+                return (true, models);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching supervision requests for doctor {DoctorProfileId}", doctorUserId);
+                return (false, null);
+            }
+        }
+
+        public async Task<(bool IsSuccess, string? Error)> RemoveSupervisionOnPatient(string patientUserId)
+        {
+            try
+            {
+                var patient = await _patientProfileRepository.GetByIdAsync(patientUserId);
+                if (patient == null)
+                {
+                    _logger.LogError("Patient profile not found for user {UserId}", patientUserId);
+                    return (false, "Patient profile not found.");
+                }
+
+                if (patient.DoctorProfileId == null)
+                {
+                    _logger.LogWarning("Patient {UserId} is not under a doctor's supervision.", patientUserId);
+                    return (true, null);
+                }
+                
+                var doctor = await _doctorProfileRepository.GetByIdAsync(patient.DoctorProfileId);
+                patient.DoctorProfileId = null;
+                await _patientProfileRepository.UpdateAsync(patient);
+                
+                var existingRequest = (await _requestRepository.FindAsync(
+                        r => r.PatientProfileId == patient.Id &&
+                             r.Status == SupervisionRequestStatus.Accepted))
+                    .FirstOrDefault();
+                
+                if (existingRequest != null)
+                {
+                    await _requestRepository.DeleteAsync(existingRequest);
+                }
+                await _unitOfWork.SaveChangesAsync();
+                
+                var patientEmail = patient.User?.Email;
+                var doctorEmail = doctor?.User?.Email;
+                var patientFullName = patient.User?.FullName ?? string.Empty;
+                var doctorFullName = doctor?.User?.FullName ?? string.Empty;
+
+                if (!string.IsNullOrEmpty(patientEmail))
+                {
+                    await _emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
+                        $"You removed the supervision request from Doctor {doctorFullName}.");
+                }
+                
+                if (!string.IsNullOrEmpty(doctorEmail))
+                {
+                    await _emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled",
+                        $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
+                }
+                
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing the supervision request for user {UserId}", patientUserId);
+                return (false, "An error occurred while removing the supervision request.");
             }
         }
     }

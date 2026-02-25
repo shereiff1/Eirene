@@ -4,6 +4,7 @@ using DAL.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(EireneDBContext))]
-    partial class EireneDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260220140108_doctorSupervision")]
+    partial class doctorSupervision
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,7 +352,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.DoctorProfile", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Biography")
@@ -389,7 +392,7 @@ namespace DAL.Migrations
                     b.Property<bool>("isActive")
                         .HasColumnType("bit");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("DoctorProfiles");
                 });
@@ -434,12 +437,16 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfilePhotoUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("PatientProfiles");
                 });
@@ -935,7 +942,7 @@ namespace DAL.Migrations
                 {
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithOne("DoctorProfile")
-                        .HasForeignKey("DAL.Entities.Core.DoctorProfile", "Id")
+                        .HasForeignKey("DAL.Entities.Core.DoctorProfile", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -962,7 +969,7 @@ namespace DAL.Migrations
 
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithOne("PatientProfile")
-                        .HasForeignKey("DAL.Entities.Core.PatientProfile", "Id")
+                        .HasForeignKey("DAL.Entities.Core.PatientProfile", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
