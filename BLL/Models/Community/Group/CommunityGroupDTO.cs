@@ -1,5 +1,4 @@
 ﻿
-
 namespace BLL.Models.Community.Group;
 
 public class CommunityGroupDTO

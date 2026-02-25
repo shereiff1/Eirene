@@ -11,7 +11,7 @@ public class CommunityPost
     [Required] public string UserId { get; set; } = string.Empty;
     [Required][MaxLength(5000)] public string Content { get; set; } = string.Empty;
     public DateTime PostedOn { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedOn { get; set; }
+    public DateTime? UpdatedOn { get; set; } = DateTime.UtcNow;
     public bool IsEdited { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
     public int CommentsCount { get; set; } = 0;
