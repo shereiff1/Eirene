@@ -25,6 +25,6 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
         return await _context.Set<DoctorProfile>()
             .Include(x => x.User)
             .Include(x => x.Patients)
-            .FirstOrDefaultAsync(x => x.UserId == (string)id);
+            .FirstOrDefaultAsync(x => x.Id == (string)id);
     }
 }

@@ -4,6 +4,7 @@ using DAL.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(EireneDBContext))]
-    partial class EireneDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260221014813_ProfilePictureHandling")]
+    partial class ProfilePictureHandling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,7 +352,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.DoctorProfile", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Biography")
@@ -389,7 +392,7 @@ namespace DAL.Migrations
                     b.Property<bool>("isActive")
                         .HasColumnType("bit");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("DoctorProfiles");
                 });
@@ -413,7 +416,7 @@ namespace DAL.Migrations
 
             modelBuilder.Entity("DAL.Entities.Core.PatientProfile", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Address")
@@ -434,10 +437,7 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProfilePhotoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.HasIndex("DoctorProfileId");
 
@@ -537,14 +537,14 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PatientProfileId")
+                    b.Property<string>("PatientProfileUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("PatientProfileId");
+                    b.HasIndex("PatientProfileUserId");
 
                     b.ToTable("Journals");
                 });
@@ -564,7 +564,7 @@ namespace DAL.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PatientProfileId")
+                    b.Property<string>("PatientProfileUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("UserId")
@@ -573,7 +573,7 @@ namespace DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PatientProfileId");
+                    b.HasIndex("PatientProfileUserId");
 
                     b.HasIndex("UserId");
 
@@ -598,14 +598,14 @@ namespace DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PatientProfileId")
+                    b.Property<string>("PatientProfileUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("PatientProfileId");
+                    b.HasIndex("PatientProfileUserId");
 
                     b.ToTable("Diagnosis");
                 });
@@ -689,7 +689,7 @@ namespace DAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("PatientProfileId")
+                    b.Property<string>("PatientProfileUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("UserId")
@@ -698,7 +698,7 @@ namespace DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PatientProfileId");
+                    b.HasIndex("PatientProfileUserId");
 
                     b.HasIndex("UserId");
 
@@ -935,7 +935,7 @@ namespace DAL.Migrations
                 {
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithOne("DoctorProfile")
-                        .HasForeignKey("DAL.Entities.Core.DoctorProfile", "Id")
+                        .HasForeignKey("DAL.Entities.Core.DoctorProfile", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -962,7 +962,7 @@ namespace DAL.Migrations
 
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithOne("PatientProfile")
-                        .HasForeignKey("DAL.Entities.Core.PatientProfile", "Id")
+                        .HasForeignKey("DAL.Entities.Core.PatientProfile", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1011,7 +1011,7 @@ namespace DAL.Migrations
 
                     b.HasOne("DAL.Entities.Core.PatientProfile", null)
                         .WithMany("Journals")
-                        .HasForeignKey("PatientProfileId");
+                        .HasForeignKey("PatientProfileUserId");
 
                     b.Navigation("Patient");
                 });
@@ -1020,7 +1020,7 @@ namespace DAL.Migrations
                 {
                     b.HasOne("DAL.Entities.Core.PatientProfile", null)
                         .WithMany("MoodTrackers")
-                        .HasForeignKey("PatientProfileId");
+                        .HasForeignKey("PatientProfileUserId");
 
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "Patient")
                         .WithMany()
@@ -1041,7 +1041,7 @@ namespace DAL.Migrations
 
                     b.HasOne("DAL.Entities.Core.PatientProfile", null)
                         .WithMany("Diagnoses")
-                        .HasForeignKey("PatientProfileId");
+                        .HasForeignKey("PatientProfileUserId");
 
                     b.Navigation("Patient");
                 });
@@ -1088,7 +1088,7 @@ namespace DAL.Migrations
                 {
                     b.HasOne("DAL.Entities.Core.PatientProfile", null)
                         .WithMany("TreatmentPlans")
-                        .HasForeignKey("PatientProfileId");
+                        .HasForeignKey("PatientProfileUserId");
 
                     b.HasOne("DAL.Entities.Core.ApplicationUser", "User")
                         .WithMany()

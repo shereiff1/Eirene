@@ -15,11 +15,13 @@ public class DoctorController : ControllerBase
 {
     private readonly ILogger<DoctorController> _logger;
     private readonly IDoctorServices _services;
+    private readonly IPictureService _pictureService;
 
-    public DoctorController(IDoctorServices services, ILogger<DoctorController> logger)
+    public DoctorController(IDoctorServices services, IPictureService pictureService, ILogger<DoctorController> logger)
     {
         _logger = logger;
         _services = services;
+        _pictureService = pictureService;
     }
 
     [HttpGet]
@@ -51,7 +53,7 @@ public class DoctorController : ControllerBase
     }
 
     [HttpPut("profile")]
-    [Authorize(Roles = Roles.AllUsers)]
+    [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> UpdateProfile([FromBody] EditDoctorProfile model)
     {
         if (!ModelState.IsValid)
@@ -78,4 +80,73 @@ public class DoctorController : ControllerBase
         
         return Ok(result.Doctor);
     }
+
+    [HttpGet("supervision-requests")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> GetSupervisionRequests()
+    {
+        var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(doctorId))
+            return Unauthorized("User not authenticated.");
+
+        var result = await _services.GetSupervisionRequestsAsync(doctorId);
+        if (!result.IsSuccess)
+            return BadRequest("Could not retrieve supervision requests.");
+
+        return Ok(result.Requests);
+    }
+
+    [HttpPut("supervision-requests/{requestId}")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> RespondToSupervisionRequest(string requestId, [FromBody] bool accept)
+    {
+        var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(doctorId))
+            return Unauthorized("User not authenticated.");
+
+        var result = await _services.RespondToSupervisionRequestAsync(requestId, accept, doctorId);
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+
+        return Ok(new { message = accept ? "Request accepted. Patient is now under your supervision." : "Request declined." });
+    }
+
+    [HttpPost("upload-picture")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> UploadProfilePicture(IFormFile file)
+    {
+        var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(doctorId))
+            return Unauthorized("User not authenticated.");
+
+        var result = await _pictureService.UploadPictureAsync(file);
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+        var editModel = new EditDoctorProfile
+        {
+            ProfilePhotoUrl = result.Url
+        };
+        var finalResult = await _services.UpdateDoctorProfileAsync(editModel, doctorId);
+        if (!finalResult.IsSuccess)
+            return BadRequest(finalResult.Error);
+        return Ok(new { 
+            message = "Profile picture uploaded successfully.",
+            url = result.Url });
+    }
+
+    
+    [HttpDelete("cancel-supervision")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> CancelDoctorSupervision()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized("User not authenticated.");
+        var result =  await _services.RemoveSupervisionOnPatient(userId);
+        if (!result.IsSuccess)
+            return BadRequest(result.Error);
+        return Ok(new { message = "Supervision is cancelled successfully." });
+    }
+        
 }

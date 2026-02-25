@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using DAL.Enumerators;
 
 namespace DAL.Entities.Core
 {
@@ -7,7 +8,7 @@ namespace DAL.Entities.Core
     {
         [Key]
         [ForeignKey(nameof(User))]
-        public string UserId { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
         public ApplicationUser User { get; set; } = null!;
         public string Biography { get; set; } = string.Empty;
         public string Specialization { get; set; } = string.Empty;
@@ -17,6 +18,7 @@ namespace DAL.Entities.Core
         public double Rating { get; set; } = 0.0;
         public int ReviewCount { get; set; } = 0;
         public ICollection<PatientProfile> Patients { get; set; } = new List<PatientProfile>();
+        public ICollection<SupervisionRequest> SupervisionRequests { get; set; } = new List<SupervisionRequest>();
         public string? ProfilePhotoUrl { get; set; }
         public bool isActive { get; set; } = true;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
