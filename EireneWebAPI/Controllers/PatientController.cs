@@ -13,15 +13,23 @@ namespace Eirene.Controllers
     [Authorize]
     public class PatientController : ControllerBase
     {
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IConfiguration _configuration;
         private readonly IPatientServices _patientServices;
         private readonly IPictureService _pictureService;
         private readonly ILogger<PatientController> _logger;
 
-        public PatientController(IPatientServices patientServices, IPictureService pictureService, ILogger<PatientController> logger)
+        public PatientController(IPatientServices patientServices, 
+            IPictureService pictureService, 
+            ILogger<PatientController> logger, 
+            IWebHostEnvironment webHostEnvironment, 
+            IConfiguration configuration)
         {
             _patientServices = patientServices;
             _pictureService = pictureService;
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -114,7 +122,7 @@ namespace Eirene.Controllers
         
         [HttpPost("upload-picture")]
         [Authorize(Roles = Roles.Patient)]
-        public async Task<IActionResult> UploadProfilePicture([FromBody]IFormFile pictureFile)
+        public async Task<IActionResult> UploadProfilePicture(IFormFile pictureFile)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
@@ -150,5 +158,29 @@ namespace Eirene.Controllers
             return Ok(new { message = "Supervision is cancelled successfully." });
         }
         
+        [HttpGet("profile-picture/{userId}")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> getDoctorProfilePicture(string userId)
+        {
+            var result = await _patientServices.GetByIdAsync(userId);
+            if (!result.IsSuccess)
+                return NotFound("Patient not found.");
+
+            var fileName = result.Patient?.ProfilePhotoUrl;
+            if (string.IsNullOrEmpty(fileName))
+                return NotFound("Profile picture not set.");
+            var relativePath = fileName.StartsWith("/") ? fileName.Substring(1) : fileName;
+            
+            var path = Path.Combine(
+                _webHostEnvironment.ContentRootPath,
+                relativePath.Replace("/", Path.DirectorySeparatorChar.ToString())
+            );
+
+            if (!System.IO.File.Exists(path))
+                return NotFound("Profile picture file not found on server.");
+
+            var imageBytes = await System.IO.File.ReadAllBytesAsync(path);
+            return File(imageBytes, "image/jpeg");
+        }
     }
 }
