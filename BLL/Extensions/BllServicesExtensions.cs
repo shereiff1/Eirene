@@ -40,9 +40,9 @@ public static class BllServicesExtensions
         services.AddScoped<IPatientServices, PatientServices>();
 
         var storageProvider = configuration["Storage:Provider"];
-        if (storageProvider == "Azure")
+        if (storageProvider == "CloudinarySettings")
         {
-            services.AddScoped<IPictureService, AzureBlobPictureService>();
+            services.AddScoped<IPictureService, CloudImageStorage>();
         }
         else
         {
