@@ -19,6 +19,7 @@ namespace DAL.Entities.Core
         public int ReviewCount { get; set; } = 0;
         public ICollection<PatientProfile> Patients { get; set; } = new List<PatientProfile>();
         public ICollection<SupervisionRequest> SupervisionRequests { get; set; } = new List<SupervisionRequest>();
+        public ICollection<DoctorRating> DoctorRatings { get; set; } = new List<DoctorRating>();
         public string? ProfilePhotoUrl { get; set; }
         public bool isActive { get; set; } = true;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;

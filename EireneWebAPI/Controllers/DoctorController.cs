@@ -146,6 +146,17 @@ namespace Eirene.Controllers
         }
 
 
+        [HttpGet("ratings/{doctorId}")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> GetDoctorRatings(string doctorId)
+        {
+            var result = await _services.GetDoctorRatingsAsync(doctorId);
+            if (!result.IsSuccess)
+                return BadRequest("Could not retrieve doctor ratings.");
+
+            return Ok(result.Ratings);
+        }
+
         [HttpDelete("cancel-supervision")]
         [Authorize(Roles = Roles.Doctor)]
         public async Task<IActionResult> CancelDoctorSupervision()

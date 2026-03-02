@@ -3,6 +3,7 @@ using BLL.Services.Abstraction.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BLL.Models.Core.Doctor;
 using BLL.Models.Core.Patient;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -156,6 +157,25 @@ namespace Eirene.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
             return Ok(new { message = "Supervision is cancelled successfully." });
+        }
+
+        [HttpPost("rate-supervisor/{doctorId}")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> RateSupervisor(string doctorId, [FromBody] AddDoctorRatingDTO model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var result = await _patientServices.RateSupervisorAsync(userId, doctorId, model);
+
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+
+            return Ok(new { message = "Thanks for rating your assigned doctor." });
         }
         
         [HttpGet("profile-picture/{userId}")]
