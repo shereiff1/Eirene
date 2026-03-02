@@ -7,6 +7,8 @@ using DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using BLL.Models.Core.Patient;
+using BLL.Models.Core.Patient;
+using BLL.Models.Core.Doctor;
 using BLL.Services.Abstraction.Identity;
 
 namespace BLL.Services.Implementation.Core
@@ -16,6 +18,7 @@ namespace BLL.Services.Implementation.Core
         private readonly IPatientProfileRepository _patientRepository;
         private readonly IDoctorProfileRepository _doctorRepository;
         private readonly ISupervisionRequestRepository _requestRepository;
+        private readonly IDoctorRatingRepository _ratingRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<PatientServices> _logger;
         private readonly IMapper _mapper;
@@ -27,12 +30,14 @@ namespace BLL.Services.Implementation.Core
             IPatientProfileRepository patientRepository,
             IDoctorProfileRepository doctorRepository,
             ISupervisionRequestRepository requestRepository,
+            IDoctorRatingRepository ratingRepository,
             IUnitOfWork unitOfWork,
             IEmailSender emailSender)
         {
             _patientRepository = patientRepository;
             _doctorRepository = doctorRepository;
             _requestRepository = requestRepository;
+            _ratingRepository = ratingRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
@@ -249,6 +254,69 @@ namespace BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "Error removing the supervision request for user {UserId}", patientUserId);
                 return (false, "An error occurred while removing the supervision request.");
+            }
+        }
+        public async Task<(bool IsSuccess, string? Error)> RateSupervisorAsync(string patientUserId, string doctorId, AddDoctorRatingDTO model)
+        {
+            try
+            {
+                var patient = await _patientRepository.GetByIdAsync(patientUserId);
+                if (patient == null)
+                    return (false, "Patient profile not found.");
+
+                if (patient.DoctorProfileId != doctorId)
+                    return (false, "You can only rate your assigned supervisor.");
+
+                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                    return (false, "Doctor not found.");
+
+                var existingRatings = await _ratingRepository.FindAsync(r => 
+                    r.PatientProfileId == patientUserId && r.DoctorProfileId == doctorId);
+                var existingRating = existingRatings.FirstOrDefault();
+
+                if (existingRating != null)
+                {
+                    existingRating.Rating = model.Rating;
+                    existingRating.Review = model.Review;
+                    existingRating.UpdatedAt = DateTime.UtcNow;
+                    await _ratingRepository.UpdateAsync(existingRating);
+                }
+                else
+                {
+                    var newRating = new DoctorRating
+                    {
+                        DoctorProfileId = doctorId,
+                        PatientProfileId = patientUserId,
+                        Rating = model.Rating,
+                        Review = model.Review,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _ratingRepository.AddAsync(newRating);
+                }
+                await _unitOfWork.SaveChangesAsync();
+
+                var allRatings = await _ratingRepository.FindAsync(r => r.DoctorProfileId == doctorId);
+                doctor.ReviewCount = allRatings.Count();
+                if (doctor.ReviewCount > 0)
+                {
+                     double avg = allRatings.Average(r => r.Rating);
+                     doctor.Rating = Math.Round(avg, 1);
+                }
+                else
+                {
+                     doctor.Rating = 0;
+                }
+                
+                await _doctorRepository.UpdateAsync(doctor);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while patient {PatientId} rating doctor {DoctorId}", patientUserId, doctorId);
+                return (false, "An error occurred while saving the rating.");
             }
         }
     }

@@ -20,7 +20,7 @@ builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection("Smtp"));
 builder.Services.AddAutoMapper(typeof(AuthProfile));
 builder.Services.AddDbContext<EireneDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

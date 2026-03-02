@@ -22,6 +22,7 @@ namespace BLL.Services.Implementation.Core
         private readonly IDoctorProfileRepository _doctorProfileRepository;
         private readonly IPatientProfileRepository _patientProfileRepository;
         private readonly ISupervisionRequestRepository _requestRepository;
+        private readonly IDoctorRatingRepository _ratingRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailSender _emailSender;
         
@@ -31,6 +32,7 @@ namespace BLL.Services.Implementation.Core
             IDoctorProfileRepository doctorProfileRepository,
             IPatientProfileRepository patientProfileRepository,
             ISupervisionRequestRepository requestRepository,
+            IDoctorRatingRepository ratingRepository,
             IUnitOfWork unitOfWork,
             IEmailSender emailSender)
         {
@@ -39,6 +41,7 @@ namespace BLL.Services.Implementation.Core
             _doctorProfileRepository = doctorProfileRepository;
             _patientProfileRepository = patientProfileRepository;
             _requestRepository = requestRepository;
+            _ratingRepository = ratingRepository;
             _unitOfWork = unitOfWork;
             _emailSender = emailSender;
         }
@@ -276,6 +279,42 @@ namespace BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "Error removing the supervision request for user {UserId}", patientUserId);
                 return (false, "An error occurred while removing the supervision request.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, List<DoctorRatingDTO>? Ratings)> GetDoctorRatingsAsync(string doctorId)
+        {
+            try
+            {
+                var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                {
+                    return (false, null);
+                }
+
+                var ratings = await _ratingRepository.FindAsync(r => r.DoctorProfileId == doctorId);
+                
+                var ratingDtos = new List<DoctorRatingDTO>();
+                foreach (var r in ratings)
+                {
+                    var patient = await _patientProfileRepository.GetByIdAsync(r.PatientProfileId);
+                    ratingDtos.Add(new DoctorRatingDTO
+                    {
+                        Id = r.Id,
+                        PatientProfileId = r.PatientProfileId,
+                        PatientName = patient?.User?.FullName ?? "Unknown",
+                        Rating = r.Rating,
+                        Review = r.Review,
+                        CreatedAt = r.CreatedAt
+                    });
+                }
+                
+                return (true, ratingDtos.OrderByDescending(r => r.CreatedAt).ToList());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching ratings for doctor {DoctorId}", doctorId);
+                return (false, null);
             }
         }
     }

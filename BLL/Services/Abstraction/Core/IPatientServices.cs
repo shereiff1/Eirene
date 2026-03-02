@@ -1,6 +1,7 @@
 ﻿ 
 
 using BLL.Models.Core.Patient;
+using BLL.Models.Core.Doctor;
 
 namespace BLL.Services.Abstraction.Core
 {
@@ -13,5 +14,6 @@ namespace BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string? Error)> DeletePatientProfileAsync(string userId);
         Task<(bool IsSuccess, string? Error)> RequestSupervisionAsync(string patientUserId, string doctorId);
         Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId);
+        Task<(bool IsSuccess, string? Error)> RateSupervisorAsync(string patientUserId, string doctorId, AddDoctorRatingDTO model);
     }
 }
