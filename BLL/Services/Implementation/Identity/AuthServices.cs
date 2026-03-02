@@ -390,6 +390,74 @@ public class AuthServices : IAuthServices
         }
     }
 
+    public async Task<AuthResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return Fail("User not found");
+
+            if (!user.EmailConfirmed)
+                return Fail("Email is not confirmed");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            await _emailSender.SendEmailAsync(
+                user.Email,
+                "Reset Password",
+                $"Your password reset token is: {token}"
+            );
+
+            return new AuthResultDTO
+            {
+                Success = true,
+                Message = "Password reset token has been sent to your email"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ForgotPasswordAsync failed for email: {Email}", dto.Email);
+            return new AuthResultDTO
+            {
+                Success = false,
+                Error = $"An error occurred during forgot password: {ex.Message}"
+            };
+        }
+    }
+
+    public async Task<AuthResultDTO> ResetPasswordAsync(ResetPasswordDTO dto)
+    {
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null)
+                return Fail("User not found");
+
+            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                return Fail($"Failed to reset password: {errors}");
+            }
+
+            return new AuthResultDTO
+            {
+                Success = true,
+                Message = "Password has been successfully reset"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ResetPasswordAsync failed for email: {Email}", dto.Email);
+            return new AuthResultDTO
+            {
+                Success = false,
+                Error = $"An error occurred during reset password: {ex.Message}"
+            };
+        }
+    }
 
     private async Task RevokeAllRefreshTokensForUser(string userId)
     {

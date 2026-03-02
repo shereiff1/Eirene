@@ -10,5 +10,7 @@ namespace BLL.Services.Abstraction.Identity
         Task LogoutAsync(string userId);
         Task<AuthResultDTO> RefreshTokenAsync(string accessToken, string refreshToken);
         Task<AuthResultDTO> ResendVerificationCodeAsync(string Email);
+        Task<AuthResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto);
+        Task<AuthResultDTO> ResetPasswordAsync(ResetPasswordDTO dto);
     }
 }
