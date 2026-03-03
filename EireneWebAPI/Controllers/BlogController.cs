@@ -52,7 +52,7 @@ public class BlogController : ControllerBase
 
         var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(doctorId))
-            return Unauthorized("User ID not found in token.");
+            return Unauthorized("User ID not found.");
 
         var result = await _blogServices.CreateAsync(blog, doctorId);
 
@@ -75,7 +75,7 @@ public class BlogController : ControllerBase
 
         var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(doctorId))
-            return Unauthorized("User ID not found in token.");
+            return Unauthorized("User ID not found.");
 
         blog.DoctorId = doctorId;
 
