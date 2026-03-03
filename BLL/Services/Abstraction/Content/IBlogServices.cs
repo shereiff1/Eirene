@@ -10,7 +10,7 @@ namespace BLL.Services.Abstraction.Content
 
         Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(Guid id);
 
-        Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model);
+        Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model, string doctorId);
 
         Task<bool> UpdateAsync(EditBlog model);
 

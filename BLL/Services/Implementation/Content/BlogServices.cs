@@ -56,11 +56,12 @@ namespace BLL.Services.Implementation.Content
             }
         }
 
-        public async Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model)
+        public async Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model, string doctorId)
         {
             try
             {
                 var blog = _mapper.Map<Blog>(model);
+                blog.DoctorId = doctorId;
 
                 var created = await _blogRepository.AddAsync(blog);
                 await _unitOfWork.SaveChangesAsync();

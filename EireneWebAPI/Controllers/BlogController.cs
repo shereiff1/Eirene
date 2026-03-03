@@ -3,6 +3,7 @@ using BLL.ModelVMs.Content;
 using BLL.Services.Abstraction.Content;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Eirene.Controllers;
 
@@ -48,7 +49,12 @@ public class BlogController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-        var result = await _blogServices.CreateAsync(blog);
+
+        var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(doctorId))
+            return Unauthorized("User ID not found in token.");
+
+        var result = await _blogServices.CreateAsync(blog, doctorId);
 
         if (!result.IsSuccess || result.CreatedPost == null)
             return BadRequest("Failed to create blog.");
@@ -66,6 +72,13 @@ public class BlogController : ControllerBase
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
+
+        var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(doctorId))
+            return Unauthorized("User ID not found in token.");
+
+        blog.DoctorId = doctorId;
+
         var updated = await _blogServices.UpdateAsync(blog);
 
         if (!updated)

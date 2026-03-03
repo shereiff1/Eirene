@@ -454,7 +454,7 @@ namespace DAL.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("DateOfBirth")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("date");
 
                     b.Property<string>("DoctorProfileId")
                         .HasColumnType("text");
