@@ -6,10 +6,10 @@ WORKDIR /src
 COPY Eirene.sln .
 
 # Copy project files
-COPY EireneWebAPI/EireneWebAPI.csproj EireneWebAPI/
+COPY Eirene.API/Eirene.API.csproj EireneWebAPI/
 COPY EireneMVC/EireneMVC.csproj EireneMVC/
-COPY BLL/BLL.csproj BLL/
-COPY DAL/DAL.csproj DAL/
+COPY Eirene.BLL/Eirene.BLL.csproj BLL/
+COPY Eirene.DAL/Eirene.DAL.csproj DAL/
 
 # Restore dependencies
 RUN dotnet restore Eirene.sln
