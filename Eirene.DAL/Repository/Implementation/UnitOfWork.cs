@@ -1,7 +1,7 @@
-﻿using DAL.Repository.Abstraction;
-using DAL.Database;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Database;
 
-namespace DAL.Repository.Implementation
+namespace Eirene.DAL.Repository.Implementation
 {
     public class UnitOfWork : IUnitOfWork
     {

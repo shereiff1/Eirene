@@ -1,6 +1,6 @@
-﻿
 
-namespace DAL.Entities.Treatment;
+
+namespace Eirene.DAL.Entities.Treatment;
 
 public class Question
 {

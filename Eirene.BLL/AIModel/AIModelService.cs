@@ -1,8 +1,8 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace BLL.AIModel;
+namespace Eirene.BLL.AIModel;
 
 public class AIModelService : IAIModelService
 {

@@ -1,9 +1,9 @@
-﻿
-using AutoMapper;
-using BLL.ModelVMs.Treatment;
-using DAL.Entities.Treatment;
 
-namespace BLL.Mappers;
+using AutoMapper;
+using Eirene.BLL.ModelVMs.Treatment;
+using Eirene.DAL.Entities.Treatment;
+
+namespace Eirene.BLL.Mappers;
 
 internal class QuestionProfile : Profile
 {

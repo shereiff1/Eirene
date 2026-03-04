@@ -1,11 +1,11 @@
-﻿using DAL.Database;
-using DAL.Entities.Tracking;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Tracking;
+using Eirene.DAL.Database;
+using Eirene.DAL.Entities.Tracking;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Tracking;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace DAL.Repository.Implementation.Tracking;
+namespace Eirene.DAL.Repository.Implementation.Tracking;
 
 public class JournalRepository : GenericRepository<Journal>, IJournalRepository
 {

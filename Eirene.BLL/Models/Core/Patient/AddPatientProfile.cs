@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.Models.Core.Patient;
+namespace Eirene.BLL.Models.Core.Patient;
 
 public class AddPatientProfile
 {

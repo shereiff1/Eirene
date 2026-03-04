@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.Models.Identity;
+namespace Eirene.BLL.Models.Identity;
 
 public class ForgotPasswordDTO
 {

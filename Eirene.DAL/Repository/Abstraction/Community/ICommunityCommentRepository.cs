@@ -1,6 +1,6 @@
-﻿using DAL.Entities.Community;
+using Eirene.DAL.Entities.Community;
 
-namespace DAL.Repository.Abstraction.Community
+namespace Eirene.DAL.Repository.Abstraction.Community
 {
     public interface ICommunityCommentRepository : IGenericRepository<CommunityComment>
     {

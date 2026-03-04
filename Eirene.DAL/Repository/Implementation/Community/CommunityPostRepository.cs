@@ -1,9 +1,9 @@
-﻿using DAL.Database;
-using DAL.Entities.Community;
-using DAL.Repository.Abstraction.Community;
+using Eirene.DAL.Database;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Repository.Abstraction.Community;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Repository.Implementation.Community
+namespace Eirene.DAL.Repository.Implementation.Community
 {
     public class CommunityPostRepository : GenericRepository<CommunityPost>, ICommunityPostRepository
     {

@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Models.Identity;
+
+namespace Eirene.BLL.Models.Identity;
 public class RegisterDTO
 {
     public string Email { get; set; } = string.Empty;

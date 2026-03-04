@@ -1,12 +1,12 @@
-﻿using AutoMapper;
-using BLL.ModelVMs.Content;
-using BLL.Services.Abstraction.Content;
-using DAL.Entities.Content;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Content;
+using AutoMapper;
+using Eirene.BLL.ModelVMs.Content;
+using Eirene.BLL.Services.Abstraction.Content;
+using Eirene.DAL.Entities.Content;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Content;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Content
+namespace Eirene.BLL.Services.Implementation.Content
 {
     public class BlogServices : IBlogServices
     {

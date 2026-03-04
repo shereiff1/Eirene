@@ -1,6 +1,6 @@
-﻿using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace DAL.Entities.Tracking;
+namespace Eirene.DAL.Entities.Tracking;
 public class MoodTracker
 {
     public Guid Id { get; set; }

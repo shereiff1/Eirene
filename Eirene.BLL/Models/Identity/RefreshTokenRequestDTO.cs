@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.Models.Identity;
+namespace Eirene.BLL.Models.Identity;
 public class RefreshTokenRequestDTO
 {
     [Required] public string AccessToken { get; set; } = string.Empty;

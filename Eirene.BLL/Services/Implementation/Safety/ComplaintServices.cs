@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BLL.Services.Abstraction.Safety.Complaint;
+using Eirene.BLL.Services.Abstraction.Safety.Complaint;
 
-namespace BLL.Services.Implementation.Safety
+namespace Eirene.BLL.Services.Implementation.Safety
 {
     public class ComplaintServices :  IComplaintServices
     {

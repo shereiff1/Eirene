@@ -1,18 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using BLL.Models.Core.Admin;
-using BLL.Services.Abstraction.Core;
-using DAL.Entities.Core;
-using DAL.Repository.Abstraction.Community;
-using DAL.Repository.Abstraction.Core;
-using DAL.Repository.Abstraction;
+using Eirene.BLL.Models.Core.Admin;
+using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction.Community;
+using Eirene.DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Repository.Abstraction;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Core
+namespace Eirene.BLL.Services.Implementation.Core
 {
     public class AdminServices : IAdminServices
     {

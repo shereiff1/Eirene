@@ -1,5 +1,5 @@
-﻿
-namespace BLL.Services.Abstraction.Treatment;
+
+namespace Eirene.BLL.Services.Abstraction.Treatment;
 
 public interface IDiagnosisServices
 {

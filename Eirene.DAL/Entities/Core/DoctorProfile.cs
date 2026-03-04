@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using DAL.Enumerators;
+using Eirene.DAL.Enumerators;
 
-namespace DAL.Entities.Core
+namespace Eirene.DAL.Entities.Core
 {
     public class DoctorProfile
     {

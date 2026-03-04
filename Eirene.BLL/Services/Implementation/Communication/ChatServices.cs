@@ -1,8 +1,8 @@
-﻿using BLL.Services.Abstraction.Communication;
-using DAL.Entities.Communication;
-using DAL.Repository.Abstraction.Communication;
+using Eirene.BLL.Services.Abstraction.Communication;
+using Eirene.DAL.Entities.Communication;
+using Eirene.DAL.Repository.Abstraction.Communication;
 
-namespace BLL.Services.Implementation.Communication
+namespace Eirene.BLL.Services.Implementation.Communication
 {
     public class ChatServices : IChatServices
     {

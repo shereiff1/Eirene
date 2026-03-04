@@ -1,8 +1,8 @@
 using AutoMapper;
-using BLL.ModelVMs.Content;
-using DAL.Entities.Content;
+using Eirene.BLL.ModelVMs.Content;
+using Eirene.DAL.Entities.Content;
 
-namespace BLL.Mappers
+namespace Eirene.BLL.Mappers
 {
     public class BlogProfile : Profile
     {

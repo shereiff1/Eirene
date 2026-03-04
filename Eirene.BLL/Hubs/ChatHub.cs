@@ -1,9 +1,9 @@
-﻿
-using BLL.Services.Abstraction.Communication;
+
+using Eirene.BLL.Services.Abstraction.Communication;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
-namespace BLL.Hubs;
+namespace Eirene.BLL.Hubs;
 
 public class ChatHub : Hub
 {

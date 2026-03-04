@@ -1,4 +1,4 @@
-namespace BLL.Models.Community.Group;
+namespace Eirene.BLL.Models.Community.Group;
 
 public class AddCommunityGroup
 {

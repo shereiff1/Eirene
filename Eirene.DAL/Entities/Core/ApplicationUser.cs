@@ -1,7 +1,7 @@
-﻿using DAL.Entities.Community;
+using Eirene.DAL.Entities.Community;
 using Microsoft.AspNetCore.Identity;
 
-namespace DAL.Entities.Core
+namespace Eirene.DAL.Entities.Core
 {
     public class ApplicationUser : IdentityUser
     {

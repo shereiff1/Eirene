@@ -1,6 +1,6 @@
-﻿using BLL.Enumerators;
-using BLL.Models.Tracking;
-using BLL.Services.Abstraction.Tracking;
+﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Models.Tracking;
+using Eirene.BLL.Services.Abstraction.Tracking;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

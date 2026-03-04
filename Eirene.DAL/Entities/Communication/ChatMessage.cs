@@ -1,5 +1,5 @@
-﻿
-namespace DAL.Entities.Communication;
+
+namespace Eirene.DAL.Entities.Communication;
 
 public class ChatMessage
 {

@@ -1,5 +1,5 @@
-﻿
-namespace BLL.AIModel;
+
+namespace Eirene.BLL.AIModel;
 
 public class AIModelSettings
 {

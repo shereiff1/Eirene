@@ -1,4 +1,4 @@
-namespace BLL.Models.Core.Moderator;
+namespace Eirene.BLL.Models.Core.Moderator;
 
 public class ModeratorModel 
 {

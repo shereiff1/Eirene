@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Models.Identity;
+
+namespace Eirene.BLL.Models.Identity;
 
 public class UserDTO
 {

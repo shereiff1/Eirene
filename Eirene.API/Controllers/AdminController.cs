@@ -1,8 +1,8 @@
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BLL.Models.Core.Admin;
-using BLL.Services.Abstraction.Core;
+using Eirene.BLL.Models.Core.Admin;
+using Eirene.BLL.Services.Abstraction.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,7 +1,7 @@
-﻿using BLL.AIModel;
-using BLL.Services.Abstraction.Treatment;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Treatment;
+﻿using Eirene.BLL.AIModel;
+using Eirene.BLL.Services.Abstraction.Treatment;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Treatment;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -67,13 +67,13 @@ public class PatientTaskServices : IPatientTaskServices
                 return false;
             }
 
-            var treatmentPlan = new DAL.Entities.Treatment.TreatmentPlan { UserId = userId };
+            var treatmentPlan = new Eirene.DAL.Entities.Treatment.TreatmentPlan { UserId = userId };
             await _treatmentPlanRepository.AddAsync(treatmentPlan);
             await _unitOfWork.SaveChangesAsync();
 
             foreach (var taskText in analysisDto.Tasks_For_User.Where(t => !string.IsNullOrWhiteSpace(t)))
             {
-                await _taskRepository.AddAsync(new DAL.Entities.Treatment.PatientTask
+                await _taskRepository.AddAsync(new Eirene.DAL.Entities.Treatment.PatientTask
                 {
                     Description = taskText,
                     PatientId = userId,

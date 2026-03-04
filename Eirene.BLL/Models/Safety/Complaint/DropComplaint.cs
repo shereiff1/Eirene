@@ -1,4 +1,4 @@
-namespace BLL.Models.Safety.Complaint;
+namespace Eirene.BLL.Models.Safety.Complaint;
 
 public class DropComplaint
 {

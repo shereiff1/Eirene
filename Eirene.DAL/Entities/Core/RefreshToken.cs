@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DAL.Entities.Core
+namespace Eirene.DAL.Entities.Core
 {
     public class RefreshToken
     {

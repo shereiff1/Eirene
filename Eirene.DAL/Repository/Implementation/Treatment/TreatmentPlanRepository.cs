@@ -1,10 +1,10 @@
-﻿
-using DAL.Entities.Treatment;
-using DAL.Repository.Abstraction.Treatment;
-using DAL.Database;
+
+using Eirene.DAL.Entities.Treatment;
+using Eirene.DAL.Repository.Abstraction.Treatment;
+using Eirene.DAL.Database;
  
 
-namespace DAL.Repository.Implementation.Treatment;
+namespace Eirene.DAL.Repository.Implementation.Treatment;
 
 public class TreatmentPlanRepository : GenericRepository<TreatmentPlan>, ITreatmentPlanRepository
 {

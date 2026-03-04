@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.ModelVMs.Content;
+namespace Eirene.BLL.ModelVMs.Content;
 
 public class BlogDTO
 {

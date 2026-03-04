@@ -1,6 +1,6 @@
-﻿using BLL.ModelVMs.Treatment;
+using Eirene.BLL.ModelVMs.Treatment;
 
-namespace BLL.Services.Abstraction.Treatment;
+namespace Eirene.BLL.Services.Abstraction.Treatment;
 
 public interface IQuestionServices
 {

@@ -1,17 +1,17 @@
-﻿using AutoMapper;
-using BLL.Models.Identity;
-using BLL.Services.Abstraction.Identity;
-using DAL.Entities.Core;
-using DAL.Repository.Abstraction.Core;
+using AutoMapper;
+using Eirene.BLL.Models.Identity;
+using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
-using DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction;
 
 
-namespace BLL.Services.Implementation.Identity;
+namespace Eirene.BLL.Services.Implementation.Identity;
 
 public class AuthServices : IAuthServices
 {

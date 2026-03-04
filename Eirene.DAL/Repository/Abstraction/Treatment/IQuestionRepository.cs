@@ -1,8 +1,8 @@
-﻿
-using DAL.Entities.Treatment;
+
+using Eirene.DAL.Entities.Treatment;
 
 
-namespace DAL.Repository.Abstraction.Treatment;
+namespace Eirene.DAL.Repository.Abstraction.Treatment;
 
 public interface IQuestionRepository : IGenericRepository<Question>
 {

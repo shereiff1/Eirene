@@ -1,5 +1,5 @@
-﻿using BLL.Models.Treatment.Question;
-using BLL.Services.Abstraction.Treatment; 
+﻿using Eirene.BLL.Models.Treatment.Question;
+using Eirene.BLL.Services.Abstraction.Treatment; 
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 

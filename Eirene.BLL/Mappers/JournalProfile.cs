@@ -1,7 +1,7 @@
-﻿using AutoMapper;
-using BLL.Models.Tracking;
-using DAL.Entities.Tracking;
-namespace BLL.Mappers
+using AutoMapper;
+using Eirene.BLL.Models.Tracking;
+using Eirene.DAL.Entities.Tracking;
+namespace Eirene.BLL.Mappers
 {
     internal class JournalProfile : Profile
     {

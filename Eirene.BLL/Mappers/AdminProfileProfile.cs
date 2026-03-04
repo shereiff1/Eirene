@@ -1,8 +1,8 @@
 using AutoMapper;
-using BLL.Models.Core.Admin;
-using DAL.Entities.Core;
+using Eirene.BLL.Models.Core.Admin;
+using Eirene.DAL.Entities.Core;
 
-namespace BLL.Mappers
+namespace Eirene.BLL.Mappers
 {
     public class AdminProfileProfile : Profile
     {

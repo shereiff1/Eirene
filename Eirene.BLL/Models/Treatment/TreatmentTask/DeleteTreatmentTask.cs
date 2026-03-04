@@ -1,4 +1,4 @@
-namespace BLL.ModelVMs.Treatment;
+namespace Eirene.BLL.ModelVMs.Treatment;
 
 public class DeleteTreatmentTask
 {

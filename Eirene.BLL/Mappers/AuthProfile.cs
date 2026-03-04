@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using BLL.Models.Identity;
-using DAL.Entities.Core;
+using AutoMapper;
+using Eirene.BLL.Models.Identity;
+using Eirene.DAL.Entities.Core;
 
-namespace BLL.Mappers
+namespace Eirene.BLL.Mappers
 {
     public class AuthProfile : Profile
     {

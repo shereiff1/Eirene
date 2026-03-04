@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using BLL.Enumerators;
+using Eirene.BLL.Enumerators;
 
-namespace BLL.Models.Core.Admin;
+namespace Eirene.BLL.Models.Core.Admin;
 
 public class AssignRoleModel
 {

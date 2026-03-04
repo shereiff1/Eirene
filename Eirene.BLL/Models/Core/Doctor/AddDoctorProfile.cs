@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 
-namespace BLL.Models.Core.Doctor;
+namespace Eirene.BLL.Models.Core.Doctor;
 
 public class AddDoctorProfile
 {

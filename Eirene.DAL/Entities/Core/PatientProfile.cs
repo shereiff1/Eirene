@@ -1,10 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using DAL.Enumerators;
-using DAL.Entities.Tracking;
-using DAL.Entities.Treatment;
+using Eirene.DAL.Enumerators;
+using Eirene.DAL.Entities.Tracking;
+using Eirene.DAL.Entities.Treatment;
 
-namespace DAL.Entities.Core;
+namespace Eirene.DAL.Entities.Core;
 
 public class PatientProfile
 {

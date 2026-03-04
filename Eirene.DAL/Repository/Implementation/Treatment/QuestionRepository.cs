@@ -1,13 +1,13 @@
-﻿using DAL.Entities.Community;
-using DAL.Entities.Treatment;
-using DAL.Repository.Abstraction.Community;
-using DAL.Repository.Abstraction.Treatment;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Entities.Treatment;
+using Eirene.DAL.Repository.Abstraction.Community;
+using Eirene.DAL.Repository.Abstraction.Treatment;
 
-using DAL.Database;
-using DAL.Repository.Abstraction;
+using Eirene.DAL.Database;
+using Eirene.DAL.Repository.Abstraction;
 
 
-namespace DAL.Repository.Implementation.Treatment;
+namespace Eirene.DAL.Repository.Implementation.Treatment;
 
 public class QuestionRepository : GenericRepository<Question>, IQuestionRepository
 {

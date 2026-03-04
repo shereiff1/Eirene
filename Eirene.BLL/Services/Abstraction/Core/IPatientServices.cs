@@ -1,9 +1,9 @@
-﻿ 
+ 
 
-using BLL.Models.Core.Patient;
-using BLL.Models.Core.Doctor;
+using Eirene.BLL.Models.Core.Patient;
+using Eirene.BLL.Models.Core.Doctor;
 
-namespace BLL.Services.Abstraction.Core
+namespace Eirene.BLL.Services.Abstraction.Core
 {
     public interface IPatientServices
     {

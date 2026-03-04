@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.Models.Core.Doctor;
+namespace Eirene.BLL.Models.Core.Doctor;
 
 public class EditDoctorProfile
 {

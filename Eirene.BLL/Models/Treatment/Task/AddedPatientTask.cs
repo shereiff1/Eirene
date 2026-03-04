@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Models.Treatment.Task;
+
+namespace Eirene.BLL.Models.Treatment.Task;
 
 public class AddedPatientTask
 {

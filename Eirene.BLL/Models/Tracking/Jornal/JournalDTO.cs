@@ -1,4 +1,4 @@
-namespace BLL.Models.Tracking;
+namespace Eirene.BLL.Models.Tracking;
 
 public class JournalDTO
 {

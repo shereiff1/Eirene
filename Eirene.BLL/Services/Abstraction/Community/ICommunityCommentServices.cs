@@ -1,11 +1,11 @@
-﻿using BLL.Models.Community.Comment;
+using Eirene.BLL.Models.Community.Comment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BLL.Services.Abstraction.Community
+namespace Eirene.BLL.Services.Abstraction.Community
 {
     public interface ICommunityCommentServices
     {

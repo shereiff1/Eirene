@@ -1,6 +1,6 @@
-﻿using DAL.Entities.Treatment;
+using Eirene.DAL.Entities.Treatment;
 
-namespace BLL.Services.Abstraction.Treatment;
+namespace Eirene.BLL.Services.Abstraction.Treatment;
 
 public interface IQuestionAnswerServices
 {

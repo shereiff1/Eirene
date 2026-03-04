@@ -1,4 +1,4 @@
-namespace BLL.ModelVMs.Content;
+namespace Eirene.BLL.ModelVMs.Content;
 
 public class EditBlog
 {

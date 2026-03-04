@@ -1,13 +1,13 @@
-﻿
+
 using AutoMapper;
-using BLL.ModelVMs.Treatment;
-using BLL.Services.Abstraction.Treatment;
-using DAL.Entities.Treatment;
-using DAL.Repository.Abstraction.Treatment;
-using DAL.Repository.Abstraction;
+using Eirene.BLL.ModelVMs.Treatment;
+using Eirene.BLL.Services.Abstraction.Treatment;
+using Eirene.DAL.Entities.Treatment;
+using Eirene.DAL.Repository.Abstraction.Treatment;
+using Eirene.DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Treatment
+namespace Eirene.BLL.Services.Implementation.Treatment
 {
     public class QuestionServices : IQuestionServices
     {

@@ -1,19 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using DAL.Enumerators;
-using BLL.Models.Core;
-using BLL.Models.Core.Doctor;
-using BLL.Services.Abstraction.Core;
-using BLL.Services.Abstraction.Identity;
-using DAL.Entities.Core;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Enumerators;
+using Eirene.BLL.Models.Core;
+using Eirene.BLL.Models.Core.Doctor;
+using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Core
+namespace Eirene.BLL.Services.Implementation.Core
 {
     public class DoctorServices :  IDoctorServices
     {

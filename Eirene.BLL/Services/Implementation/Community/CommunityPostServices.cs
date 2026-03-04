@@ -1,13 +1,13 @@
-﻿using AutoMapper;
-using BLL.Models.Community.Post;
-using BLL.Services.Abstraction.Community;
-using DAL.Entities.Community;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Community;
+using AutoMapper;
+using Eirene.BLL.Models.Community.Post;
+using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Community;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Community
+namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityPostServices : ICommunityPostServices
     {

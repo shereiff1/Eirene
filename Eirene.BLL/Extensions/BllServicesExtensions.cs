@@ -1,23 +1,23 @@
-using BLL.Services.Abstraction.Communication;
-using BLL.Services.Abstraction.Community;
-using BLL.Services.Abstraction.Content;
-using BLL.Services.Abstraction.Core;
-using BLL.Services.Abstraction.Identity;
-using BLL.Services.Abstraction.Tracking;
-using BLL.Services.Abstraction.Treatment;
-using BLL.Services.Implementation.Communication;
-using BLL.Services.Implementation.Community;
-using BLL.Services.Implementation.Content;
-using BLL.Services.Implementation.Core;
-using BLL.Services.Implementation.identity;
-using BLL.Services.Implementation.Identity;
-using BLL.Services.Implementation.Tracking;
-using BLL.Services.Implementation.Treatment;
+using Eirene.BLL.Services.Abstraction.Communication;
+using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.BLL.Services.Abstraction.Content;
+using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.BLL.Services.Abstraction.Tracking;
+using Eirene.BLL.Services.Abstraction.Treatment;
+using Eirene.BLL.Services.Implementation.Communication;
+using Eirene.BLL.Services.Implementation.Community;
+using Eirene.BLL.Services.Implementation.Content;
+using Eirene.BLL.Services.Implementation.Core;
+using Eirene.BLL.Services.Implementation.identity;
+using Eirene.BLL.Services.Implementation.Identity;
+using Eirene.BLL.Services.Implementation.Tracking;
+using Eirene.BLL.Services.Implementation.Treatment;
 using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.Extensions.Configuration;
 
-namespace BLL.Extensions;
+namespace Eirene.BLL.Extensions;
 
 public static class BllServicesExtensions
 {

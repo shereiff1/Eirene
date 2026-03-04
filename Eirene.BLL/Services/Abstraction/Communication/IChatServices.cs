@@ -1,8 +1,8 @@
-﻿
 
-using DAL.Entities.Communication;
 
-namespace BLL.Services.Abstraction.Communication;
+using Eirene.DAL.Entities.Communication;
+
+namespace Eirene.BLL.Services.Abstraction.Communication;
 
 public interface IChatServices
 {

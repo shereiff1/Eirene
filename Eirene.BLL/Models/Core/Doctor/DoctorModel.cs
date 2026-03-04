@@ -1,4 +1,4 @@
-namespace BLL.Models.Core.Doctor;
+namespace Eirene.BLL.Models.Core.Doctor;
 
 public class DoctorModel
 {

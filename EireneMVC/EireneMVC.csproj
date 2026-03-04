@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EireneWebAPI\EireneWebAPI.csproj" />
+      <ProjectReference Include="..\Eirene.API\Eirene.API.csproj" />
     </ItemGroup>
 
 </Project>

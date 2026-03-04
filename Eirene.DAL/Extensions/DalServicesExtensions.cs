@@ -1,20 +1,20 @@
-﻿using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Communication;
-using DAL.Repository.Abstraction.Community;
-using DAL.Repository.Abstraction.Content;
-using DAL.Repository.Abstraction.Core;
-using DAL.Repository.Abstraction.Tracking;
-using DAL.Repository.Abstraction.Treatment;
-using DAL.Repository.Implementation;
-using DAL.Repository.Implementation.Communication;
-using DAL.Repository.Implementation.Community;
-using DAL.Repository.Implementation.Content;
-using DAL.Repository.Implementation.Core;
-using DAL.Repository.Implementation.Tracking;
-using DAL.Repository.Implementation.Treatment;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Communication;
+using Eirene.DAL.Repository.Abstraction.Community;
+using Eirene.DAL.Repository.Abstraction.Content;
+using Eirene.DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Repository.Abstraction.Tracking;
+using Eirene.DAL.Repository.Abstraction.Treatment;
+using Eirene.DAL.Repository.Implementation;
+using Eirene.DAL.Repository.Implementation.Communication;
+using Eirene.DAL.Repository.Implementation.Community;
+using Eirene.DAL.Repository.Implementation.Content;
+using Eirene.DAL.Repository.Implementation.Core;
+using Eirene.DAL.Repository.Implementation.Tracking;
+using Eirene.DAL.Repository.Implementation.Treatment;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DAL.Extensions;
+namespace Eirene.DAL.Extensions;
 
 public static class DalServicesExtensions
 {

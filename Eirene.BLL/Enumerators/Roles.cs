@@ -1,5 +1,5 @@
-﻿
-namespace BLL.Enumerators;
+
+namespace Eirene.BLL.Enumerators;
 
 public static class Roles
 {

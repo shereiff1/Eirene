@@ -1,6 +1,6 @@
-﻿using BLL.AIModel;
-using BLL.Services.Abstraction.Treatment;
-using DAL.Entities.Treatment;
+﻿using Eirene.BLL.AIModel;
+using Eirene.BLL.Services.Abstraction.Treatment;
+using Eirene.DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

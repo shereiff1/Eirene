@@ -1,8 +1,8 @@
 using AutoMapper;
-using BLL.Models.Core.Patient;
-using DAL.Entities.Core;
+using Eirene.BLL.Models.Core.Patient;
+using Eirene.DAL.Entities.Core;
 
-namespace BLL.Mappers
+namespace Eirene.BLL.Mappers
 {
     public class PatientProfileProfile : Profile
     {

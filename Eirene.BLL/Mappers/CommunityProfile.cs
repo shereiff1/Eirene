@@ -1,13 +1,13 @@
-﻿using AutoMapper;
-using BLL.Models.Community.Comment;
-using BLL.Models.Community.Group;
-using BLL.Models.Community.Post;
-using BLL.Models.Identity;
-using DAL.Entities.Community;
-using DAL.Entities.Core;
+using AutoMapper;
+using Eirene.BLL.Models.Community.Comment;
+using Eirene.BLL.Models.Community.Group;
+using Eirene.BLL.Models.Community.Post;
+using Eirene.BLL.Models.Identity;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Entities.Core;
 
 
-namespace BLL.Mappers
+namespace Eirene.BLL.Mappers
 {
     public class CommunityProfile : Profile
     {

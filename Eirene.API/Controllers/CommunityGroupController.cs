@@ -1,6 +1,6 @@
-﻿using BLL.Enumerators;
-using BLL.Models.Community.Group;
-using BLL.Services.Abstraction.Community;
+﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Models.Community.Group;
+using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

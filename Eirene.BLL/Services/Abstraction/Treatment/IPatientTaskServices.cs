@@ -1,9 +1,9 @@
-﻿
 
-using BLL.Models.Treatment.Task;
-using BLL.ModelVMs.Treatment;
 
-namespace BLL.Services.Abstraction.Treatment;
+using Eirene.BLL.Models.Treatment.Task;
+using Eirene.BLL.ModelVMs.Treatment;
+
+namespace Eirene.BLL.Services.Abstraction.Treatment;
 
 public interface IPatientTaskServices
 {

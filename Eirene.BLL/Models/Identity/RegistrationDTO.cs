@@ -1,8 +1,8 @@
-﻿
+
 
 using System.Text.Json.Serialization;
 
-namespace BLL.Models.Identity;
+namespace Eirene.BLL.Models.Identity;
 
 public class RegistrationDTO
 {

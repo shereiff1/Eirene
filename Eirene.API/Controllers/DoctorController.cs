@@ -1,9 +1,7 @@
 using System.Security.Claims;
-using BLL.Enumerators;
-using BLL.Models.Core.Doctor;
-using BLL.ModelVMs.Content;
-using BLL.Services.Abstraction.Content;
-using BLL.Services.Abstraction.Core;
+using Eirene.BLL.Enumerators;
+using Eirene.BLL.Models.Core.Doctor;
+using Eirene.BLL.Services.Abstraction.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

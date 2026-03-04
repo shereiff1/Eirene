@@ -1,10 +1,10 @@
-﻿using DAL.Entities.Core;
-using DAL.Repository.Abstraction.Core;
-using DAL.Repository.Abstraction;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
-using DAL.Database;
+using Eirene.DAL.Database;
 
-namespace DAL.Repository.Implementation.Core
+namespace Eirene.DAL.Repository.Implementation.Core
 {
     public class ApplicationUserRepository : GenericRepository<ApplicationUser>, IApplicationUserRepository
     {

@@ -1,7 +1,7 @@
-﻿
-using BLL.Services.Abstraction.Treatment;
 
-namespace BLL.Services.Implementation.Treatment;
+using Eirene.BLL.Services.Abstraction.Treatment;
+
+namespace Eirene.BLL.Services.Implementation.Treatment;
 
 public class TreatmentPlanServices : ITreatmentPlanServices
 {

@@ -1,10 +1,10 @@
-using DAL.Database;
-using DAL.Entities.Core;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Database;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Repository.Implementation.Core;
+namespace Eirene.DAL.Repository.Implementation.Core;
 
 internal class ModeratorProfileRepository :  GenericRepository<ModeratorProfile>, IModeratorProfileRepository
 {

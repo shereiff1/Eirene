@@ -1,12 +1,12 @@
-﻿using DAL.Entities.Community;
-using DAL.Entities.Content;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Entities.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DAL.Repository.Abstraction.Content
+namespace Eirene.DAL.Repository.Abstraction.Content
 {
     public interface IBlogRepository: IGenericRepository<Blog>
     {

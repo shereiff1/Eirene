@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Models.Communication;
+
+namespace Eirene.BLL.Models.Communication;
 
 public class SendMessageDto
 {

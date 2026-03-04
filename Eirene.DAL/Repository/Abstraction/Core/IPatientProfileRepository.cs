@@ -1,6 +1,6 @@
-using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 
-namespace DAL.Repository.Abstraction.Core;
+namespace Eirene.DAL.Repository.Abstraction.Core;
 
 public interface IPatientProfileRepository : IGenericRepository<PatientProfile>
 {

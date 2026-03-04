@@ -1,7 +1,7 @@
-﻿using DAL.Entities.Tracking;
+using Eirene.DAL.Entities.Tracking;
 
 
-namespace DAL.Repository.Abstraction.Tracking;
+namespace Eirene.DAL.Repository.Abstraction.Tracking;
 
 public interface IMoodTrackerRepository : IGenericRepository<MoodTracker>
 {

@@ -1,4 +1,4 @@
-namespace BLL.Enumerators;
+namespace Eirene.BLL.Enumerators;
 
 public enum SupervisionRequestStatus
 {

@@ -1,6 +1,6 @@
-﻿using BLL.Models.Tracking;
+using Eirene.BLL.Models.Tracking;
 
-namespace BLL.Services.Abstraction.Tracking
+namespace Eirene.BLL.Services.Abstraction.Tracking
 {
     public interface IJournalServices
     {

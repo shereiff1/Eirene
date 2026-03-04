@@ -1,10 +1,10 @@
-using DAL.Database;
-using DAL.Entities.Treatment;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Treatment;
+using Eirene.DAL.Database;
+using Eirene.DAL.Entities.Treatment;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Treatment;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Repository.Implementation.Treatment;
+namespace Eirene.DAL.Repository.Implementation.Treatment;
 
 internal class DiagnosisRepository : GenericRepository<Diagnosis>, IDiagnosisRepository
 {

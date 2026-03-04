@@ -1,13 +1,13 @@
-using DAL.Entities.Communication;
-using DAL.Entities.Community;
-using DAL.Entities.Content;
-using DAL.Entities.Core;
-using DAL.Entities.Tracking;
-using DAL.Entities.Treatment;
+using Eirene.DAL.Entities.Communication;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Entities.Content;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Entities.Tracking;
+using Eirene.DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Database;
+namespace Eirene.DAL.Database;
 
 public class EireneDBContext : IdentityDbContext<ApplicationUser>
 {

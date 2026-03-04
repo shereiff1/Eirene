@@ -1,5 +1,5 @@
-﻿using BLL.Models.Identity;
-using BLL.Services.Abstraction.Identity;
+﻿using Eirene.BLL.Models.Identity;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 

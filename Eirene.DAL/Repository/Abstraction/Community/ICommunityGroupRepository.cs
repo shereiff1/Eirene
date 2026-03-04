@@ -1,11 +1,11 @@
-﻿using DAL.Entities.Community;
+using Eirene.DAL.Entities.Community;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DAL.Repository.Abstraction.Community
+namespace Eirene.DAL.Repository.Abstraction.Community
 {
     public interface ICommunityGroupRepository : IGenericRepository<CommunityGroup>
     {

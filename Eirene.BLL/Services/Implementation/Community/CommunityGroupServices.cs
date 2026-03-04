@@ -1,12 +1,12 @@
-﻿using AutoMapper;
-using BLL.Models.Community.Group;
-using BLL.Services.Abstraction.Community;
-using DAL.Entities.Community;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Community;
+using AutoMapper;
+using Eirene.BLL.Models.Community.Group;
+using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Community;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Community
+namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityGroupServices : ICommunityGroupServices
     {

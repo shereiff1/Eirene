@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace DAL.Database
+namespace Eirene.DAL.Database
 {
     public class EireneDbContextFactory : IDesignTimeDbContextFactory<EireneDBContext>
     {

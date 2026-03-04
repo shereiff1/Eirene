@@ -1,8 +1,8 @@
-﻿
 
-using BLL.ModelVMs.Content;
 
-namespace BLL.Services.Abstraction.Content
+using Eirene.BLL.ModelVMs.Content;
+
+namespace Eirene.BLL.Services.Abstraction.Content
 {
     public interface IBlogServices
     {

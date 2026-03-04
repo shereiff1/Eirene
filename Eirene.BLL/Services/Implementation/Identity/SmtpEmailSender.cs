@@ -1,11 +1,11 @@
-﻿
-using BLL.Models.Identity;
+
+using Eirene.BLL.Models.Identity;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
-using BLL.Services.Abstraction.Identity;
+using Eirene.BLL.Services.Abstraction.Identity;
 
-namespace BLL.Services.Implementation.identity;
+namespace Eirene.BLL.Services.Implementation.identity;
 
 public class SmtpEmailSender : IEmailSender
 {

@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Services.Abstraction.Core
+
+namespace Eirene.BLL.Services.Abstraction.Core
 {
     public interface IUserServices
     {

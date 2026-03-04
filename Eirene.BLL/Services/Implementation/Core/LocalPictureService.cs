@@ -1,10 +1,10 @@
-using BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Core
+namespace Eirene.BLL.Services.Implementation.Core
 {
     public class LocalPictureService : IPictureService
     {

@@ -1,6 +1,6 @@
-﻿using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 
-namespace DAL.Entities.Treatment;
+namespace Eirene.DAL.Entities.Treatment;
 
 public class TreatmentPlan
 {

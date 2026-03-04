@@ -1,9 +1,9 @@
-﻿using DAL.Entities.Content;
-using DAL.Repository.Abstraction.Content;
-using DAL.Database;
-using DAL.Repository.Abstraction;
+using Eirene.DAL.Entities.Content;
+using Eirene.DAL.Repository.Abstraction.Content;
+using Eirene.DAL.Database;
+using Eirene.DAL.Repository.Abstraction;
 
-namespace DAL.Repository.Implementation.Content
+namespace Eirene.DAL.Repository.Implementation.Content
 {
     public class BlogRepository: GenericRepository<Blog>, IBlogRepository
     {

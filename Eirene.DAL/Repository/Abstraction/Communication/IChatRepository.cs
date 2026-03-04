@@ -1,7 +1,7 @@
-﻿
-using DAL.Entities.Communication;
 
-namespace DAL.Repository.Abstraction.Communication;
+using Eirene.DAL.Entities.Communication;
+
+namespace Eirene.DAL.Repository.Abstraction.Communication;
 
 public interface IChatRepository
 {

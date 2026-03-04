@@ -1,9 +1,9 @@
-﻿using DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using DAL.Database;
+using Eirene.DAL.Database;
 
-namespace DAL.Repository.Implementation
+namespace Eirene.DAL.Repository.Implementation
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {

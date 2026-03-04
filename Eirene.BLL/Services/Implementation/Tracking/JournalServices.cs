@@ -1,13 +1,13 @@
-﻿using AutoMapper;
-using BLL.Models.Tracking;
-using BLL.Services.Abstraction.Tracking;
-using DAL.Entities.Tracking;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Tracking;
+using AutoMapper;
+using Eirene.BLL.Models.Tracking;
+using Eirene.BLL.Services.Abstraction.Tracking;
+using Eirene.DAL.Entities.Tracking;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Tracking;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace BLL.Services.Implementation.Tracking
+namespace Eirene.BLL.Services.Implementation.Tracking
 {
     public class JournalServices : IJournalServices
     {

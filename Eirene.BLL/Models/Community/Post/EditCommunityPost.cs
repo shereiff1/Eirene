@@ -1,4 +1,4 @@
-namespace BLL.Models.Community.Post;
+namespace Eirene.BLL.Models.Community.Post;
 
 public class EditCommunityPost
 {

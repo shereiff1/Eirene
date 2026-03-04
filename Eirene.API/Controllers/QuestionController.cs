@@ -1,7 +1,5 @@
-﻿using BLL.Enumerators;
-using BLL.ModelVMs.Treatment;
-using BLL.Services.Abstraction.Treatment;
-using Microsoft.AspNetCore.Authorization;
+﻿using Eirene.BLL.ModelVMs.Treatment;
+using Eirene.BLL.Services.Abstraction.Treatment;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eirene.Controllers

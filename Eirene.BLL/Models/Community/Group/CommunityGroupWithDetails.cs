@@ -1,9 +1,9 @@
-﻿
 
-using BLL.Models.Community.Post;
-using BLL.Models.Identity;
 
-namespace BLL.Models.Community.Group;
+using Eirene.BLL.Models.Community.Post;
+using Eirene.BLL.Models.Identity;
+
+namespace Eirene.BLL.Models.Community.Group;
 
 public class CommunityGroupWithDetails
 {

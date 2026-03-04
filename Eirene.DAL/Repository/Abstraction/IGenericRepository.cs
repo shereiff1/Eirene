@@ -1,8 +1,8 @@
-﻿
+
 using System.Linq.Expressions;
 
 
-namespace DAL.Repository.Abstraction
+namespace Eirene.DAL.Repository.Abstraction
 {
     public interface IGenericRepository<T> where T : class
     {

@@ -1,5 +1,5 @@
-using BLL.Services.Abstraction.Identity;
-using DAL.Entities.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.DAL.Entities.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 
-namespace BLL.Services.Implementation.Identity;
+namespace Eirene.BLL.Services.Implementation.Identity;
 
 public class TokenService : ITokenService
 {

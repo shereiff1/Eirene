@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 
-namespace BLL.Services.Abstraction.Identity
+namespace Eirene.BLL.Services.Abstraction.Identity
 {
     public interface ITokenService
     {

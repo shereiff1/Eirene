@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 
-namespace DAL.Entities.Content;
+namespace Eirene.DAL.Entities.Content;
 
 public class Blog
 {

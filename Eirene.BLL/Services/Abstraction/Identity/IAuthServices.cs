@@ -1,6 +1,6 @@
-﻿using BLL.Models.Identity;
+using Eirene.BLL.Models.Identity;
 
-namespace BLL.Services.Abstraction.Identity
+namespace Eirene.BLL.Services.Abstraction.Identity
 {
     public interface IAuthServices
     {

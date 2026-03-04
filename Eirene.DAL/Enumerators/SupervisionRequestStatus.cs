@@ -1,4 +1,4 @@
-namespace DAL.Enumerators;
+namespace Eirene.DAL.Enumerators;
 
 public enum SupervisionRequestStatus
 {

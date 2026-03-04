@@ -1,8 +1,8 @@
-﻿using DAL.Entities.Core;
+using Eirene.DAL.Entities.Core;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DAL.Entities.Community;
+namespace Eirene.DAL.Entities.Community;
 
 public class CommunityComment
 {

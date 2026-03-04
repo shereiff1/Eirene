@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace DAL.Migrations
+namespace Eirene.DAL.Migrations
 {
     /// <inheritdoc />
     public partial class FixingBlogAndDoctorIdBug : Migration

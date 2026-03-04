@@ -1,9 +1,9 @@
-﻿
-using BLL.Models.Core;
-using BLL.Models.Core.Doctor;
-using DAL.Entities.Core;
 
-namespace BLL.Services.Abstraction.Core
+using Eirene.BLL.Models.Core;
+using Eirene.BLL.Models.Core.Doctor;
+using Eirene.DAL.Entities.Core;
+
+namespace Eirene.BLL.Services.Abstraction.Core
 {
     public interface IDoctorServices
     {

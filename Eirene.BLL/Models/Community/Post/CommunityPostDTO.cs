@@ -1,6 +1,6 @@
-using BLL.Models.Community.Comment;
+using Eirene.BLL.Models.Community.Comment;
 
-namespace BLL.Models.Community.Post;
+namespace Eirene.BLL.Models.Community.Post;
 
 public class CommunityPostDTO
 {

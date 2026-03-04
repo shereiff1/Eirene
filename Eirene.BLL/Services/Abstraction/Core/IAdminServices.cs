@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BLL.Models.Core.Admin;
+using Eirene.BLL.Models.Core.Admin;
 
-namespace BLL.Services.Abstraction.Core
+namespace Eirene.BLL.Services.Abstraction.Core
 {
     public interface IAdminServices
     {

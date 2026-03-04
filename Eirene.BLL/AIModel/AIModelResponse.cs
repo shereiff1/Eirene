@@ -1,7 +1,7 @@
-﻿
+
 using System.Text.Json.Serialization;
 
-namespace BLL.AIModel;
+namespace Eirene.BLL.AIModel;
 
 public class AIModelResponse
 {

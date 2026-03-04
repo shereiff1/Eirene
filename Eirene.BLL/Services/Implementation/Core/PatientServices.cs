@@ -1,16 +1,16 @@
-﻿using DAL.Enumerators;
-using BLL.Models.Core;
-using BLL.Services.Abstraction.Core;
-using DAL.Entities.Core;
-using DAL.Repository.Abstraction;
-using DAL.Repository.Abstraction.Core;
+using Eirene.DAL.Enumerators;
+using Eirene.BLL.Models.Core;
+using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Repository.Abstraction;
+using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
-using BLL.Models.Core.Patient;
-using BLL.Models.Core.Doctor;
-using BLL.Services.Abstraction.Identity;
+using Eirene.BLL.Models.Core.Patient;
+using Eirene.BLL.Models.Core.Doctor;
+using Eirene.BLL.Services.Abstraction.Identity;
 
-namespace BLL.Services.Implementation.Core
+namespace Eirene.BLL.Services.Implementation.Core
 {
     public class PatientServices : IPatientServices
     {

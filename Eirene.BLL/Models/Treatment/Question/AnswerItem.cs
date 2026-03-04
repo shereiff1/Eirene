@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Models.Treatment.Question;
+
+namespace Eirene.BLL.Models.Treatment.Question;
 
 public class AnswerItem
 {

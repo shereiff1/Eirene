@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace BLL.Services.Abstraction.Core
+namespace Eirene.BLL.Services.Abstraction.Core
 {
     public interface IPictureService
     {

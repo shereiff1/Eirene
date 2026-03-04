@@ -1,6 +1,6 @@
-using DAL.Enumerators;
+using Eirene.DAL.Enumerators;
 
-namespace DAL.Entities.Core;
+namespace Eirene.DAL.Entities.Core;
 
 public class SupervisionRequest
 {

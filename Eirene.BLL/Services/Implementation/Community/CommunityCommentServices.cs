@@ -1,13 +1,13 @@
-﻿using AutoMapper;
-using BLL.Models.Community.Comment;
-using BLL.Services.Abstraction.Community;
-using DAL.Entities.Community;
-using DAL.Repository.Abstraction.Community;
-using DAL.Repository.Abstraction;
+using AutoMapper;
+using Eirene.BLL.Models.Community.Comment;
+using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Repository.Abstraction.Community;
+using Eirene.DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 
-namespace BLL.Services.Implementation.Community
+namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityCommentServices : ICommunityCommentServices
     {

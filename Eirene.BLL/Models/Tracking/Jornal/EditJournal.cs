@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BLL.Models.Tracking;
+namespace Eirene.BLL.Models.Tracking;
 
 public class EditJournal
 {

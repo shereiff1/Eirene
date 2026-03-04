@@ -1,4 +1,4 @@
-namespace BLL.Models.Core.Admin;
+namespace Eirene.BLL.Models.Core.Admin;
 
 public class AdminModel
 {

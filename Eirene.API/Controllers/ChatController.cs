@@ -1,6 +1,6 @@
-﻿using BLL.Models.Communication;
-using BLL.Services.Abstraction.Communication;
-using DAL.Entities.Communication;
+﻿using Eirene.BLL.Models.Communication;
+using Eirene.BLL.Services.Abstraction.Communication;
+using Eirene.DAL.Entities.Communication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

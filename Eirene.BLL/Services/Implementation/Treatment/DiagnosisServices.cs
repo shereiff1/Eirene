@@ -1,6 +1,6 @@
-﻿
 
-namespace BLL.Services.Implementation.Treatment;
+
+namespace Eirene.BLL.Services.Implementation.Treatment;
 
 public class DiagnosisServices
 {

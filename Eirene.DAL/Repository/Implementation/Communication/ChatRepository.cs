@@ -1,9 +1,9 @@
-﻿using DAL.Database;
-using DAL.Entities.Communication;
-using DAL.Repository.Abstraction.Communication;
+using Eirene.DAL.Database;
+using Eirene.DAL.Entities.Communication;
+using Eirene.DAL.Repository.Abstraction.Communication;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.Repository.Implementation.Communication
+namespace Eirene.DAL.Repository.Implementation.Communication
 {
     public class ChatRepository : IChatRepository
     {
