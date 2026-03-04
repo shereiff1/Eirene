@@ -14,10 +14,6 @@ public class AddPatientProfile
     [Required(ErrorMessage = "Emergency Contact is required")]
     [Phone(ErrorMessage = "Invalid phone number format")]
     public string EmergencyContact { get; set; } = string.Empty;
-    
-    [Required(ErrorMessage = "Phone number is required")]
-    [Phone(ErrorMessage = "Invalid phone number format")]
-    public string PhoneNumber { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Medical History is required")]
     [StringLength(2000, ErrorMessage = "Medical History cannot exceed 2000 characters")]
