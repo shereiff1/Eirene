@@ -40,6 +40,23 @@ namespace BLL.Services.Implementation.Content
             }
         }
 
+        public async Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetByDoctorIdAsync(string doctorId)
+        {
+            try
+            {
+                var blogs = await _blogRepository.FindAsync(b => b.DoctorId == doctorId);
+                if (blogs == null) return (false, null);
+
+                var blogDtOs = _mapper.Map<List<BlogDTO>>(blogs);
+                return (true, blogDtOs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return (false, null);
+            }
+        }
+
         public async Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(Guid id)
         {
             try

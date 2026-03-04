@@ -8,6 +8,8 @@ namespace BLL.Services.Abstraction.Content
     {
         Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetAllAsync();
 
+        Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetByDoctorIdAsync(string doctorId);
+
         Task<(bool IsSuccess, BlogDTO? Post)> GetByIdAsync(Guid id);
 
         Task<(bool IsSuccess, BlogDTO? CreatedPost)> CreateAsync(AddBlog model, string doctorId);

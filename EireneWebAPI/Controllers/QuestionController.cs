@@ -24,7 +24,7 @@ namespace Eirene.Controllers
             var result = await _questionServices.GetAllAsync();
             if (result.questions == null || !result.IsSuccess)
             {
-                return BadRequest("Could not retrieve blogs.");
+                return BadRequest("Could not retrieve Questions.");
             }
             return Ok(result.questions);
         }

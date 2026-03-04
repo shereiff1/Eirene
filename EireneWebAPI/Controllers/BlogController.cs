@@ -32,6 +32,17 @@ public class BlogController : ControllerBase
         return Ok(result.Posts);
     }
 
+    [HttpGet("doctor/{doctorId}")]
+    [Authorize(Roles = Roles.AllUsers)]
+    public async Task<IActionResult> GetByDoctorId(string doctorId)
+    {
+        var result = await _blogServices.GetByDoctorIdAsync(doctorId);
+        if (!result.IsSuccess)
+            return BadRequest("Could not retrieve blogs.");
+
+        return Ok(result.Posts);
+    }
+
     [HttpGet("{id}")]
     [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetById(Guid id)
