@@ -38,6 +38,7 @@ public static class BllServicesExtensions
         services.AddScoped<IChatServices, ChatServices>();
         services.AddScoped<IDoctorServices, DoctorServices>();
         services.AddScoped<IPatientServices, PatientServices>();
+        services.AddScoped<IAdminServices, AdminServices>();
 
         var storageProvider = configuration["Storage:Provider"];
         if (storageProvider == "CloudinarySettings")

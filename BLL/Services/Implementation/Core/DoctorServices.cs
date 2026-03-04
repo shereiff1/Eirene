@@ -102,7 +102,7 @@ namespace BLL.Services.Implementation.Core
                     return (false, "Doctor profile already exists for this user.", null);
                 }
 
-                var doctorEntity = _mapper.Map<DAL.Entities.Core.DoctorProfile>(model);
+                var doctorEntity = _mapper.Map<DoctorProfile>(model);
                 doctorEntity.Id = userId;
                 doctorEntity.JoinedAt = DateTime.UtcNow;
 

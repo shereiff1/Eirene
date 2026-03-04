@@ -1,6 +1,8 @@
+using DAL.Entities.Core;
+
 namespace DAL.Repository.Abstraction.Core;
 
-public interface IAdminProfileRepository
+public interface IAdminProfileRepository : IGenericRepository<AdminProfile>
 {
     
 }
