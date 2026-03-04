@@ -18,7 +18,7 @@ RUN dotnet restore Eirene.sln
 COPY . .
 
 # Publish API
-WORKDIR /src/EireneWebAPI
+WORKDIR /src/Eirene.API
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
@@ -30,4 +30,4 @@ COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "EireneWebAPI.dll"]
+ENTRYPOINT ["dotnet", "Eirene.API.dll"]
