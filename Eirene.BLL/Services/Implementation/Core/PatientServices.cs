@@ -7,7 +7,6 @@ using DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using BLL.Models.Core.Patient;
-using BLL.Models.Core.Patient;
 using BLL.Models.Core.Doctor;
 using BLL.Services.Abstraction.Identity;
 
@@ -19,6 +18,7 @@ namespace BLL.Services.Implementation.Core
         private readonly IDoctorProfileRepository _doctorRepository;
         private readonly ISupervisionRequestRepository _requestRepository;
         private readonly IDoctorRatingRepository _ratingRepository;
+        private readonly IApplicationUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<PatientServices> _logger;
         private readonly IMapper _mapper;
@@ -31,6 +31,7 @@ namespace BLL.Services.Implementation.Core
             IDoctorProfileRepository doctorRepository,
             ISupervisionRequestRepository requestRepository,
             IDoctorRatingRepository ratingRepository,
+            IApplicationUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IEmailSender emailSender)
         {
@@ -38,6 +39,7 @@ namespace BLL.Services.Implementation.Core
             _doctorRepository = doctorRepository;
             _requestRepository = requestRepository;
             _ratingRepository = ratingRepository;
+            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
@@ -149,7 +151,15 @@ namespace BLL.Services.Implementation.Core
                 {
                     return (false, "Patient profile already exists for this user.", null);
                 }
-                
+
+                // Save the phone number to the user account
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    return (false, "User account not found.", null);
+
+                user.PhoneNumber = model.PhoneNumber;
+                await _userRepository.UpdateAsync(user);
+
                 var patientEntity = _mapper.Map<PatientProfile>(model);
                 patientEntity.Id = userId;
 
