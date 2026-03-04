@@ -39,7 +39,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
         builder.Entity<ApplicationUser>()
             .HasOne(u => u.AdminProfile)
             .WithOne(p => p.User)
-            .HasForeignKey<AdminProfile>(p => p.UserId)
+            .HasForeignKey<AdminProfile>(p => p.Id)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<ApplicationUser>()
