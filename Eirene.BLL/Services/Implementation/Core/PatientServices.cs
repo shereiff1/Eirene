@@ -151,7 +151,6 @@ namespace Eirene.BLL.Services.Implementation.Core
                     return (false, "Patient profile already exists for this user.", null);
                 }
 
-                // Save the phone number to the user account
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                     return (false, "User account not found.", null);
@@ -182,14 +181,22 @@ namespace Eirene.BLL.Services.Implementation.Core
             try
             {
                 var existingProfile = await _patientRepository.GetByIdAsync(userId);
-
+                var user = await _userRepository.GetByIdAsync(userId);
                 if (existingProfile == null)
                 {
                     return (false, "Patient profile not found.", null);
                 }
-
+                
                 _mapper.Map(model, existingProfile);
+                if (user == null)
+                    return (false, "User account not found.", null);
 
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                {
+                    user.PhoneNumber = model.PhoneNumber;
+                    await _userRepository.UpdateAsync(user);
+                }
+                
                 await _patientRepository.UpdateAsync(existingProfile);
                 await _unitOfWork.SaveChangesAsync();
 

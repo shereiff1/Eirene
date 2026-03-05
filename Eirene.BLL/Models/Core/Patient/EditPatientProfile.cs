@@ -9,7 +9,8 @@ public class EditPatientProfile
 
     [Phone(ErrorMessage = "Invalid phone number format")]
     public string? EmergencyContact { get; set; }
-
+    [Phone(ErrorMessage = "Invalid phone number format")]
+    public string? PhoneNumber { get; set; }
     [StringLength(2000, ErrorMessage = "Medical History cannot exceed 2000 characters")]
     public string? MedicalHistory { get; set; }
     
