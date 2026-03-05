@@ -13,18 +13,18 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
- 
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
- 
+
 builder.Services.Configure<SmtpSettings>(
     builder.Configuration.GetSection("Smtp"));
- 
+
 builder.Services.AddAutoMapper(typeof(AuthProfile));
- 
+
 builder.Services.AddDbContext<EireneDBContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
- 
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = false;
@@ -37,30 +37,34 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<EireneDBContext>()
 .AddDefaultTokenProviders();
- 
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .SetIsOriginAllowed(_ => true) 
+            .SetIsOriginAllowed(_ => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
     });
 });
- 
+
 builder.Services.AddDataAccessServices()
                 .AddBusinessLogicServices(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
- 
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = jwtSettings["Secret"];
 
 builder.Services.Configure<AIModelSettings>(
     builder.Configuration.GetSection("AIModel"));
 
+builder.Services.Configure<PythonSettings>(
+    builder.Configuration.GetSection("PythonSettings"));
+
+builder.Services.AddSingleton<IPythonModelService, PythonModelService>();
 builder.Services.AddHttpClient<IAIModelService, AIModelService>();
 
 builder.Services.AddAuthentication(options =>
@@ -85,7 +89,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
         ClockSkew = TimeSpan.Zero
     };
-     
+
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -105,14 +109,14 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
- 
+
 builder.Services.AddSignalR();
 
 var app = builder.Build();
- 
+
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://*:{port}");
- 
+
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -126,14 +130,14 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
- 
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseStaticFiles();
- 
+
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
