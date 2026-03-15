@@ -6,6 +6,8 @@ using System.Security.Claims;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Models.Core.Patient;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Eirene.DAL.Enumerators;
+using SupervisionRequestStatus = Eirene.DAL.Enumerators.SupervisionRequestStatus;
 
 namespace Eirene.Controllers
 {
@@ -191,5 +193,21 @@ namespace Eirene.Controllers
                 return NotFound("Profile picture not set.");
             return Redirect(imageUrl);
         }
+        
+        [HttpGet("supervision-requests")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> getSupervisionRequests([FromQuery] SupervisionRequestStatus? status = null)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var result = await _patientServices.GetSupervisionRequestsAsync(userId, status);
+            if (!result.IsSuccess)
+                return BadRequest("Could not retrieve supervision requests.");
+
+            return Ok(result.Requests);
+        }
     }
+    
 }

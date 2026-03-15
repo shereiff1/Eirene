@@ -265,6 +265,32 @@ namespace Eirene.BLL.Services.Implementation.Core
                 return (false, "An error occurred while removing the supervision request.");
             }
         }
+        public async Task<(bool IsSuccess, List<SupervisionRequest>? Requests)> GetSupervisionRequestsAsync(string patientUserId, SupervisionRequestStatus? status = null)
+        {
+            try
+            {
+                var requests = await _requestRepository.FindAsync(
+                    r => r.PatientProfileId == patientUserId && (!status.HasValue || r.Status == status.Value));
+
+                var models = requests.Select(r => new SupervisionRequest
+                {
+                    Id = r.Id,
+                    PatientProfileId = r.PatientProfileId,
+                    DoctorProfileId = r.DoctorProfileId,
+                    Status = r.Status,
+                    CreatedAt = r.CreatedAt,
+                    RespondedAt = r.RespondedAt
+                }).ToList();
+
+                return (true, models);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching supervision requests for patient {PatientProfileId}", patientUserId);
+                return (false, null);
+            }
+        }
+
         public async Task<(bool IsSuccess, string? Error)> RateSupervisorAsync(string patientUserId, string doctorId, AddDoctorRatingDTO model)
         {
             try
