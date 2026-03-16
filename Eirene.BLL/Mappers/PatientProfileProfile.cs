@@ -14,6 +14,7 @@ namespace Eirene.BLL.Mappers
                 .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.User.Gender))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
+                .ForMember(dest => dest.DoctorId, opt => opt.MapFrom(src => src.DoctorProfileId))
                 .ForMember(dest => dest.dateOfBirth, opt => opt.MapFrom(src => src.DateOfBirth));
 
             // Map AddModel -> Entity (creation)
