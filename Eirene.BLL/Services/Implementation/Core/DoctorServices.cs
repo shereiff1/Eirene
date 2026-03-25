@@ -175,8 +175,8 @@ namespace Eirene.BLL.Services.Implementation.Core
                     var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
                     var doctorFullName = doctor?.User?.FullName ?? string.Empty;
                     var patientFullName = patient?.User?.FullName ?? string.Empty;
-                    await _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted.");
-                    await _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor.");
+                    // await _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted.");
+                    // await _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor.");
                     var otherRequests = await _requestRepository.FindAsync(
                         r => r.PatientProfileId == request.PatientProfileId &&
                              r.Id != requestId &&
@@ -261,17 +261,17 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var patientFullName = patient.User?.FullName ?? string.Empty;
                 var doctorFullName = doctor?.User?.FullName ?? string.Empty;
 
-                if (!string.IsNullOrEmpty(patientEmail))
-                {
-                    await _emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
-                        $"You removed the supervision request from Doctor {doctorFullName}.");
-                }
-                
-                if (!string.IsNullOrEmpty(doctorEmail))
-                {
-                    await _emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled",
-                        $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
-                }
+                // if (!string.IsNullOrEmpty(patientEmail))
+                // {
+                //     await _emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
+                //         $"You removed the supervision request from Doctor {doctorFullName}.");
+                // }
+                //
+                // if (!string.IsNullOrEmpty(doctorEmail))
+                // {
+                //     await _emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled",
+                //         $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
+                // }
                 
                 return (true, null);
             }

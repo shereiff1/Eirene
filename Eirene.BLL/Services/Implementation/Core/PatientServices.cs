@@ -253,10 +253,10 @@ namespace Eirene.BLL.Services.Implementation.Core
                 await _requestRepository.DeleteAsync(existingRequest);
                 await _unitOfWork.SaveChangesAsync();
                 
-                await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled",
-                    $"You removed the supervision request from Doctor {doctor.User.FullName}.");
-                await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
-                    $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
+                // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled",
+                //     $"You removed the supervision request from Doctor {doctor.User.FullName}.");
+                // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
+                //     $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
                 return (true, null);
             }
             catch (Exception ex)
