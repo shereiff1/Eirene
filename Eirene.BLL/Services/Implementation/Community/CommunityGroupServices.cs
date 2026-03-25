@@ -2,8 +2,10 @@ using AutoMapper;
 using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
 using Eirene.DAL.Entities.Community;
+using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace Eirene.BLL.Services.Implementation.Community
@@ -14,17 +16,20 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IMapper _mapper;
         private readonly ICommunityGroupRepository _communityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
             IMapper mapper,
             ICommunityGroupRepository communityGroupRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _mapper = mapper;
             _communityGroupRepository = communityGroupRepository;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
@@ -239,6 +244,77 @@ namespace Eirene.BLL.Services.Implementation.Community
             {
                 _logger.LogError(ex, "Error deleting community group {GroupId}", id);
                 return false;
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> JoinGroupAsync(Guid groupId, string userId)
+        {
+            try
+            {
+                var group = await _communityGroupRepository.GetByIdWithMembersAsync(groupId);
+                if (group == null)
+                {
+                    _logger.LogWarning("Community group {GroupId} not found", groupId);
+                    return (false, "Community group not found.");
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.LogWarning("User {UserId} not found", userId);
+                    return (false, "User not found.");
+                }
+
+                if (group.Members != null && group.Members.Any(m => m.Id == userId))
+                {
+                    _logger.LogInformation("User {UserId} is already a member of group {GroupId}", userId, groupId);
+                    return (false, "You are already a member of this group.");
+                }
+
+                group.Members ??= new List<ApplicationUser>();
+                group.Members.Add(user);
+                group.MemberCount++;
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} joined group {GroupId}", userId, groupId);
+                return (true, "Successfully joined the group.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error joining group {GroupId} for user {UserId}", groupId, userId);
+                return (false, "An error occurred while joining the group.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> LeaveGroupAsync(Guid groupId, string userId)
+        {
+            try
+            {
+                var group = await _communityGroupRepository.GetByIdWithMembersAsync(groupId);
+                if (group == null)
+                {
+                    _logger.LogWarning("Community group {GroupId} not found", groupId);
+                    return (false, "Community group not found.");
+                }
+
+                var member = group.Members?.FirstOrDefault(m => m.Id == userId);
+                if (member == null)
+                {
+                    _logger.LogInformation("User {UserId} is not a member of group {GroupId}", userId, groupId);
+                    return (false, "You are not a member of this group.");
+                }
+
+                group.Members!.Remove(member);
+                group.MemberCount--;
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} left group {GroupId}", userId, groupId);
+                return (true, "Successfully left the group.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error leaving group {GroupId} for user {UserId}", groupId, userId);
+                return (false, "An error occurred while leaving the group.");
             }
         }
     }

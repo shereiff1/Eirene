@@ -3,6 +3,7 @@ using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 
 namespace Eirene.Controllers
@@ -83,6 +84,34 @@ namespace Eirene.Controllers
             if (!deleted)
                 return NotFound("Community group not found.");
             return NoContent();
+        }
+
+        [HttpPost("{id}/join")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> JoinGroup(Guid id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.JoinGroupAsync(id, userId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+            return Ok(result.Message);
+        }
+
+        [HttpPost("{id}/leave")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> LeaveGroup(Guid id)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.LeaveGroupAsync(id, userId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+            return Ok(result.Message);
         }
     }
 }

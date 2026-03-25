@@ -9,6 +9,7 @@ public class CommunityGroupDTO
     public string CreatedByUserId { get; set; } = string.Empty;
     public string CreatedByUserName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public int MemberCount { get; set; }
     public int PostsCount { get; set; }
 
 }

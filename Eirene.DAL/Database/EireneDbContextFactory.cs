@@ -9,7 +9,7 @@ namespace Eirene.DAL.Database
         public EireneDBContext CreateDbContext(string[] args)
         {
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "EireneWebAPI"))
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "Eirene.API"))
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 

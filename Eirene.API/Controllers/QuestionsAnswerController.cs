@@ -1,5 +1,5 @@
 ﻿using Eirene.BLL.Models.Treatment.Question;
-using Eirene.BLL.Services.Abstraction.Treatment; 
+using Eirene.BLL.Services.Abstraction.Treatment;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -34,6 +34,7 @@ namespace Eirene.Controllers
                 {
                     return NotFound("No questions found.");
                 }
+
                 return Ok(Questions);
             }
             catch (Exception ex)
@@ -56,9 +57,14 @@ namespace Eirene.Controllers
 
                 var (IsSuccess, Answers) = await _questionAnswerServices.GetAnswersForUserAsync(userId);
 
-                if (!IsSuccess || Answers == null || !Answers.Any())
+                if (Answers == null || !Answers.Any())
                 {
-                    return NotFound("No answers found for this user.");
+                    return Ok("No answers found for this user.");
+                }
+
+                if (!IsSuccess)
+                {
+                    return StatusCode(500, "An error occurred while retrieving answers.");
                 }
 
                 return Ok(Answers);

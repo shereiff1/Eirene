@@ -47,5 +47,12 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .OrderByDescending(g => g.CreatedAt)
                 .ToListAsync();
         }
+
+        public async Task<CommunityGroup?> GetByIdWithMembersAsync(Guid id)
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.Members)
+                .FirstOrDefaultAsync(g => g.Id == id);
+        }
     }
 }

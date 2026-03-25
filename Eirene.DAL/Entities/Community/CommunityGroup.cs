@@ -18,6 +18,7 @@ public class CommunityGroup
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     [ForeignKey(nameof(CreatedByUserId))]
     public ApplicationUser? CreatedBy { get; set; }
+    public int MemberCount { get; set; } = 0;
     public ICollection<ApplicationUser>? Members { get; set; } = new List<ApplicationUser>();
     public ICollection<CommunityPost> Posts { get; set; } = new List<CommunityPost>();
 

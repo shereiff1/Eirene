@@ -16,5 +16,7 @@ namespace Eirene.BLL.Services.Abstraction.Community
         Task<bool> UpdateAsync(EditCommunityGroup model);
         Task<(bool IsSuccess, CommunityGroupWithDetails? Group)> GetByIdWithFullDetailsAsync(Guid id);
         Task<bool> DeleteAsync(Guid id);
+        Task<(bool IsSuccess, string Message)> JoinGroupAsync(Guid groupId, string userId);
+        Task<(bool IsSuccess, string Message)> LeaveGroupAsync(Guid groupId, string userId);
     }
 }
