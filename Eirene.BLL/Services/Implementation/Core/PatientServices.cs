@@ -82,10 +82,10 @@ namespace Eirene.BLL.Services.Implementation.Core
                 await _requestRepository.AddAsync(request);
                 await _unitOfWork.SaveChangesAsync();
 
-                await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Request",
-                    $"You sent a supervision request to Doctor {doctor.User.FullName}.");
-                await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
-                    $"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience.");
+                // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Request",
+                //     $"You sent a supervision request to Doctor {doctor.User.FullName}.");
+                // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
+                //     $"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience.");
                 
                 return (true, null);
             }
