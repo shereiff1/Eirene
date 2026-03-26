@@ -226,7 +226,7 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
-        public async Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId)
+        public async Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId, string doctorId)
         {
             try
             {
@@ -236,21 +236,32 @@ namespace Eirene.BLL.Services.Implementation.Core
                     _logger.LogError("Patient profile not found for user {UserId}", patientUserId);
                     return (false, "Patient profile not found.");
                 }
-
-                if (patient.DoctorProfileId == null)
+                
+                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
                 {
-                    _logger.LogWarning("Patient {UserId} is not under a doctor's supervision.", patientUserId);
-                    return (true, null);
+                    _logger.LogError("doctor profile not found for user {UserId}", doctorId);
+                    return (false, "doctor profile not found.");
                 }
-                var doctor = await _doctorRepository.GetByIdAsync(patient.DoctorProfileId);
-                patient.DoctorProfileId = null;
-                await _patientRepository.UpdateAsync(patient);
                 
                 var existingRequest = (await _requestRepository.FindAsync(
                         r => r.PatientProfileId == patient.Id &&
-                             r.Status == SupervisionRequestStatus.Accepted))
+                             r.DoctorProfileId == doctor.Id))
                     .FirstOrDefault();
+                if (existingRequest == null)
+                {
+                    _logger.LogError("supervision request is not found for user {UserId} and doctor {doctorId}", patientUserId, doctorId);
+                    return (false, "no supervision request found for this patient and doctor.");
+                }
                 await _requestRepository.DeleteAsync(existingRequest);
+                
+                if (patient.DoctorProfileId != null)
+                {
+                    _logger.LogInformation("Removing doctor's id from patient {UserId} profile.", patientUserId);
+                    patient.DoctorProfileId = null;
+                    await _patientRepository.UpdateAsync(patient);
+                }
+                
                 await _unitOfWork.SaveChangesAsync();
                 
                 // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled",

@@ -15,7 +15,7 @@ namespace Eirene.BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string? Error, PatientModel? Patient)> UpdatePatientProfileAsync(EditPatientProfile model, string userId);
         Task<(bool IsSuccess, string? Error)> DeletePatientProfileAsync(string userId);
         Task<(bool IsSuccess, string? Error)> RequestSupervisionAsync(string patientUserId, string doctorId);
-        Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId);
+        Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId, string doctorId);
         Task<(bool IsSuccess, string? Error)> RateSupervisorAsync(string patientUserId, string doctorId, AddDoctorRatingDTO model);
         Task<(bool IsSuccess, List<SupervisionRequest>? Requests)> GetSupervisionRequestsAsync(string patientUserId, SupervisionRequestStatus? status = null);
     }
