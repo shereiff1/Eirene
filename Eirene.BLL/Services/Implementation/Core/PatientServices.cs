@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Eirene.BLL.Models.Core.Patient;
 using Eirene.BLL.Models.Core.Doctor;
+using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.BLL.Services.Abstraction.Identity;
 
 namespace Eirene.BLL.Services.Implementation.Core
@@ -22,6 +23,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly ILogger<PatientServices> _logger;
         private readonly IMapper _mapper;
         private readonly IEmailSender _emailSender;
+        private readonly IBackgroundJobService _backgroundJobService;
 
         public PatientServices(
             ILogger<PatientServices> logger,
@@ -32,7 +34,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             IDoctorRatingRepository ratingRepository,
             IApplicationUserRepository userRepository,
             IUnitOfWork unitOfWork,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IBackgroundJobService backgroundJobService)
         {
             _patientRepository = patientRepository;
             _doctorRepository = doctorRepository;
@@ -43,6 +46,7 @@ namespace Eirene.BLL.Services.Implementation.Core
             _logger = logger;
             _mapper = mapper;
             _emailSender = emailSender;
+            _backgroundJobService = backgroundJobService;
         }
 
         public async Task<(bool IsSuccess, string? Error)> RequestSupervisionAsync(string patientUserId, string doctorId)
@@ -82,8 +86,12 @@ namespace Eirene.BLL.Services.Implementation.Core
                 await _requestRepository.AddAsync(request);
                 await _unitOfWork.SaveChangesAsync();
 
+                _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Request",
+                $"You sent a supervision request to Doctor {doctor.User.FullName}."));
+
                 // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Request",
                 //     $"You sent a supervision request to Doctor {doctor.User.FullName}.");
+                _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",$"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience."));
                 // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
                 //     $"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience.");
                 
@@ -151,7 +159,6 @@ namespace Eirene.BLL.Services.Implementation.Core
                     return (false, "Patient profile already exists for this user.", null);
                 }
 
-                // Save the phone number to the user account
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null)
                     return (false, "User account not found.", null);
@@ -264,8 +271,11 @@ namespace Eirene.BLL.Services.Implementation.Core
                 
                 await _unitOfWork.SaveChangesAsync();
                 
+                _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled", $"You removed the supervision request from Doctor {doctor.User.FullName}."));
                 // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled",
                 //     $"You removed the supervision request from Doctor {doctor.User.FullName}.");
+                
+                _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request", $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience."));
                 // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
                 //     $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
                 return (true, null);

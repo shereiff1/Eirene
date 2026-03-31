@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
+using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.DAL.Repository.Abstraction;
 
 
@@ -24,6 +25,7 @@ public class AuthServices : IAuthServices
     private readonly ILogger<AuthServices> _logger;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBackgroundJobService _backgroundJobService;
     private readonly string _otpSecret;
 
     public AuthServices(
@@ -36,7 +38,8 @@ public class AuthServices : IAuthServices
         IRefreshTokenRepository refreshTokenRepository,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
-        ILogger<AuthServices> logger)
+        ILogger<AuthServices> logger,
+        IBackgroundJobService backgroundJobService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -48,6 +51,7 @@ public class AuthServices : IAuthServices
         _unitOfWork = unitOfWork;
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
+        _backgroundJobService = backgroundJobService;
     }
 
     public async Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto)
@@ -88,8 +92,10 @@ public class AuthServices : IAuthServices
 
             await _userManager.AddToRoleAsync(user, role);
 
-            await _emailSender.SendEmailAsync(user.Email, "Verification Code",
-                $"Your verification code is: {code}");
+            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email, "Verification Code",
+                $"Your verification code is: {code}"));
+            // await _emailSender.SendEmailAsync(user.Email, "Verification Code",
+                // $"Your verification code is: {code}");
             var Registrationdto = new RegistrationDTO
             {
                 Email = registerDto.Email,
@@ -367,11 +373,14 @@ public class AuthServices : IAuthServices
             user.EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(20);
             await _userManager.UpdateAsync(user);
 
-            await _emailSender.SendEmailAsync(
-                user.Email,
+            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email, 
                 "Email Verification Code",
-                $"Your verification code is: {code}"
-            );
+                $"Your verification code is: {code}"));
+            // await _emailSender.SendEmailAsync(
+            //     user.Email,
+            //     "Email Verification Code",
+            //     $"Your verification code is: {code}"
+            // );
 
             return new AuthResultDTO
             {
@@ -403,11 +412,15 @@ public class AuthServices : IAuthServices
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            await _emailSender.SendEmailAsync(
+            _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(
                 user.Email,
                 "Reset Password",
-                $"Your password reset token is: {token}"
-            );
+                $"Your password reset token is: {token}"));
+            // await _emailSender.SendEmailAsync(
+            //     user.Email,
+            //     "Reset Password",
+            //     $"Your password reset token is: {token}"
+            // );
 
             return new AuthResultDTO
             {
