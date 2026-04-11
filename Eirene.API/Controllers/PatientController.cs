@@ -147,17 +147,17 @@ namespace Eirene.Controllers
                 url = result.Url });
         }
 
-        [HttpDelete("cancel-supervision")]
+        [HttpDelete("cancel-supervision/{doctorId}")]
         [Authorize(Roles = Roles.Patient)]
-        public async Task<IActionResult> CancelDoctorSupervision()
+        public async Task<IActionResult> CancelDoctorSupervision(string doctorId)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User not authenticated.");
-            var result =  await _patientServices.RemoveDoctorSupervision(userId);
+            var result =  await _patientServices.RemoveDoctorSupervision(userId, doctorId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
             return Ok(new { message = "Supervision is cancelled successfully." });
         }
 

@@ -6,11 +6,13 @@ using AutoMapper;
 using Eirene.DAL.Enumerators;
 using Eirene.BLL.Models.Core;
 using Eirene.BLL.Models.Core.Doctor;
+using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Core;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 
 namespace Eirene.BLL.Services.Implementation.Core
@@ -25,6 +27,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly IDoctorRatingRepository _ratingRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailSender _emailSender;
+        private readonly IBackgroundJobService _backgroundJobService;
         
         public DoctorServices(
             ILogger<DoctorServices> logger,
@@ -34,7 +37,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             ISupervisionRequestRepository requestRepository,
             IDoctorRatingRepository ratingRepository,
             IUnitOfWork unitOfWork,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IBackgroundJobService backgroundJobService)
         {
             _logger = logger;
             _mapper = mapper;
@@ -44,6 +48,7 @@ namespace Eirene.BLL.Services.Implementation.Core
             _ratingRepository = ratingRepository;
             _unitOfWork = unitOfWork;
             _emailSender = emailSender;
+            _backgroundJobService = backgroundJobService;
         }
 
         public async Task<(bool IsSuccess, List<DoctorModel>? Doctors)> GetAllAsync()
@@ -175,7 +180,9 @@ namespace Eirene.BLL.Services.Implementation.Core
                     var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
                     var doctorFullName = doctor?.User?.FullName ?? string.Empty;
                     var patientFullName = patient?.User?.FullName ?? string.Empty;
+                    _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
                     // await _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted.");
+                    _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
                     // await _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor.");
                     var otherRequests = await _requestRepository.FindAsync(
                         r => r.PatientProfileId == request.PatientProfileId &&
@@ -261,17 +268,20 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var patientFullName = patient.User?.FullName ?? string.Empty;
                 var doctorFullName = doctor?.User?.FullName ?? string.Empty;
 
-                // if (!string.IsNullOrEmpty(patientEmail))
-                // {
-                //     await _emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
-                //         $"You removed the supervision request from Doctor {doctorFullName}.");
-                // }
-                //
-                // if (!string.IsNullOrEmpty(doctorEmail))
-                // {
-                //     await _emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled",
-                //         $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
-                // }
+                if (!string.IsNullOrEmpty(patientEmail))
+                {
+                    _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
+                        $"You removed the supervision request from Doctor {doctorFullName}."));
+                    // await _emailSender.SendEmailAsync(patientEmail, "Supervision Canceled",
+                    //     $"You removed the supervision request from Doctor {doctorFullName}.");
+                }
+                
+                if (!string.IsNullOrEmpty(doctorEmail))
+                {
+                    _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled", $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience."));
+                    // await _emailSender.SendEmailAsync(doctorEmail, "Supervision Canceled",
+                    //     $"Patient {patientFullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
+                }
                 
                 return (true, null);
             }

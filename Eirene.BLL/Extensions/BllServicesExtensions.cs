@@ -1,3 +1,4 @@
+using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.BLL.Services.Abstraction.Communication;
 using Eirene.BLL.Services.Abstraction.Community;
 using Eirene.BLL.Services.Abstraction.Content;
@@ -5,6 +6,7 @@ using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.BLL.Services.Abstraction.Tracking;
 using Eirene.BLL.Services.Abstraction.Treatment;
+using Eirene.BLL.Services.Implementation.Background_Jobs;
 using Eirene.BLL.Services.Implementation.Communication;
 using Eirene.BLL.Services.Implementation.Community;
 using Eirene.BLL.Services.Implementation.Content;
@@ -39,6 +41,7 @@ public static class BllServicesExtensions
         services.AddScoped<IDoctorServices, DoctorServices>();
         services.AddScoped<IPatientServices, PatientServices>();
         services.AddScoped<IAdminServices, AdminServices>();
+        services.AddScoped<IBackgroundJobService, BackgroundJobServices>();
 
         var storageProvider = configuration["Storage:Provider"];
         if (storageProvider == "CloudinarySettings")

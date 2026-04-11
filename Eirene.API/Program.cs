@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Hangfire;
+using Hangfire.PostgreSql;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -112,6 +114,16 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSignalR();
 
+builder.Services.AddHangfire(config =>
+    config.UsePostgreSqlStorage(options =>
+        options.UseNpgsqlConnection(
+            builder.Configuration.GetConnectionString("DefaultConnection")
+        )
+    )
+);
+
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
@@ -142,6 +154,7 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
