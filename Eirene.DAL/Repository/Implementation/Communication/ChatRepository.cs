@@ -38,6 +38,13 @@ namespace Eirene.DAL.Repository.Implementation.Communication
             return conversation;
         }
 
+        public async Task<Conversation?> GetConversationAsync(Guid conversationId)
+        {
+            return await _dbContext.Conversations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == conversationId);
+        }
+
         public async Task<IEnumerable<ChatMessage>> GetMessagesAsync(Guid conversationId)
         {
             return await _dbContext.ChatMessages

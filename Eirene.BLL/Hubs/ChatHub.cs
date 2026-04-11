@@ -16,6 +16,18 @@ public class ChatHub : Hub
 
     public async Task JoinConversation(Guid conversationId)
     {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            throw new HubException("Unauthorized");
+
+        var conversation = await _chatServices.GetConversationAsync(conversationId);
+        if (conversation == null)
+            throw new HubException("Conversation not found.");
+
+        if (conversation.DoctorId != userId && conversation.PatientId != userId)
+            throw new HubException("You are not a participant in this conversation.");
+
         await Groups.AddToGroupAsync(Context.ConnectionId, conversationId.ToString());
     }
 
