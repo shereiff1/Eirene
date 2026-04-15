@@ -30,4 +30,12 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
                 .ThenInclude(d => d.User)
             .FirstOrDefaultAsync(r => r.Id == (string)id);
     }
+    public async Task<List<SupervisionRequest>> GetDoctorPatientsAsync(string doctorId)
+    {
+        return await _context.Set<SupervisionRequest>()
+            .Include(r => r.Patient)
+                .ThenInclude(p => p.User)
+            .Where(r => r.DoctorProfileId == doctorId && r.Status == Eirene.DAL.Enumerators.SupervisionRequestStatus.Accepted)
+            .ToListAsync();
+    }
 }
