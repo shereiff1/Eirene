@@ -99,7 +99,7 @@ public class BlogController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = Roles.Doctor)]
+    [Authorize(Roles = Roles.DoctorOrAdmin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _blogServices.DeleteAsync(id);
