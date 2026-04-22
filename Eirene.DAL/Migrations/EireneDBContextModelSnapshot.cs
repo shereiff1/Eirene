@@ -22,21 +22,6 @@ namespace Eirene.DAL.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ApplicationUserCommunityGroup", b =>
-                {
-                    b.Property<Guid>("GroupsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("MembersId")
-                        .HasColumnType("text");
-
-                    b.HasKey("GroupsId", "MembersId");
-
-                    b.HasIndex("MembersId");
-
-                    b.ToTable("ApplicationUserCommunityGroup");
-                });
-
             modelBuilder.Entity("Eirene.DAL.Entities.Communication.ChatMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -207,6 +192,31 @@ namespace Eirene.DAL.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("CommunityPosts");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Community.UserCommunityGroup", b =>
+                {
+                    b.Property<Guid>("CommunityGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("GroupsId");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("MembersId");
+
+                    b.Property<bool>("IsBanned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("TimeoutUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CommunityGroupId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ApplicationUserCommunityGroup", (string)null);
                 });
 
             modelBuilder.Entity("Eirene.DAL.Entities.Content.Blog", b =>
@@ -863,21 +873,6 @@ namespace Eirene.DAL.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ApplicationUserCommunityGroup", b =>
-                {
-                    b.HasOne("Eirene.DAL.Entities.Community.CommunityGroup", null)
-                        .WithMany()
-                        .HasForeignKey("GroupsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Eirene.DAL.Entities.Core.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("MembersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Eirene.DAL.Entities.Community.CommunityComment", b =>
                 {
                     b.HasOne("Eirene.DAL.Entities.Community.CommunityComment", "ParentComment")
@@ -927,6 +922,25 @@ namespace Eirene.DAL.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CommunityGroup");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Community.UserCommunityGroup", b =>
+                {
+                    b.HasOne("Eirene.DAL.Entities.Community.CommunityGroup", "CommunityGroup")
+                        .WithMany("UserCommunityGroups")
+                        .HasForeignKey("CommunityGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Eirene.DAL.Entities.Core.ApplicationUser", "User")
+                        .WithMany("UserCommunityGroups")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CommunityGroup");
@@ -1202,6 +1216,8 @@ namespace Eirene.DAL.Migrations
             modelBuilder.Entity("Eirene.DAL.Entities.Community.CommunityGroup", b =>
                 {
                     b.Navigation("Posts");
+
+                    b.Navigation("UserCommunityGroups");
                 });
 
             modelBuilder.Entity("Eirene.DAL.Entities.Community.CommunityPost", b =>
@@ -1220,6 +1236,8 @@ namespace Eirene.DAL.Migrations
                     b.Navigation("PatientProfile");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("UserCommunityGroups");
                 });
 
             modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorProfile", b =>

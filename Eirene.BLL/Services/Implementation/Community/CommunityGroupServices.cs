@@ -15,6 +15,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly ILogger<CommunityGroupServices> _logger;
         private readonly IMapper _mapper;
         private readonly ICommunityGroupRepository _communityGroupRepository;
+        private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -22,12 +23,14 @@ namespace Eirene.BLL.Services.Implementation.Community
             ILogger<CommunityGroupServices> logger,
             IMapper mapper,
             ICommunityGroupRepository communityGroupRepository,
+            IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _mapper = mapper;
             _communityGroupRepository = communityGroupRepository;
+            _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
         }
@@ -251,7 +254,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var group = await _communityGroupRepository.GetByIdWithMembersAsync(groupId);
+                var group = await _communityGroupRepository.GetByIdAsync(groupId);
                 if (group == null)
                 {
                     _logger.LogWarning("Community group {GroupId} not found", groupId);
@@ -265,15 +268,21 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (false, "User not found.");
                 }
 
-                if (group.Members != null && group.Members.Any(m => m.Id == userId))
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership != null)
                 {
                     _logger.LogInformation("User {UserId} is already a member of group {GroupId}", userId, groupId);
                     return (false, "You are already a member of this group.");
                 }
 
-                group.Members ??= new List<ApplicationUser>();
-                group.Members.Add(user);
+                await _userCommunityGroupRepository.AddAsync(new UserCommunityGroup
+                {
+                    CommunityGroupId = groupId,
+                    UserId = userId
+                });
+
                 group.MemberCount++;
+                await _communityGroupRepository.UpdateAsync(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("User {UserId} joined group {GroupId}", userId, groupId);
@@ -290,22 +299,27 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var group = await _communityGroupRepository.GetByIdWithMembersAsync(groupId);
+                var group = await _communityGroupRepository.GetByIdAsync(groupId);
                 if (group == null)
                 {
                     _logger.LogWarning("Community group {GroupId} not found", groupId);
                     return (false, "Community group not found.");
                 }
 
-                var member = group.Members?.FirstOrDefault(m => m.Id == userId);
-                if (member == null)
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership == null)
                 {
                     _logger.LogInformation("User {UserId} is not a member of group {GroupId}", userId, groupId);
                     return (false, "You are not a member of this group.");
                 }
 
-                group.Members!.Remove(member);
-                group.MemberCount--;
+                await _userCommunityGroupRepository.DeleteAsync(membership);
+                if (group.MemberCount > 0)
+                {
+                    group.MemberCount--;
+                }
+
+                await _communityGroupRepository.UpdateAsync(group);
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("User {UserId} left group {GroupId}", userId, groupId);

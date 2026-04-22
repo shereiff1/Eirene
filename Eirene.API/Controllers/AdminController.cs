@@ -1,6 +1,7 @@
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -80,6 +81,58 @@ namespace EireneWebAPI.Controllers
                 return BadRequest("Failed to remove user from the community group.");
 
             return Ok(new { Message = $"User '{userId}' successfully removed from group '{groupId}'." });
+        }
+
+        [HttpPost("community-group/{groupId}/ban")]
+        public async Task<IActionResult> BanUserFromGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.UserId))
+                return BadRequest("User ID is required.");
+
+            var result = await _adminServices.BanUserFromGroupAsync(groupId, model.UserId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+
+            return Ok(new { result.Message });
+        }
+
+        [HttpPost("community-group/{groupId}/unban")]
+        public async Task<IActionResult> UnbanUserFromGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.UserId))
+                return BadRequest("User ID is required.");
+
+            var result = await _adminServices.UnbanUserFromGroupAsync(groupId, model.UserId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+
+            return Ok(new { result.Message });
+        }
+
+        [HttpPost("community-group/{groupId}/timeout")]
+        public async Task<IActionResult> TimeoutUserInGroup(Guid groupId, [FromBody] CommunityGroupUserTimeoutRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.UserId))
+                return BadRequest("User ID is required.");
+
+            var result = await _adminServices.TimeoutUserInGroupAsync(groupId, model.UserId, model.TimeoutUntil);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+
+            return Ok(new { result.Message });
+        }
+
+        [HttpPost("community-group/{groupId}/timeout/remove")]
+        public async Task<IActionResult> RemoveTimeoutUserInGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.UserId))
+                return BadRequest("User ID is required.");
+
+            var result = await _adminServices.RemoveTimeoutUserInGroupAsync(groupId, model.UserId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+
+            return Ok(new { result.Message });
         }
     }
 }

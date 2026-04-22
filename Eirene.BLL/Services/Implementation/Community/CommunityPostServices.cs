@@ -1,6 +1,7 @@
 using AutoMapper;
 using Eirene.BLL.Models.Community.Post;
 using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.BLL.Enumerators;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
@@ -15,6 +16,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IMapper _mapper;
         private readonly ICommunityPostRepository _communityPostRepository;
         private readonly ICommunityGroupRepository _communityGroupRepository;
+        private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -23,6 +25,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             IMapper mapper,
             ICommunityPostRepository communityPostRepository,
             ICommunityGroupRepository communityGroupRepository,
+            IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
             IHttpContextAccessor httpContextAccessor)
         {
@@ -30,6 +33,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _mapper = mapper;
             _communityPostRepository = communityPostRepository;
             _communityGroupRepository = communityGroupRepository;
+            _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -38,6 +42,13 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve all community posts");
+                    return (false, null);
+                }
+
                 var posts = await _communityPostRepository.GetAllWithDetailsAsync();
 
                 if (posts == null || !posts.Any())
@@ -46,7 +57,15 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (true, new List<CommunityPostDTO>());
                 }
 
-                var activePosts = posts.Where(p => !p.IsDeleted).ToList();
+                var activePosts = new List<CommunityPost>();
+                foreach (var post in posts.Where(p => !p.IsDeleted))
+                {
+                    if (await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
+                    {
+                        activePosts.Add(post);
+                    }
+                }
+
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
                 _logger.LogInformation("Retrieved {Count} community posts", postDTOs.Count);
@@ -63,6 +82,19 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve posts for group {GroupId}", groupId);
+                    return (false, null);
+                }
+
+                if (!await CanAccessGroupContentAsync(groupId, userId))
+                {
+                    _logger.LogWarning("User {UserId} is not allowed to access posts for group {GroupId}", userId, groupId);
+                    return (false, null);
+                }
+
                 var posts = await _communityPostRepository.GetByGroupIdWithDetailsAsync(groupId);
 
                 if (posts == null || !posts.Any())
@@ -88,11 +120,24 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve post {PostId}", id);
+                    return (false, null);
+                }
+
                 var post = await _communityPostRepository.GetByIdWithDetailsAsync(id);
 
                 if (post == null || post.IsDeleted)
                 {
                     _logger.LogWarning("Post with ID {PostId} not found or deleted", id);
+                    return (false, null);
+                }
+
+                if (!await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
+                {
+                    _logger.LogWarning("User {UserId} is not allowed to access post {PostId}", userId, id);
                     return (false, null);
                 }
 
@@ -110,7 +155,8 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                if (string.IsNullOrEmpty(userId))
+                var currentUserId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(currentUserId))
                 {
                     _logger.LogWarning("UserId is null or empty");
                     return (false, null);
@@ -124,7 +170,15 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (true, new List<CommunityPostDTO>());
                 }
 
-                var activePosts = posts.Where(p => !p.IsDeleted).ToList();
+                var activePosts = new List<CommunityPost>();
+                foreach (var post in posts.Where(p => !p.IsDeleted))
+                {
+                    if (await CanAccessGroupContentAsync(post.CommunityGroupId, currentUserId))
+                    {
+                        activePosts.Add(post);
+                    }
+                }
+
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
                 _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postDTOs.Count, userId);
@@ -137,7 +191,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, CommunityPostDTO? CreatedPost)> CreateAsync(AddCommunityPost model)
+        public async Task<(bool IsSuccess, string Message, CommunityPostDTO? CreatedPost)> CreateAsync(AddCommunityPost model)
         {
             try
             {
@@ -150,14 +204,27 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (string.IsNullOrWhiteSpace(model.Content) || string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("Invalid post data: Content or UserId is empty");
-                    return (false, null);
+                    return (false, "Post content is required.", null);
                 }
 
                 var group = await _communityGroupRepository.GetByIdAsync(model.CommunityGroupId);
                 if (group == null)
                 {
                     _logger.LogWarning("Cannot create post: Group with ID {GroupId} not found", model.CommunityGroupId);
-                    return (false, null);
+                    return (false, "Community group not found.", null);
+                }
+
+                var membershipValidationResult =
+                    await ValidateGroupMessagingPermissionAsync(model.CommunityGroupId, userId);
+                if (!membershipValidationResult.IsAllowed)
+                {
+                    _logger.LogWarning(
+                        "User {UserId} is not allowed to create a post in group {GroupId}. Reason: {Reason}",
+                        userId,
+                        model.CommunityGroupId,
+                        membershipValidationResult.Message);
+
+                    return (false, membershipValidationResult.Message, null);
                 }
 
                 var post = _mapper.Map<CommunityPost>(model);
@@ -169,7 +236,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (createdPost == null)
                 {
                     _logger.LogWarning("Failed to create post in group {GroupId}", model.CommunityGroupId);
-                    return (false, null);
+                    return (false, "Failed to create the post.", null);
                 }
 
                 var postWithDetails = await _communityPostRepository.GetByIdWithDetailsAsync(createdPost.Id);
@@ -178,13 +245,64 @@ namespace Eirene.BLL.Services.Implementation.Community
                 _logger.LogInformation("Post created successfully with ID: {PostId} by user {UserId} in group {GroupId}",
                     createdPost.Id, userId, model.CommunityGroupId);
 
-                return (true, postDTO);
+                return (true, "Post created successfully.", postDTO);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating post in group {GroupId}", model.CommunityGroupId);
-                return (false, null);
+                return (false, "An error occurred while creating the post.", null);
             }
+        }
+
+        private async Task<(bool IsAllowed, string Message)> ValidateGroupMessagingPermissionAsync(Guid groupId, string userId)
+        {
+            if (IsCurrentUserAdmin())
+            {
+                return (true, string.Empty);
+            }
+
+            var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+            if (membership == null)
+            {
+                return (false, "You must join this community group before posting.");
+            }
+
+            if (membership.IsBanned)
+            {
+                return (false, "You are banned from this community group and cannot post.");
+            }
+
+            if (membership.HasActiveTimeout(DateTime.UtcNow))
+            {
+                return (false, "You are temporarily timed out in this community group and cannot post yet.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private async Task<bool> CanAccessGroupContentAsync(Guid groupId, string userId)
+        {
+            if (IsCurrentUserAdmin())
+            {
+                return true;
+            }
+
+            var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+            return membership != null && !membership.IsBanned;
+        }
+
+        private string? GetCurrentUserId()
+        {
+            return _httpContextAccessor
+                ?.HttpContext
+                ?.User
+                ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                ?.Value;
+        }
+
+        private bool IsCurrentUserAdmin()
+        {
+            return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
         }
 
 

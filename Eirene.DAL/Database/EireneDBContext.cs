@@ -23,6 +23,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<Blog> Blogs { get; set; }
     public DbSet<CommunityComment> CommunityComments { get; set; }
     public DbSet<CommunityGroup> CommunityGroups { get; set; }
+    public DbSet<UserCommunityGroup> UserCommunityGroups { get; set; }
     public DbSet<CommunityPost> CommunityPosts { get; set; }
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
     public DbSet<Question> Questions { get; set; }
@@ -75,6 +76,38 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(g => g.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ApplicationUser>()
+            .HasMany(u => u.Groups)
+            .WithMany(g => g.Members)
+            .UsingEntity<UserCommunityGroup>(
+                right => right
+                    .HasOne(ug => ug.CommunityGroup)
+                    .WithMany(g => g.UserCommunityGroups)
+                    .HasForeignKey(ug => ug.CommunityGroupId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                left => left
+                    .HasOne(ug => ug.User)
+                    .WithMany(u => u.UserCommunityGroups)
+                    .HasForeignKey(ug => ug.UserId)
+                    .OnDelete(DeleteBehavior.Cascade),
+                join =>
+                {
+                    join.ToTable("ApplicationUserCommunityGroup");
+                    join.HasKey(ug => new { ug.CommunityGroupId, ug.UserId });
+
+                    join.Property(ug => ug.CommunityGroupId)
+                        .HasColumnName("GroupsId");
+
+                    join.Property(ug => ug.UserId)
+                        .HasColumnName("MembersId");
+
+                    join.Property(ug => ug.IsBanned)
+                        .HasDefaultValue(false);
+
+                    join.Property(ug => ug.TimeoutUntil)
+                        .HasColumnType("timestamp with time zone");
+                });
 
         builder.Entity<CommunityPost>()
             .HasOne(p => p.User)

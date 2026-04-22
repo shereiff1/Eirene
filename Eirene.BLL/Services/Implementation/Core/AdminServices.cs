@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.DAL.Repository.Abstraction.Core;
@@ -18,6 +19,7 @@ namespace Eirene.BLL.Services.Implementation.Core
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICommunityGroupRepository _communityGroupRepository;
+        private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IAdminProfileRepository _adminProfileRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AdminServices> _logger;
@@ -26,6 +28,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         public AdminServices(
             UserManager<ApplicationUser> userManager,
             ICommunityGroupRepository communityGroupRepository,
+            IUserCommunityGroupRepository userCommunityGroupRepository,
             IAdminProfileRepository adminProfileRepository,
             IUnitOfWork unitOfWork,
             ILogger<AdminServices> logger,
@@ -33,6 +36,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             _userManager = userManager;
             _communityGroupRepository = communityGroupRepository;
+            _userCommunityGroupRepository = userCommunityGroupRepository;
             _adminProfileRepository = adminProfileRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
@@ -163,7 +167,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var group = await _communityGroupRepository.GetByIdWithDetailsAsync(groupId);
+                var group = await _communityGroupRepository.GetByIdAsync(groupId);
                 if (group == null)
                 {
                     _logger.LogWarning("Attempted to manage membership for non-existent group {GroupId}.", groupId);
@@ -177,18 +181,27 @@ namespace Eirene.BLL.Services.Implementation.Core
                     return false;
                 }
 
-                group.Members ??= new List<ApplicationUser>();
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
 
-                var isMember = group.Members.Any(m => m.Id == userId);
-
-                if (assign && !isMember)
+                if (assign && membership == null)
                 {
-                    group.Members.Add(user);
+                    await _userCommunityGroupRepository.AddAsync(new UserCommunityGroup
+                    {
+                        CommunityGroupId = groupId,
+                        UserId = userId
+                    });
+
+                    group.MemberCount++;
                     _logger.LogInformation("Added user {UserId} to group {GroupId}.", userId, groupId);
                 }
-                else if (!assign && isMember)
+                else if (!assign && membership != null)
                 {
-                    group.Members.Remove(group.Members.First(m => m.Id == userId));
+                    await _userCommunityGroupRepository.DeleteAsync(membership);
+                    if (group.MemberCount > 0)
+                    {
+                        group.MemberCount--;
+                    }
+
                     _logger.LogInformation("Removed user {UserId} from group {GroupId}.", userId, groupId);
                 }
                 else
@@ -204,6 +217,131 @@ namespace Eirene.BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "An error occurred while managing membership for user {UserId} in group {GroupId}. Assign: {Assign}", userId, groupId, assign);
                 return false;
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> BanUserFromGroupAsync(Guid groupId, string userId)
+        {
+            try
+            {
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership == null)
+                {
+                    _logger.LogWarning("Cannot ban user {UserId} from group {GroupId}: membership not found.", userId, groupId);
+                    return (false, "User is not a member of this community group.");
+                }
+
+                if (membership.IsBanned)
+                {
+                    return (false, "User is already banned from this community group.");
+                }
+
+                membership.IsBanned = true;
+                membership.TimeoutUntil = null;
+
+                await _userCommunityGroupRepository.UpdateAsync(membership);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} was banned from group {GroupId}.", userId, groupId);
+                return (true, "User was banned from the community group successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while banning user {UserId} from group {GroupId}.", userId, groupId);
+                return (false, "An error occurred while banning the user from the community group.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> UnbanUserFromGroupAsync(Guid groupId, string userId)
+        {
+            try
+            {
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership == null)
+                {
+                    _logger.LogWarning("Cannot unban user {UserId} from group {GroupId}: membership not found.", userId, groupId);
+                    return (false, "User is not a member of this community group.");
+                }
+
+                if (!membership.IsBanned)
+                {
+                    return (false, "User is not banned from this community group.");
+                }
+
+                membership.IsBanned = false;
+
+                await _userCommunityGroupRepository.UpdateAsync(membership);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} was unbanned from group {GroupId}.", userId, groupId);
+                return (true, "User was unbanned from the community group successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while unbanning user {UserId} from group {GroupId}.", userId, groupId);
+                return (false, "An error occurred while removing the ban from the user.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> TimeoutUserInGroupAsync(Guid groupId, string userId, DateTime timeoutUntil)
+        {
+            try
+            {
+                if (timeoutUntil <= DateTime.UtcNow)
+                {
+                    return (false, "Timeout end date must be in the future.");
+                }
+
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership == null)
+                {
+                    _logger.LogWarning("Cannot timeout user {UserId} in group {GroupId}: membership not found.", userId, groupId);
+                    return (false, "User is not a member of this community group.");
+                }
+
+                membership.TimeoutUntil = timeoutUntil.ToUniversalTime();
+
+                await _userCommunityGroupRepository.UpdateAsync(membership);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("User {UserId} was timed out in group {GroupId} until {TimeoutUntil}.", userId, groupId, membership.TimeoutUntil);
+                return (true, "User timeout was applied successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while applying a timeout to user {UserId} in group {GroupId}.", userId, groupId);
+                return (false, "An error occurred while applying the timeout.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> RemoveTimeoutUserInGroupAsync(Guid groupId, string userId)
+        {
+            try
+            {
+                var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (membership == null)
+                {
+                    _logger.LogWarning("Cannot remove timeout for user {UserId} in group {GroupId}: membership not found.", userId, groupId);
+                    return (false, "User is not a member of this community group.");
+                }
+
+                if (!membership.TimeoutUntil.HasValue)
+                {
+                    return (false, "User does not have an active timeout in this community group.");
+                }
+
+                membership.TimeoutUntil = null;
+
+                await _userCommunityGroupRepository.UpdateAsync(membership);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Timeout removed for user {UserId} in group {GroupId}.", userId, groupId);
+                return (true, "User timeout was removed successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while removing timeout for user {UserId} in group {GroupId}.", userId, groupId);
+                return (false, "An error occurred while removing the timeout.");
             }
         }
     }

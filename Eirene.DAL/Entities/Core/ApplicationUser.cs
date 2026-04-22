@@ -17,5 +17,6 @@ namespace Eirene.DAL.Entities.Core
         public ICollection<RefreshToken>? RefreshTokens { get; set; }
         public AdminProfile? AdminProfile { get; set; }
         public ICollection<CommunityGroup>? Groups { get; set; } = new List<CommunityGroup>();
+        public ICollection<UserCommunityGroup>? UserCommunityGroups { get; set; } = new List<UserCommunityGroup>();
     }
 }

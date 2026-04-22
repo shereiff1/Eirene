@@ -12,5 +12,9 @@ namespace Eirene.BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string? Error, AdminModel? Admin)> CreateAdminProfileAsync(string userId);
         Task<bool> AssignRoleAsync(string adminId, string userId, string role);
         Task<bool> ManageCommunityGroupMembershipAsync(Guid groupId, string userId, bool assign);
+        Task<(bool IsSuccess, string Message)> BanUserFromGroupAsync(Guid groupId, string userId);
+        Task<(bool IsSuccess, string Message)> UnbanUserFromGroupAsync(Guid groupId, string userId);
+        Task<(bool IsSuccess, string Message)> TimeoutUserInGroupAsync(Guid groupId, string userId, DateTime timeoutUntil);
+        Task<(bool IsSuccess, string Message)> RemoveTimeoutUserInGroupAsync(Guid groupId, string userId);
     }
 }
