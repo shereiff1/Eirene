@@ -19,8 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-builder.Services.Configure<SmtpSettings>(
-    builder.Configuration.GetSection("Smtp"));
+builder.Services.Configure<SendGridSettings>(
+    builder.Configuration.GetSection("SendGrid"));
 
 builder.Services.AddAutoMapper(typeof(AuthProfile));
 
@@ -158,5 +158,6 @@ app.UseHangfireDashboard();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+app.UseHangfireDashboard("/hangfire");
 
 app.Run();

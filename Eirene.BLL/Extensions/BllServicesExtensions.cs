@@ -25,7 +25,7 @@ public static class BllServicesExtensions
 {
     public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IEmailSender, SendGridEmailSender>();
         services.AddScoped<IBlogServices, BlogServices>();
         services.AddScoped<ICommunityGroupServices, CommunityGroupServices>();
         services.AddScoped<IJournalServices, JournalServices>();

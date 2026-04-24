@@ -18,6 +18,7 @@ public class SmtpEmailSender : IEmailSender
 
     public async Task SendEmailAsync(string? to, string subject, string body)
     {
+
         using var client = new SmtpClient
         {
             Host = _settings.Host,
