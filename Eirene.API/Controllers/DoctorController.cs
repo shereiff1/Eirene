@@ -171,7 +171,7 @@ namespace Eirene.Controllers
 
         [HttpGet("profile-picture/{userId}")]
         [Authorize(Roles = Roles.AllUsers)]
-        public async Task<IActionResult> getDoctorProfilePicture(string userId)
+        public async Task<IActionResult> GetDoctorProfilePicture(string userId)
         {
             var result = await _services.GetByIdAsync(userId);
             if (!result.isSuccess)
@@ -193,6 +193,21 @@ namespace Eirene.Controllers
 
             var imageBytes = await System.IO.File.ReadAllBytesAsync(path);
             return File(imageBytes, "image/jpeg");
+        }
+
+        [HttpGet("patients")]
+        [Authorize(Roles = Roles.Doctor)]
+        public async Task<IActionResult> GetDoctorsPatients()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var result = await _services.GetDoctorsPatientsAsync(userId);
+            if (!result.IsSuccess)
+                return BadRequest("Could not retrieve patients.");
+
+            return Ok(result.Patients);
         }
     }
 }

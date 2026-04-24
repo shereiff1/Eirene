@@ -563,3 +563,5 @@ global.json
 /EireneWebAPI/images/profiles
 build_log.txt
 *.pt
+.env
+.idea/.idea.Eirene/.idea/awsToolkit.xml

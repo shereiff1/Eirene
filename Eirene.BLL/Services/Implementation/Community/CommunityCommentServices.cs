@@ -1,4 +1,5 @@
 using AutoMapper;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Comment;
 using Eirene.BLL.Services.Abstraction.Community;
 using Eirene.DAL.Entities.Community;
@@ -15,6 +16,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IMapper _mapper;
         private readonly ICommunityCommentRepository _communityCommentRepository;
         private readonly ICommunityPostRepository _communityPostRepository;
+        private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
@@ -23,6 +25,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             IMapper mapper,
             ICommunityCommentRepository communityCommentRepository,
             ICommunityPostRepository communityPostRepository,
+            IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
             IHttpContextAccessor httpContextAccessor)
         {
@@ -30,6 +33,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _mapper = mapper;
             _communityCommentRepository = communityCommentRepository;
             _communityPostRepository = communityPostRepository;
+            _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -38,6 +42,26 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve comments for post {PostId}", postId);
+                    return (false, null);
+                }
+
+                var post = await _communityPostRepository.GetByIdAsync(postId);
+                if (post == null || post.IsDeleted)
+                {
+                    _logger.LogWarning("Cannot retrieve comments: Post with ID {PostId} not found or deleted", postId);
+                    return (false, null);
+                }
+
+                if (!await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
+                {
+                    _logger.LogWarning("User {UserId} is not allowed to access comments for post {PostId}", userId, postId);
+                    return (false, null);
+                }
+
                 var comments = await _communityCommentRepository.GetByPostIdWithDetailsAsync(postId);
 
                 if (!comments.Any())
@@ -63,11 +87,25 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve comment {CommentId}", id);
+                    return (false, null);
+                }
+
                 var comment = await _communityCommentRepository.GetByIdWithDetailsAsync(id);
 
                 if (comment == null || comment.IsDeleted)
                 {
                     _logger.LogWarning("Comment with ID {CommentId} not found or deleted", id);
+                    return (false, null);
+                }
+
+                var post = await _communityPostRepository.GetByIdAsync(comment.PostId);
+                if (post == null || post.IsDeleted || !await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
+                {
+                    _logger.LogWarning("User {UserId} is not allowed to access comment {CommentId}", userId, id);
                     return (false, null);
                 }
 
@@ -86,6 +124,27 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = GetCurrentUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Unauthorized user tried to retrieve replies for comment {CommentId}", commentId);
+                    return (false, null);
+                }
+
+                var parentComment = await _communityCommentRepository.GetByIdAsync(commentId);
+                if (parentComment == null || parentComment.IsDeleted)
+                {
+                    _logger.LogWarning("Cannot retrieve replies: Comment with ID {CommentId} not found or deleted", commentId);
+                    return (false, null);
+                }
+
+                var post = await _communityPostRepository.GetByIdAsync(parentComment.PostId);
+                if (post == null || post.IsDeleted || !await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
+                {
+                    _logger.LogWarning("User {UserId} is not allowed to access replies for comment {CommentId}", userId, commentId);
+                    return (false, null);
+                }
+
                 var replies = await _communityCommentRepository.GetRepliesByCommentIdAsync(commentId);
 
                 if (replies == null || !replies.Any())
@@ -108,7 +167,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         }
 
 
-        public async Task<(bool IsSuccess, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model)
+        public async Task<(bool IsSuccess, string Message, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model)
         {
             try
             {
@@ -121,14 +180,27 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(model.Content))
                 {
                     _logger.LogWarning("Invalid comment data: Content or UserId is empty");
-                    return (false, null);
+                    return (false, "Comment content is required.", null);
                 }
 
                 var post = await _communityPostRepository.GetByIdAsync(model.PostId);
                 if (post == null || post.IsDeleted)
                 {
                     _logger.LogWarning("Cannot create comment: Post with ID {PostId} not found or deleted", model.PostId);
-                    return (false, null);
+                    return (false, "Community post not found.", null);
+                }
+
+                var membershipValidationResult =
+                    await ValidateGroupMessagingPermissionAsync(post.CommunityGroupId, userId);
+                if (!membershipValidationResult.IsAllowed)
+                {
+                    _logger.LogWarning(
+                        "User {UserId} is not allowed to comment in group {GroupId}. Reason: {Reason}",
+                        userId,
+                        post.CommunityGroupId,
+                        membershipValidationResult.Message);
+
+                    return (false, membershipValidationResult.Message, null);
                 }
 
                 if (model.ParentCommentId.HasValue)
@@ -139,14 +211,14 @@ namespace Eirene.BLL.Services.Implementation.Community
                         _logger.LogWarning(
                             "Cannot create reply: Parent comment with ID {ParentCommentId} not found or deleted",
                             model.ParentCommentId.Value);
-                        return (false, null);
+                        return (false, "Parent comment not found.", null);
                     }
 
                     if (parentComment.PostId != model.PostId)
                     {
                         _logger.LogWarning("Parent comment {ParentCommentId} does not belong to post {PostId}",
                             model.ParentCommentId.Value, model.PostId);
-                        return (false, null);
+                        return (false, "Parent comment does not belong to the selected post.", null);
                     }
                 }
 
@@ -159,7 +231,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (createdComment == null)
                 {
                     _logger.LogWarning("Failed to create comment for post {PostId}", model.PostId);
-                    return (false, null);
+                    return (false, "Failed to create the comment.", null);
                 }
 
                 post.CommentsCount++;
@@ -185,13 +257,64 @@ namespace Eirene.BLL.Services.Implementation.Community
                 _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}",
                     createdComment.Id, userId);
 
-                return (true, commentDTO);
+                return (true, "Comment created successfully.", commentDTO);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating comment for post {PostId}", model.PostId);
-                return (false, null);
+                return (false, "An error occurred while creating the comment.", null);
             }
+        }
+
+        private async Task<(bool IsAllowed, string Message)> ValidateGroupMessagingPermissionAsync(Guid groupId, string userId)
+        {
+            if (IsCurrentUserAdmin())
+            {
+                return (true, string.Empty);
+            }
+
+            var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+            if (membership == null)
+            {
+                return (false, "You must join this community group before commenting.");
+            }
+
+            if (membership.IsBanned)
+            {
+                return (false, "You are banned from this community group and cannot comment.");
+            }
+
+            if (membership.HasActiveTimeout(DateTime.UtcNow))
+            {
+                return (false, "You are temporarily timed out in this community group and cannot comment yet.");
+            }
+
+            return (true, string.Empty);
+        }
+
+        private async Task<bool> CanAccessGroupContentAsync(Guid groupId, string userId)
+        {
+            if (IsCurrentUserAdmin())
+            {
+                return true;
+            }
+
+            var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+            return membership != null && !membership.IsBanned;
+        }
+
+        private string? GetCurrentUserId()
+        {
+            return _httpContextAccessor
+                ?.HttpContext
+                ?.User
+                ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+                ?.Value;
+        }
+
+        private bool IsCurrentUserAdmin()
+        {
+            return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
         }
 
         public async Task<bool> UpdateAsync(EditCommunityComment model)

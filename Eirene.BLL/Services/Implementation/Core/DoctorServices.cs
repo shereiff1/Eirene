@@ -231,6 +231,32 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
+        public async Task<(bool IsSuccess, List<DoctorPatientDTO>? Patients)> GetDoctorsPatientsAsync(string doctorUserId)
+        {
+            try
+            {
+                var requests = await _requestRepository.GetDoctorPatientsAsync(doctorUserId);
+
+                var models = requests.Select(r => new DoctorPatientDTO
+                {
+                    RequestId = r.Id,
+                    PatientId = r.PatientProfileId,
+                    FullName = r.Patient?.User?.FullName ?? "Unknown",
+                    Email = r.Patient?.User?.Email ?? "Unknown",
+                    DateOfBirth = r.Patient?.DateOfBirth ?? DateTime.MinValue,
+                    ProfilePhotoUrl = r.Patient?.ProfilePhotoUrl,
+                    AcceptedAt = r.RespondedAt ?? r.CreatedAt
+                }).ToList();
+
+                return (true, models);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching doctor's patients for doctor {DoctorProfileId}", doctorUserId);
+                return (false, null);
+            }
+        }
+
         public async Task<(bool IsSuccess, string? Error)> RemoveSupervisionOnPatient(string patientUserId)
         {
             try

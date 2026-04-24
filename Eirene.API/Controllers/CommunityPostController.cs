@@ -19,7 +19,7 @@ public class CommunityPostController : ControllerBase
         _communityPostServices = communityPostService;
     }
     [HttpGet]
-    [Authorize(Roles = Roles.AllExceptDoctor)]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _communityPostServices.GetAllAsync();
@@ -56,12 +56,12 @@ public class CommunityPostController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = Roles.Patient)]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> Create([FromBody] AddCommunityPost post)
     {
         var result = await _communityPostServices.CreateAsync(post);
         if (!result.IsSuccess || result.CreatedPost == null)
-            return BadRequest("Failed to create post.");
+            return BadRequest(result.Message);
         return CreatedAtAction(
             nameof(GetById),
             new { id = result.CreatedPost.Id },
@@ -70,7 +70,7 @@ public class CommunityPostController : ControllerBase
     }
 
     [HttpPut]
-    [Authorize(Roles = Roles.Patient)]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> Update([FromBody] EditCommunityPost post)
     {
         var updated = await _communityPostServices.UpdateAsync(post);
@@ -80,7 +80,7 @@ public class CommunityPostController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = Roles.Patient)]
+    [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var deleted = await _communityPostServices.DeleteAsync(id);

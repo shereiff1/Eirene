@@ -87,7 +87,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/join")]
-        [Authorize(Roles = Roles.AllUsers)]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> JoinGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -101,7 +101,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/leave")]
-        [Authorize(Roles = Roles.AllUsers)]
+        [Authorize(Roles = Roles.Patient)]
         public async Task<IActionResult> LeaveGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

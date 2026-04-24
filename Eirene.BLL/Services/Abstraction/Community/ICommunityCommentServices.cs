@@ -12,7 +12,7 @@ namespace Eirene.BLL.Services.Abstraction.Community
         Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(Guid postId);
         Task<(bool IsSuccess, CommunityCommentDTO? Comment)> GetByIdAsync(Guid id);
         Task<(bool IsSuccess, List<CommunityCommentDTO>? Replies)> GetRepliesByCommentIdAsync(Guid commentId);
-        Task<(bool IsSuccess, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model);
+        Task<(bool IsSuccess, string Message, CommunityCommentDTO? CreatedComment)> CreateAsync(AddCommunityComment model);
         Task<bool> UpdateAsync(EditCommunityComment model);
         Task<bool> DeleteAsync(Guid id);
     }

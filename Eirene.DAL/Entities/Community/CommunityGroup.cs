@@ -20,6 +20,7 @@ public class CommunityGroup
     public ApplicationUser? CreatedBy { get; set; }
     public int MemberCount { get; set; } = 0;
     public ICollection<ApplicationUser>? Members { get; set; } = new List<ApplicationUser>();
+    public ICollection<UserCommunityGroup>? UserCommunityGroups { get; set; } = new List<UserCommunityGroup>();
     public ICollection<CommunityPost> Posts { get; set; } = new List<CommunityPost>();
 
 }
