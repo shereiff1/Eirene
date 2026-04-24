@@ -158,5 +158,6 @@ app.UseHangfireDashboard();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+app.UseHangfireDashboard("/hangfire");
 
 app.Run();
