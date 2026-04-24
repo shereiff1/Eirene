@@ -19,16 +19,6 @@ public class SmtpEmailSender : IEmailSender
     public async Task SendEmailAsync(string? to, string subject, string body)
     {
 
-        try
-        {
-            using var tcp = new System.Net.Sockets.TcpClient();
-            await tcp.ConnectAsync("smtp.gmail.com", 587);
-            Console.WriteLine("SMTP reachable ");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("SMTP blocked: " + ex.Message);
-        }
         using var client = new SmtpClient
         {
             Host = _settings.Host,
