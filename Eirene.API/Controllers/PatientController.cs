@@ -208,6 +208,39 @@ namespace Eirene.Controllers
 
             return Ok(result.Requests);
         }
+        [HttpGet("check-ban/{groupID}")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> isPatientBanned(Guid groupID)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) 
+                return Unauthorized("User not authenticated.");
+            var result = await _patientServices.CheckIfBanned(userId, groupID);
+            if (!result.IsSuccess)
+                return BadRequest("Couldn't check if the user is banned or not");
+            return Ok(new
+            {
+                isBanned = result.IsBanned,
+            });
+        }
+
+        [HttpGet("check-timeout/{groupId}")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> CheckTimeout(Guid groupId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var result = await _patientServices.CheckTimeoutAsync(userId, groupId);
+            if (!result.IsSuccess)
+                return BadRequest(new { message = result.Error });
+
+            return Ok(new
+            {
+                isTimedOut = result.IsTimedOut,
+                timeoutUntil = result.TimeoutUntil
+            });
+        }
     }
-    
 }
