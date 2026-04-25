@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.DAL.Repository.Abstraction;
-
+using Google.Apis.Auth;
 
 namespace Eirene.BLL.Services.Implementation.Identity;
 
@@ -27,6 +27,7 @@ public class AuthServices : IAuthServices
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBackgroundJobService _backgroundJobService;
     private readonly string _otpSecret;
+    private readonly string? _googleClientId;
 
     public AuthServices(
         UserManager<ApplicationUser> userManager,
@@ -52,6 +53,7 @@ public class AuthServices : IAuthServices
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
         _backgroundJobService = backgroundJobService;
+        _googleClientId = configuration["Google:ClientId"];
     }
 
     public async Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto)
@@ -179,6 +181,85 @@ public class AuthServices : IAuthServices
                 Success = false,
                 Error = $"An error occurred during login: {ex.Message}"
             };
+        }
+    }
+
+    public async Task<AuthResultDTO> GoogleLoginAsync(GoogleLoginDTO googleLoginDto)
+    {
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = !string.IsNullOrEmpty(_googleClientId) ? new[] { _googleClientId } : null
+            };
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, settings);
+
+            var user = await _userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = payload.Email,
+                    Email = payload.Email,
+                    FullName = payload.Name ?? payload.Email,
+                    EmailConfirmed = true,
+                    IsEmailVerified = true
+                };
+
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                    return Fail("Error creating Google user account");
+
+                string role = "Patient";
+                if (!await _roleManager.RoleExistsAsync(role))
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else if (!user.EmailConfirmed && payload.EmailVerified)
+            {
+                user.EmailConfirmed = true;
+                user.IsEmailVerified = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenHash = _tokenService.ComputeSha256Hash(refreshToken);
+            var dbToken = new RefreshToken
+            {
+                TokenHash = refreshTokenHash,
+                JwtId = jti,
+                UserId = user.Id,
+                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                CreatedDate = DateTime.UtcNow,
+                IsUsed = false,
+                IsRevoked = false
+            };
+
+            await _refreshTokenRepository.AddAsync(dbToken);
+            await _unitOfWork.SaveChangesAsync();
+
+            var authResult = _mapper.Map<AuthResultDTO>(user);
+            authResult.RefreshToken = refreshToken;
+            authResult.RefreshTokenExpiration = dbToken.ExpiryDate;
+            authResult.AccessToken = accessToken;
+            authResult.Success = true;
+            authResult.Role = "Patient";
+            authResult.EmailConfirmed = user.EmailConfirmed;
+            return authResult;
+        }
+        catch (InvalidJwtException ex)
+        {
+            _logger.LogWarning(ex, "Invalid Google ID Token");
+            return Fail("Invalid Google ID Token");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GoogleLoginAsync failed");
+            return Fail($"An error occurred during Google login: {ex.Message}");
         }
     }
 
@@ -373,7 +454,7 @@ public class AuthServices : IAuthServices
             user.EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(20);
             await _userManager.UpdateAsync(user);
 
-            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email, 
+            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email,
                 "Email Verification Code",
                 $"Your verification code is: {code}"));
             // await _emailSender.SendEmailAsync(

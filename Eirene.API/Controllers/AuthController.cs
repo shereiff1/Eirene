@@ -46,6 +46,20 @@ namespace Eirene.Controllers
             return Ok(result);
         }
 
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDTO googleLoginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.GoogleLoginAsync(googleLoginDto);
+
+            if (!result.Success)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

@@ -6,6 +6,7 @@ namespace Eirene.BLL.Services.Abstraction.Identity
     {
         Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto);
         Task<AuthResultDTO> LoginAsync(LoginDTO loginDto);
+        Task<AuthResultDTO> GoogleLoginAsync(GoogleLoginDTO googleLoginDto);
         Task<ConfirmMailDTO> ConfirmEmailCodeAsync(string Email, string ConfirmationCode);
         Task LogoutAsync(string userId);
         Task<AuthResultDTO> RefreshTokenAsync(string accessToken, string refreshToken);
