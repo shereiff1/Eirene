@@ -353,5 +353,25 @@ namespace Eirene.BLL.Services.Implementation.Core
                 return (false, null);
             }
         }
+
+        public async Task<(bool IsSuccess, string? Error)> DeleteDoctorProfile(string doctorId)
+        {
+            try
+            {
+                var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                {
+                    return (false, null);
+                }
+                await _doctorProfileRepository.DeleteAsync(doctor);
+                await _unitOfWork.SaveChangesAsync();
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting doctor profile for user {UserId}", doctorId);
+                return (false, "An error occurred while deleting the profile.");
+            }
+        }
     }
 }

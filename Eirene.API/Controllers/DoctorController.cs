@@ -209,5 +209,18 @@ namespace Eirene.Controllers
 
             return Ok(result.Patients);
         }
+
+        [HttpDelete("profile")]
+        [Authorize(Roles = Roles.DoctorOrAdmin)]
+        public async Task<IActionResult> DeleteDoctorProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+            var result = await _services.DeleteDoctorProfile(userId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Error);
+            return Ok(new { message = "Doctor profile deleted successfully." });
+        }
     }
 }
