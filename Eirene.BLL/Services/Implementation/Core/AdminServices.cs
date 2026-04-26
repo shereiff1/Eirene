@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Community;
@@ -21,6 +22,8 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly ICommunityGroupRepository _communityGroupRepository;
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IAdminProfileRepository _adminProfileRepository;
+        private readonly IDoctorProfileRepository _doctorProfileRepository;
+        private readonly IPatientProfileRepository _patientProfileRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AdminServices> _logger;
         private readonly IMapper _mapper;
@@ -30,6 +33,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IAdminProfileRepository adminProfileRepository,
+            IDoctorProfileRepository doctorProfileRepository,
+            IPatientProfileRepository patientProfileRepository,
             IUnitOfWork unitOfWork,
             ILogger<AdminServices> logger,
             IMapper mapper)
@@ -38,6 +43,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             _communityGroupRepository = communityGroupRepository;
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _adminProfileRepository = adminProfileRepository;
+            _doctorProfileRepository = doctorProfileRepository;
+            _patientProfileRepository = patientProfileRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
@@ -140,17 +147,67 @@ namespace Eirene.BLL.Services.Implementation.Core
                     _logger.LogWarning("Attempted to assign role to non-existent user {UserId}.", userId);
                     return false;
                 }
+
                 var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
                 if (currentRole != null && currentRole == role)
                 {
                     _logger.LogWarning("User {UserId} already has role '{Role}'.", userId, role);
                     return true;
                 }
-                if (currentRole != null) await _userManager.RemoveFromRoleAsync(user, currentRole);
+
+                string? commonProfilePhotoUrl = null;
+                string? phoneNumber = null;
+
+                if (currentRole != null)
+                {
+                    switch (currentRole)
+                    {
+                        case Roles.Doctor:
+                            var doctorProfile = await _doctorProfileRepository.GetByIdAsync(userId);
+                            if (doctorProfile != null)
+                            {
+                                commonProfilePhotoUrl = doctorProfile.ProfilePhotoUrl;
+                                phoneNumber = doctorProfile.PhoneNumber;
+                                await _doctorProfileRepository.DeleteAsync(doctorProfile);
+                            }
+                            break;
+                        case Roles.Patient:
+                            var patientProfile = await _patientProfileRepository.GetByIdAsync(userId);
+                            if (patientProfile != null)
+                            {
+                                commonProfilePhotoUrl = patientProfile.ProfilePhotoUrl;
+                                await _patientProfileRepository.DeleteAsync(patientProfile);
+                            }
+                            break;
+                    }
+                    await _userManager.RemoveFromRoleAsync(user, currentRole);
+                }
+
+                switch (role)
+                {
+                    case Roles.Doctor:
+                        await _doctorProfileRepository.AddAsync(new DoctorProfile
+                        {
+                            Id = userId,
+                            ProfilePhotoUrl = commonProfilePhotoUrl,
+                            PhoneNumber = phoneNumber ?? string.Empty,
+                            JoinedAt = DateTime.UtcNow
+                        });
+                        break;
+                    case Roles.Patient:
+                        await _patientProfileRepository.AddAsync(new PatientProfile
+                        {
+                            Id = userId,
+                            ProfilePhotoUrl = commonProfilePhotoUrl
+                        });
+                        break;
+                }
+
                 var result = await _userManager.AddToRoleAsync(user, role);
                 await _unitOfWork.SaveChangesAsync();
+
                 if (result.Succeeded)
-                    _logger.LogInformation("Successfully assigned role '{Role}' to user {UserId} by admin {AdminId}.", role, userId, adminId);
+                    _logger.LogInformation("Successfully assigned role '{Role}' to user {UserId} by admin {AdminId} and migrated profile.", role, userId, adminId);
                 else
                     _logger.LogWarning("Failed to assign role '{Role}' to user {UserId}. Errors: {Errors}", role, userId, string.Join(", ", result.Errors.Select(e => e.Description)));
 

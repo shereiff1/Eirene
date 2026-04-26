@@ -18,5 +18,7 @@ namespace Eirene.BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string? Error)> RemoveDoctorSupervision(string patientUserId, string doctorId);
         Task<(bool IsSuccess, string? Error)> RateSupervisorAsync(string patientUserId, string doctorId, AddDoctorRatingDTO model);
         Task<(bool IsSuccess, List<SupervisionRequest>? Requests)> GetSupervisionRequestsAsync(string patientUserId, SupervisionRequestStatus? status = null);
+        Task<(bool IsSuccess, bool? IsBanned)> CheckIfBanned(string userId, Guid groupId);
+        Task<(bool IsSuccess, bool IsTimedOut, DateTime? TimeoutUntil, string? Error)> CheckTimeoutAsync(string userId, Guid groupId);
     }
 }
