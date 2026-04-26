@@ -155,7 +155,7 @@ public class AuthServices : IAuthServices
                 TokenHash = refreshTokenHash,
                 JwtId = jti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddMinutes(7),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
@@ -233,7 +233,7 @@ public class AuthServices : IAuthServices
                 TokenHash = refreshTokenHash,
                 JwtId = jti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddDays(20),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
@@ -409,7 +409,7 @@ public class AuthServices : IAuthServices
                 TokenHash = newRefreshTokenHash,
                 JwtId = newJti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddMinutes(7),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
