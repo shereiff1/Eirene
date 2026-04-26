@@ -9,6 +9,13 @@
   </PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="images\**" />
+	  <Content Remove="images\**" />
+	  <EmbeddedResource Remove="images\**" />
+	  <None Remove="images\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CloudinaryDotNet" Version="1.28.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
@@ -22,10 +29,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Eirene.BLL\Eirene.BLL.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="images\profiles\" />
 	</ItemGroup>
 
 </Project>
