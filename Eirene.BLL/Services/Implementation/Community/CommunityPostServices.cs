@@ -68,6 +68,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
+                if (!IsPrivilegedUser())
+                    postDTOs.ForEach(SanitizePostPersonalData);
+
                 _logger.LogInformation("Retrieved {Count} community posts", postDTOs.Count);
                 return (true, postDTOs);
             }
@@ -106,6 +109,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 var activePosts = posts.Where(p => !p.IsDeleted).ToList();
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
+                if (!IsPrivilegedUser())
+                    postDTOs.ForEach(SanitizePostPersonalData);
+
                 _logger.LogInformation("Retrieved {Count} posts for group {GroupId}", postDTOs.Count, groupId);
                 return (true, postDTOs);
             }
@@ -142,6 +148,10 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var postDTO = _mapper.Map<CommunityPostDTO>(post);
+
+                if (!IsPrivilegedUser())
+                    SanitizePostPersonalData(postDTO);
+
                 return (true, postDTO);
             }
             catch (Exception ex)
@@ -180,6 +190,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
+
+                if (!IsPrivilegedUser())
+                    postDTOs.ForEach(SanitizePostPersonalData);
 
                 _logger.LogInformation("Retrieved {Count} posts for user {UserId}", postDTOs.Count, userId);
                 return (true, postDTOs);
@@ -242,6 +255,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 var postWithDetails = await _communityPostRepository.GetByIdWithDetailsAsync(createdPost.Id);
                 var postDTO = _mapper.Map<CommunityPostDTO>(postWithDetails);
 
+                if (!IsPrivilegedUser())
+                    SanitizePostPersonalData(postDTO);
+
                 _logger.LogInformation("Post created successfully with ID: {PostId} by user {UserId} in group {GroupId}",
                     createdPost.Id, userId, model.CommunityGroupId);
 
@@ -303,6 +319,36 @@ namespace Eirene.BLL.Services.Implementation.Community
         private bool IsCurrentUserAdmin()
         {
             return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
+        }
+
+        private bool IsPrivilegedUser()
+        {
+            var user = _httpContextAccessor?.HttpContext?.User;
+            return user?.IsInRole(Roles.Admin) == true || user?.IsInRole(Roles.Doctor) == true;
+        }
+
+        private static void SanitizePostPersonalData(CommunityPostDTO post)
+        {
+            post.UserId = string.Empty;
+            if (post.Comments != null)
+            {
+                foreach (var comment in post.Comments)
+                {
+                    SanitizeCommentPersonalData(comment);
+                }
+            }
+        }
+
+        private static void SanitizeCommentPersonalData(Models.Community.Comment.CommunityCommentDTO comment)
+        {
+            comment.UserName = string.Empty;
+            if (comment.Replies != null)
+            {
+                foreach (var reply in comment.Replies)
+                {
+                    SanitizeCommentPersonalData(reply);
+                }
+            }
         }
 
 

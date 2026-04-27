@@ -73,6 +73,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 var topLevelComments = comments.Where(c => c.ParentCommentId == null && !c.IsDeleted).ToList();
                 var commentDTOs = _mapper.Map<List<CommunityCommentDTO>>(topLevelComments);
 
+                if (!IsPrivilegedUser())
+                    commentDTOs.ForEach(SanitizeCommentPersonalData);
+
                 _logger.LogInformation("Retrieved {Count} comments for post {PostId}", commentDTOs.Count, postId);
                 return (true, commentDTOs);
             }
@@ -110,6 +113,10 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var commentDTO = _mapper.Map<CommunityCommentDTO>(comment);
+
+                if (!IsPrivilegedUser())
+                    SanitizeCommentPersonalData(commentDTO);
+
                 return (true, commentDTO);
             }
             catch (Exception ex)
@@ -155,6 +162,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 var activeReplies = replies.Where(r => !r.IsDeleted).ToList();
                 var replyDTOs = _mapper.Map<List<CommunityCommentDTO>>(activeReplies);
+
+                if (!IsPrivilegedUser())
+                    replyDTOs.ForEach(SanitizeCommentPersonalData);
 
                 _logger.LogInformation("Retrieved {Count} replies for comment {CommentId}", replyDTOs.Count, commentId);
                 return (true, replyDTOs);
@@ -254,6 +264,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 var commentDTO = _mapper.Map<CommunityCommentDTO>(commentWithDetails);
 
+                if (!IsPrivilegedUser())
+                    SanitizeCommentPersonalData(commentDTO);
+
                 _logger.LogInformation("Comment created successfully with ID: {CommentId} by user {UserId}",
                     createdComment.Id, userId);
 
@@ -315,6 +328,24 @@ namespace Eirene.BLL.Services.Implementation.Community
         private bool IsCurrentUserAdmin()
         {
             return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
+        }
+
+        private bool IsPrivilegedUser()
+        {
+            var user = _httpContextAccessor?.HttpContext?.User;
+            return user?.IsInRole(Roles.Admin) == true || user?.IsInRole(Roles.Doctor) == true;
+        }
+
+        private static void SanitizeCommentPersonalData(CommunityCommentDTO comment)
+        {
+            comment.UserName = string.Empty;
+            if (comment.Replies != null)
+            {
+                foreach (var reply in comment.Replies)
+                {
+                    SanitizeCommentPersonalData(reply);
+                }
+            }
         }
 
         public async Task<bool> UpdateAsync(EditCommunityComment model)
