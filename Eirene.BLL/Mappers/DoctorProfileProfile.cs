@@ -31,7 +31,6 @@ namespace Eirene.BLL.Mappers
             CreateMap<EditDoctorProfile, DoctorProfile>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.User, opt => opt.Ignore())
-                .ForMember(dest => dest.Specialization, opt => opt.Ignore())
                 .ForMember(dest => dest.Rating, opt => opt.Ignore())
                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
                 .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())

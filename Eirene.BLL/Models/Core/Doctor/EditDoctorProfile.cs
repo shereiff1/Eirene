@@ -4,6 +4,8 @@ namespace Eirene.BLL.Models.Core.Doctor;
 
 public class EditDoctorProfile
 {
+    [StringLength(100, ErrorMessage = "Specialization cannot exceed 100 characters")]
+    public string? Specialization { get; set; }
     // [Required(ErrorMessage = "Biography is required")]
     [StringLength(2000, MinimumLength = 50, ErrorMessage = "Biography must be between 50 and 2000 characters")]
     public string? Biography { get; set; } = null!;
