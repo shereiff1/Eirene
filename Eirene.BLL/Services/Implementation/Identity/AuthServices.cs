@@ -27,7 +27,9 @@ public class AuthServices : IAuthServices
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBackgroundJobService _backgroundJobService;
     private readonly string _otpSecret;
-    private readonly string? _googleClientId;
+    private readonly string? _googleWebClientId;
+    private readonly string? _googleIosClientId;
+    private readonly string? _googleAndroidClientId;
 
     public AuthServices(
         UserManager<ApplicationUser> userManager,
@@ -53,7 +55,9 @@ public class AuthServices : IAuthServices
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
         _backgroundJobService = backgroundJobService;
-        _googleClientId = configuration["Google:ClientId"];
+        _googleWebClientId = configuration["Google:WebClientId"];
+        _googleIosClientId = configuration["Google:IosClientId"];
+        _googleAndroidClientId = configuration["Google:AndroidClientId"];
     }
 
     public async Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto)
@@ -188,9 +192,13 @@ public class AuthServices : IAuthServices
     {
         try
         {
+            var audienceList = new[] { _googleWebClientId, _googleIosClientId, _googleAndroidClientId }
+                .Where(id => !string.IsNullOrEmpty(id))
+                .ToList();
+
             var settings = new GoogleJsonWebSignature.ValidationSettings
             {
-                Audience = !string.IsNullOrEmpty(_googleClientId) ? new[] { _googleClientId } : null
+                Audience = audienceList.Count > 0 ? audienceList : null
             };
 
             var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, settings);
