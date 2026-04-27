@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Hangfire;
 using Hangfire.PostgreSql;
 using System.Text;
+using Eirene.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -108,6 +109,14 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
+})
+.AddCookie("HangfireCookie", options =>
+{
+    options.LoginPath = "/hangfire-login";
+    options.Cookie.Name = "HangfireAuth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization();
@@ -152,12 +161,17 @@ app.UseStaticFiles();
 
 app.UseCors("AllowFrontend");
 
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHangfireDashboard();
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
-app.UseHangfireDashboard("/hangfire");
 
 app.Run();
