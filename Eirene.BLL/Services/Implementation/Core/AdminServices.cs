@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Eirene.BLL.Enumerators;
+using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Community;
@@ -400,6 +401,18 @@ namespace Eirene.BLL.Services.Implementation.Core
                 _logger.LogError(ex, "An error occurred while removing timeout for user {UserId} in group {GroupId}.", userId, groupId);
                 return (false, "An error occurred while removing the timeout.");
             }
+        }
+
+        public async Task<List<CommunityGroupMembershipDTO>> GetBannedUsersByGroupAsync(Guid groupId)
+        {
+            var bannedMemberships = await _userCommunityGroupRepository.GetBannedUsersByGroupAsync(groupId);
+            return _mapper.Map<List<CommunityGroupMembershipDTO>>(bannedMemberships);
+        }
+
+        public async Task<List<CommunityGroupMembershipDTO>> GetTimedOutUsersByGroupAsync(Guid groupId)
+        {
+            var timedOutMemberships = await _userCommunityGroupRepository.GetTimedOutUsersByGroupAsync(groupId);
+            return _mapper.Map<List<CommunityGroupMembershipDTO>>(timedOutMemberships);
         }
     }
 }

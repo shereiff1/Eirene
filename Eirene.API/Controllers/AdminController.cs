@@ -134,5 +134,19 @@ namespace EireneWebAPI.Controllers
 
             return Ok(new { result.Message });
         }
+
+        [HttpGet("community-group/{groupId}/banned-users")]
+        public async Task<IActionResult> GetBannedUsers(Guid groupId)
+        {
+            var users = await _adminServices.GetBannedUsersByGroupAsync(groupId);
+            return Ok(users);
+        }
+
+        [HttpGet("community-group/{groupId}/timed-out-users")]
+        public async Task<IActionResult> GetTimedOutUsers(Guid groupId)
+        {
+            var users = await _adminServices.GetTimedOutUsersByGroupAsync(groupId);
+            return Ok(users);
+        }
     }
 }

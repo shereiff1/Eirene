@@ -25,4 +25,21 @@ public class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup
             .Include(ug => ug.CommunityGroup)
             .FirstOrDefaultAsync(ug => ug.CommunityGroupId == groupId && ug.UserId == userId);
     }
+
+    public async Task<List<UserCommunityGroup>> GetBannedUsersByGroupAsync(Guid groupId)
+    {
+        return await _context.UserCommunityGroups
+            .Include(ug => ug.User)
+            .Where(ug => ug.CommunityGroupId == groupId && ug.IsBanned)
+            .ToListAsync();
+    }
+
+    public async Task<List<UserCommunityGroup>> GetTimedOutUsersByGroupAsync(Guid groupId)
+    {
+        var now = DateTime.UtcNow;
+        return await _context.UserCommunityGroups
+            .Include(ug => ug.User)
+            .Where(ug => ug.CommunityGroupId == groupId && ug.TimeoutUntil.HasValue && ug.TimeoutUntil.Value > now)
+            .ToListAsync();
+    }
 }
