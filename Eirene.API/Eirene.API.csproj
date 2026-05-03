@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -29,6 +29,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Eirene.BLL\Eirene.BLL.csproj" />
+		<ProjectReference Include="..\EireneMVC\EireneMVC.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -17,7 +17,7 @@ using Eirene.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
 
 builder.Services.Configure<SendGridSettings>(
@@ -168,7 +168,8 @@ app.UseAuthorization();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = new[] { new HangfireAuthorizationFilter() }
+    Authorization = new[] { new HangfireAuthorizationFilter() },
+    IgnoreAntiforgeryToken = true
 });
 
 app.MapControllers();
