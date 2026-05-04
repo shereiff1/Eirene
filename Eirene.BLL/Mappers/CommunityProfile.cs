@@ -1,6 +1,7 @@
 using AutoMapper;
 using Eirene.BLL.Models.Community.Comment;
 using Eirene.BLL.Models.Community.Group;
+using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Community.Post;
 using Eirene.BLL.Models.Identity;
 using Eirene.DAL.Entities.Community;
@@ -119,7 +120,14 @@ namespace Eirene.BLL.Mappers
             // ApplicationUser to UserDTO
             CreateMap<ApplicationUser, UserDTO>()
                 .ForMember(dest => dest.Role,
-                    opt => opt.Ignore()); 
+                    opt => opt.Ignore());
+
+            CreateMap<UserCommunityGroup, CommunityGroupMembershipDTO>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+                .ForMember(dest => dest.CommunityGroupName, opt => opt.MapFrom(src => src.CommunityGroup != null ? src.CommunityGroup.Name : string.Empty))
+                .ForMember(dest => dest.HasActiveMessagingTimeout, opt => opt.MapFrom(src => src.TimeoutUntil.HasValue && src.TimeoutUntil.Value > DateTime.UtcNow))
+                .ForMember(dest => dest.MessagingTimeoutEndsAt, opt => opt.MapFrom(src => src.TimeoutUntil));
         }
     }
 }
