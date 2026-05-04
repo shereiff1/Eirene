@@ -35,7 +35,9 @@ namespace Eirene.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _communityGroupServices.GetByIdAsync(id);
-            if (!result.IsSuccess || result.Group == null)
+            if (!result.IsSuccess)
+                return Forbid();
+            if ( result.Group == null)
                 return NotFound();
             return Ok(result.Group);
         }
