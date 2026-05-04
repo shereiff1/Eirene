@@ -172,12 +172,11 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 var patientEntity = _mapper.Map<PatientProfile>(model);
                 patientEntity.Id = userId;
-
+                patientEntity.ProfilePhotoUrl = $"https://api.dicebear.com/9.x/notionists/png?seed={user.Email}";
                 await _patientRepository.AddAsync(patientEntity);
                 await _unitOfWork.SaveChangesAsync();
 
-                var createdPatient = await _patientRepository.GetByIdAsync(userId);
-                var patientDto = _mapper.Map<PatientModel>(createdPatient);
+                var patientDto = _mapper.Map<PatientModel>(patientEntity);
 
                 return (true, null, patientDto);
             }

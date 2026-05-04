@@ -190,7 +190,6 @@ namespace Eirene.BLL.Services.Implementation.Core
                         await _doctorProfileRepository.AddAsync(new DoctorProfile
                         {
                             Id = userId,
-                            ProfilePhotoUrl = commonProfilePhotoUrl,
                             PhoneNumber = phoneNumber ?? string.Empty,
                             JoinedAt = DateTime.UtcNow
                         });
@@ -199,7 +198,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                         await _patientProfileRepository.AddAsync(new PatientProfile
                         {
                             Id = userId,
-                            ProfilePhotoUrl = commonProfilePhotoUrl
+                            ProfilePhotoUrl = $"https://api.dicebear.com/9.x/notionists/png?seed={user.Email}"
                         });
                         break;
                 }
