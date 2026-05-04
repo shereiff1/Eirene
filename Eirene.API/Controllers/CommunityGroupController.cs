@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +26,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetAllAsync();
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve community groups.");
+                return StatusCode(500, "Could not retrieve community groups.");
             return Ok(result.Groups);
         }
 
@@ -35,10 +35,8 @@ namespace Eirene.Controllers
         public async Task<IActionResult> GetById(Guid id)
         {
             var result = await _communityGroupServices.GetByIdAsync(id);
-            if (!result.IsSuccess)
-                return Forbid();
-            if ( result.Group == null)
-                return NotFound();
+            if (!result.IsSuccess || result.Group == null)
+                return NotFound("Community group not found.");
             return Ok(result.Group);
         }
 

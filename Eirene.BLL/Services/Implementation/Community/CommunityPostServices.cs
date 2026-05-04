@@ -81,7 +81,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             }
         }
 
-        public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(Guid groupId)
+        public async Task<(bool IsSuccess, string? Message, List<CommunityPostDTO>? Posts)> GetByGroupIdAsync(Guid groupId)
         {
             try
             {
@@ -89,13 +89,13 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("Unauthorized user tried to retrieve posts for group {GroupId}", groupId);
-                    return (false, null);
+                    return (false, "Unauthorized", null);
                 }
 
                 if (!await CanAccessGroupContentAsync(groupId, userId))
                 {
                     _logger.LogWarning("User {UserId} is not allowed to access posts for group {GroupId}", userId, groupId);
-                    return (false, null);
+                    return (false, "You are not a member of this community group.", null);
                 }
 
                 var posts = await _communityPostRepository.GetByGroupIdWithDetailsAsync(groupId);
@@ -103,7 +103,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (posts == null || !posts.Any())
                 {
                     _logger.LogInformation("No posts found for group {GroupId}", groupId);
-                    return (true, new List<CommunityPostDTO>());
+                    return (true, null, new List<CommunityPostDTO>());
                 }
 
                 var activePosts = posts.Where(p => !p.IsDeleted).ToList();
@@ -113,12 +113,12 @@ namespace Eirene.BLL.Services.Implementation.Community
                     postDTOs.ForEach(SanitizePostPersonalData);
 
                 _logger.LogInformation("Retrieved {Count} posts for group {GroupId}", postDTOs.Count, groupId);
-                return (true, postDTOs);
+                return (true, null, postDTOs);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving posts for group {GroupId}", groupId);
-                return (false, null);
+                return (false, "An error occurred while retrieving posts.", null);
             }
         }
 

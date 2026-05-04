@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Post;
 using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +24,7 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetAllAsync();
         if (!result.IsSuccess)
-            return BadRequest("Could not retrieve community posts.");
+            return StatusCode(500, "Could not retrieve community posts.");
         return Ok(result.Posts);
     }
 
@@ -33,9 +33,11 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetByIdAsync(id);
         if (!result.IsSuccess)
-            return Forbid(); 
-        if (result.Post == null)
-            return NotFound();
+        {
+            if (result.Post == null)
+                return NotFound("Post not found.");
+            return Forbid();
+        }
         return Ok(result.Post);
     }
 
@@ -44,7 +46,13 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetByGroupIdAsync(groupId);
         if (!result.IsSuccess)
-            return BadRequest("Could not retrieve posts for the group.");
+        {
+            if (result.Message == "Unauthorized")
+                return Unauthorized();
+            if (result.Message == "You are not a member of this community group.")
+                return StatusCode(403, result.Message);
+            return StatusCode(500, result.Message);
+        }
         return Ok(result.Posts);
     }
 
@@ -53,7 +61,7 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetByUserIdAsync(userId);
         if (!result.IsSuccess)
-            return BadRequest("Could not retrieve user's posts.");
+            return StatusCode(500, "Could not retrieve user's posts.");
         return Ok(result.Posts);
     }
 
