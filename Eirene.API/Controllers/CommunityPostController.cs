@@ -32,7 +32,9 @@ public class CommunityPostController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _communityPostServices.GetByIdAsync(id);
-        if (!result.IsSuccess || result.Post == null)
+        if (!result.IsSuccess)
+            return Forbid(); 
+        if (result.Post == null)
             return NotFound();
         return Ok(result.Post);
     }
