@@ -167,7 +167,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .HasOne(r => r.Doctor)
             .WithMany(d => d.SupervisionRequests)
             .HasForeignKey(r => r.DoctorProfileId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<DoctorRating>()
             .HasOne(r => r.Doctor)
