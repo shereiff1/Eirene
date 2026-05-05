@@ -329,7 +329,6 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private static void SanitizePostPersonalData(CommunityPostDTO post)
         {
-            post.UserId = string.Empty;
             if (post.Comments != null)
             {
                 foreach (var comment in post.Comments)

@@ -427,7 +427,6 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private static void SanitizeGroupPersonalData(CommunityGroupDTO group)
         {
-            group.CreatedByUserId = string.Empty;
             group.CreatedByUserName = string.Empty;
         }
 
@@ -437,7 +436,6 @@ namespace Eirene.BLL.Services.Implementation.Community
             {
                 foreach (var member in group.Members)
                 {
-                    member.Id = string.Empty;
                     member.UserName = string.Empty;
                     member.Email = string.Empty;
                 }
@@ -447,7 +445,6 @@ namespace Eirene.BLL.Services.Implementation.Community
             {
                 foreach (var post in group.Posts)
                 {
-                    post.UserId = string.Empty;
                     if (post.Comments != null)
                     {
                         foreach (var comment in post.Comments)
