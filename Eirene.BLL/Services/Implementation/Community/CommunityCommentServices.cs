@@ -338,7 +338,8 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private static void SanitizeCommentPersonalData(CommunityCommentDTO comment)
         {
-            comment.UserName = string.Empty;
+            // comment.UserName = string.Empty;
+            // comment.UserId = string.Empty;
             if (comment.Replies != null)
             {
                 foreach (var reply in comment.Replies)

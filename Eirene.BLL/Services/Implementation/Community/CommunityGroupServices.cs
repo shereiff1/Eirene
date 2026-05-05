@@ -445,6 +445,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             {
                 foreach (var post in group.Posts)
                 {
+                    // post.UserId = string.Empty;
                     if (post.Comments != null)
                     {
                         foreach (var comment in post.Comments)
@@ -458,7 +459,8 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private static void SanitizeCommentPersonalData(Models.Community.Comment.CommunityCommentDTO comment)
         {
-            comment.UserName = string.Empty;
+            // comment.UserName = string.Empty;
+            // comment.UserId = string.Empty;
             if (comment.Replies != null)
             {
                 foreach (var reply in comment.Replies)
