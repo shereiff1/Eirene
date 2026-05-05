@@ -353,6 +353,72 @@ namespace Eirene.BLL.Services.Implementation.Community
             }
         }
 
+        public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetJoinedByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("UserId is null or empty");
+                    return (false, null);
+                }
+
+                var groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
+
+                if (groups == null || !groups.Any())
+                {
+                    _logger.LogInformation("No joined community groups found for user {UserId}", userId);
+                    return (true, new List<CommunityGroupDTO>());
+                }
+
+                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
+
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+
+                _logger.LogInformation("Retrieved {Count} joined community groups for user {UserId}", groupDTOs.Count, userId);
+                return (true, groupDTOs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving joined community groups for user {UserId}", userId);
+                return (false, null);
+            }
+        }
+
+        public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetUnjoinedByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("UserId is null or empty");
+                    return (false, null);
+                }
+
+                var groups = await _communityGroupRepository.GetUnjoinedGroupsByUserIdAsync(userId);
+
+                if (groups == null || !groups.Any())
+                {
+                    _logger.LogInformation("No available community groups found for user {UserId}", userId);
+                    return (true, new List<CommunityGroupDTO>());
+                }
+
+                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
+
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+
+                _logger.LogInformation("Retrieved {Count} available community groups for user {UserId}", groupDTOs.Count, userId);
+                return (true, groupDTOs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available community groups for user {UserId}", userId);
+                return (false, null);
+            }
+        }
+
         private bool IsPrivilegedUser()
         {
             var user = _httpContextAccessor?.HttpContext?.User;

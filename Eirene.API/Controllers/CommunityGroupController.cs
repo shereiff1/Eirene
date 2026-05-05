@@ -113,5 +113,33 @@ namespace Eirene.Controllers
                 return BadRequest(result.Message);
             return Ok(result.Message);
         }
+
+        [HttpGet("my-groups")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> GetMyGroups()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.GetJoinedByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return StatusCode(500, "Could not retrieve joined community groups.");
+            return Ok(result.Groups);
+        }
+
+        [HttpGet("available-groups")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> GetAvailableGroups()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.GetUnjoinedByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return StatusCode(500, "Could not retrieve available community groups.");
+            return Ok(result.Groups);
+        }
     }
 }
