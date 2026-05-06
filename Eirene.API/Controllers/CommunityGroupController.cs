@@ -101,7 +101,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/leave")]
-        [Authorize(Roles = Roles.Patient)]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> LeaveGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
