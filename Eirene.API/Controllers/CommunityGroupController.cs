@@ -87,7 +87,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/join")]
-        [Authorize(Roles = Roles.Patient)]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> JoinGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
