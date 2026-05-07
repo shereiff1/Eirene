@@ -5,9 +5,10 @@ using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {
@@ -129,9 +130,27 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                if (string.IsNullOrEmpty(model.Name) || string.IsNullOrEmpty(model.CreatedByUserId))
+                model.CreatedByUserId = _httpContextAccessor.HttpContext?.User
+                    .FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(model.CreatedByUserId))
                 {
-                    _logger.LogWarning("Invalid community group data: Name or CreatedByUserId is empty");
+                    _logger.LogWarning("Unauthorized: No user ID found in token");
+                    return (false, null);
+                }
+
+                var userRole = _httpContextAccessor.HttpContext?.User
+                    .FindFirstValue(ClaimTypes.Role);
+
+                if (userRole != "Admin")
+                {
+                    _logger.LogWarning("Forbidden: User {UserId} is not an Admin", model.CreatedByUserId);
+                    return (false, null);
+                }
+
+                if (string.IsNullOrEmpty(model.Name))
+                {
+                    _logger.LogWarning("Invalid community group data: Name is empty");
                     return (false, null);
                 }
 
@@ -169,7 +188,6 @@ namespace Eirene.BLL.Services.Implementation.Community
                 return (false, null);
             }
         }
-
         public async Task<bool> UpdateAsync(EditCommunityGroup model)
         {
             try
