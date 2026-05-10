@@ -228,5 +228,24 @@ namespace Eirene.Controllers
                 return BadRequest(result.Error);
             return Ok(new { message = "Doctor profile deleted successfully." });
         }
+        [HttpGet("is-verified")]
+        [Authorize(Roles = Roles.Doctor)]
+        public async Task<IActionResult> CheckIfVerified()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new
+                {
+                    message = "User not authenticated.",
+                });
+            }
+            var result = await _services.CheckIfVerified(userId);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(new { isVerified = result.IsVerified });
+        }
     }
 }
