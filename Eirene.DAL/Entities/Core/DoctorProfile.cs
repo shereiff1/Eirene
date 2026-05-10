@@ -22,6 +22,7 @@ namespace Eirene.DAL.Entities.Core
         public ICollection<DoctorRating> DoctorRatings { get; set; } = new List<DoctorRating>();
         public string? ProfilePhotoUrl { get; set; }
         public bool isActive { get; set; } = true;
+        public bool IsVerified { get; set; } = false;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         
