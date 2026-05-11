@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.API.Filters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -87,6 +88,7 @@ namespace Eirene.Controllers
 
         [HttpGet("supervision-requests")]
         [Authorize(Roles = Roles.Doctor)]
+        [VerifiedDoctor]
         public async Task<IActionResult> GetSupervisionRequests()
         {
             var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -102,6 +104,7 @@ namespace Eirene.Controllers
 
         [HttpPut("supervision-requests/{requestId}")]
         [Authorize(Roles = Roles.Doctor)]
+        [VerifiedDoctor]
         public async Task<IActionResult> RespondToSupervisionRequest(string requestId, [FromBody] bool accept)
         {
             var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -146,6 +149,7 @@ namespace Eirene.Controllers
 
         [HttpGet("ratings/{doctorId}")]
         [Authorize(Roles = Roles.AllUsers)]
+        [VerifiedDoctor]
         public async Task<IActionResult> GetDoctorRatings(string doctorId)
         {
             var result = await _services.GetDoctorRatingsAsync(doctorId);
@@ -157,6 +161,7 @@ namespace Eirene.Controllers
 
         [HttpDelete("cancel-supervision")]
         [Authorize(Roles = Roles.Doctor)]
+        [VerifiedDoctor]
         public async Task<IActionResult> CancelDoctorSupervision()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -197,6 +202,7 @@ namespace Eirene.Controllers
 
         [HttpGet("patients")]
         [Authorize(Roles = Roles.Doctor)]
+        [VerifiedDoctor]
         public async Task<IActionResult> GetDoctorsPatients()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -221,6 +227,25 @@ namespace Eirene.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Error);
             return Ok(new { message = "Doctor profile deleted successfully." });
+        }
+        [HttpGet("is-verified")]
+        [Authorize(Roles = Roles.Doctor)]
+        public async Task<IActionResult> CheckIfVerified()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new
+                {
+                    message = "User not authenticated.",
+                });
+            }
+            var result = await _services.CheckIfVerified(userId);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result.Error);
+            }
+            return Ok(new { isVerified = result.IsVerified });
         }
     }
 }

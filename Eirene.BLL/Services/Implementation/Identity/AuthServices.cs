@@ -89,7 +89,7 @@ public class AuthServices : IAuthServices
                 };
             }
 
-            string role = registerDto.Role ?? "Patient";
+            string role = registerDto.Role;
 
             if (!await _roleManager.RoleExistsAsync(role))
             {

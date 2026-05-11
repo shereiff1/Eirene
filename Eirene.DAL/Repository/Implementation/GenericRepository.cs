@@ -20,7 +20,7 @@ namespace Eirene.DAL.Repository.Implementation
         {
             return await _dbSet.ToListAsync();
         }
-        public async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public virtual async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.Where(predicate).ToListAsync();
         }

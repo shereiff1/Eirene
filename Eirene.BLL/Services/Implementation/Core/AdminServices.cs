@@ -6,6 +6,7 @@ using AutoMapper;
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
+using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
@@ -412,6 +413,57 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             var timedOutMemberships = await _userCommunityGroupRepository.GetTimedOutUsersByGroupAsync(groupId);
             return _mapper.Map<List<CommunityGroupMembershipDTO>>(timedOutMemberships);
+        }
+
+        public async Task<(bool IsSuccess, List<DoctorModel>? Doctors)> GetPendingDoctorsAsync()
+        {
+            try
+            {
+                var pendingDoctors = await _doctorProfileRepository.FindAsync(d => !d.IsVerified);
+                if (pendingDoctors == null)
+                {
+                    return (false, null);
+                }
+                
+                var doctorModels = _mapper.Map<List<DoctorModel>>(pendingDoctors);
+                return (true, doctorModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving pending doctors.");
+                return (false, null);
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> ApproveDoctorAsync(string doctorId)
+        {
+            try
+            {
+                var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                {
+                    return (false, "Doctor profile not found.");
+                }
+
+                if (doctor.IsVerified)
+                {
+                    return (false, "Doctor is already verified.");
+                }
+
+                doctor.IsVerified = true;
+                doctor.UpdatedAt = DateTime.UtcNow;
+
+                await _doctorProfileRepository.UpdateAsync(doctor);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Doctor {DoctorId} has been verified.", doctorId);
+                return (true, "Doctor has been successfully verified.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while approving doctor {DoctorId}.", doctorId);
+                return (false, "An error occurred while approving the doctor.");
+            }
         }
     }
 }

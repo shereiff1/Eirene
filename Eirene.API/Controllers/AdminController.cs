@@ -148,5 +148,25 @@ namespace EireneWebAPI.Controllers
             var users = await _adminServices.GetTimedOutUsersByGroupAsync(groupId);
             return Ok(users);
         }
+
+        [HttpGet("doctors/pending")]
+        public async Task<IActionResult> GetPendingDoctors()
+        {
+            var result = await _adminServices.GetPendingDoctorsAsync();
+            if (!result.IsSuccess)
+                return BadRequest("Could not retrieve pending doctors.");
+
+            return Ok(result.Doctors);
+        }
+
+        [HttpPost("doctors/{doctorId}/approve")]
+        public async Task<IActionResult> ApproveDoctor(string doctorId)
+        {
+            var result = await _adminServices.ApproveDoctorAsync(doctorId);
+            if (!result.IsSuccess)
+                return BadRequest(result.Message);
+
+            return Ok(new { Message = result.Message });
+        }
     }
 }

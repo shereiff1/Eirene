@@ -354,6 +354,24 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
+        public async Task<(bool IsSuccess, string? Error, bool IsVerified)> CheckIfVerified(string doctorId)
+        {
+            try
+            {
+                var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                {
+                    return (false, "Doctor Not Found", false);
+                }
+                return (true, null, doctor.IsVerified);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching data for doctor {DoctorId}", doctorId);
+                return (false, "An error happened while fetching doctor data", false);
+            }
+        }
+
         public async Task<(bool IsSuccess, string? Error)> DeleteDoctorProfile(string doctorId)
         {
             try
