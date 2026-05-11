@@ -54,10 +54,15 @@ namespace Eirene.Controllers
             );
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         [Authorize(Roles = Roles.Admin)]
-        public async Task<IActionResult> Update([FromBody] EditCommunityGroup group)
+        public async Task<IActionResult> Update(Guid id, [FromBody] EditCommunityGroup group)
         {
+            if (group.Id != Guid.Empty && group.Id != id)
+            {
+                return BadRequest("ID mismatch between URL and body.");
+            }
+            group.Id = id;
             var updated = await _communityGroupServices.UpdateAsync(group);
             if (!updated)
                 return NotFound("Community group not found.");

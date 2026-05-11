@@ -130,14 +130,16 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                model.CreatedByUserId = _httpContextAccessor.HttpContext?.User
-                    .FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _httpContextAccessor.HttpContext?.User
+                                     .FindFirstValue(ClaimTypes.NameIdentifier);
 
-                if (string.IsNullOrEmpty(model.CreatedByUserId))
+                if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("Unauthorized: No user ID found in token");
                     return (false, null);
                 }
+
+                model.CreatedByUserId = userId;
 
                 var userRole = _httpContextAccessor.HttpContext?.User
                     .FindFirstValue(ClaimTypes.Role);
