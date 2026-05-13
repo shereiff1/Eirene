@@ -135,13 +135,12 @@ public class AuthServices : IAuthServices
 
             if (!result.Succeeded)
             {
-                if (result.IsLockedOut)
-                    return Fail("Account is locked out");
-
-                if (result.IsNotAllowed)
-                    return Fail("Login not allowed");
-
-                return Fail("Invalid email or password");
+                var failResponse = result.IsLockedOut ? Fail("Account is locked out") :
+                                 result.IsNotAllowed ? Fail("Login not allowed") :
+                                 Fail("Invalid email or password");
+                
+                failResponse.EmailConfirmed = user.EmailConfirmed;
+                return failResponse;
             }
 
             var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
@@ -502,6 +501,6 @@ public class AuthServices : IAuthServices
         byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(otp));
         return Convert.ToBase64String(hash);
     }
-    private static AuthResultDTO Fail(string error) =>
-        new() { Success = false, Error = error };
+    private static AuthResultDTO Fail(string error, bool emailConfirmed = false) =>
+        new() { Success = false, Error = error, EmailConfirmed = emailConfirmed };
 }
