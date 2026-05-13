@@ -505,13 +505,22 @@ public class AuthServices : IAuthServices
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var request = _httpContextAccessor.HttpContext!.Request;
-            var baseUrl = $"{request.Scheme}://{request.Host}";
+            // var request = _httpContextAccessor.HttpContext!.Request;
+            // var baseUrl = $"{request.Scheme}://{request.Host}";
+            // var encodedToken = Uri.EscapeDataString(token);
+            // var encodedEmail = Uri.EscapeDataString(dto.Email);
+            // var resetLink = $"{baseUrl}/api/Auth/reset-password?email={encodedEmail}&token={encodedToken}";
+            // var emailBody = $"To reset your password, go to this link:\n\n{resetLink}\n\nIf you didn't request this, you can ignore this email.";
+
             var encodedToken = Uri.EscapeDataString(token);
             var encodedEmail = Uri.EscapeDataString(dto.Email);
-            var resetLink = $"{baseUrl}/api/Auth/reset-password?email={encodedEmail}&token={encodedToken}";
+            var resetLink = $"exp://192.168.1.11:8081/--/reset-password?email={encodedEmail}&token={encodedToken}";
 
-            var emailBody = $"To reset your password, go to this link:\n\n{resetLink}\n\nIf you didn't request this, you can ignore this email.";
+            var emailBody = $"<html><body>" +
+                $"<p>To reset your password, click the link below:</p>" +
+                $"<p><a href=\"{resetLink}\">{resetLink}</a></p>" +
+                $"<p>If you didn't request this, you can ignore this email.</p>" +
+                $"</body></html>";
 
             _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(
                 user.Email,
