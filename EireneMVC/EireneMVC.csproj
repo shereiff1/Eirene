@@ -1,13 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Eirene.API\Eirene.API.csproj" />
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Eirene.DAL\Eirene.DAL.csproj" />
     </ItemGroup>
 
 </Project>

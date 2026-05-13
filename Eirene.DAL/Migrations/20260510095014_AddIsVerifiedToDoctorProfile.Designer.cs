@@ -3,6 +3,7 @@ using System;
 using Eirene.DAL.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Eirene.DAL.Migrations
 {
     [DbContext(typeof(EireneDBContext))]
-    partial class EireneDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260510095014_AddIsVerifiedToDoctorProfile")]
+    partial class AddIsVerifiedToDoctorProfile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -320,13 +323,6 @@ namespace Eirene.DAL.Migrations
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
-
-                    b.Property<string>("PasswordResetCode")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("PasswordResetCodeExpiration")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");

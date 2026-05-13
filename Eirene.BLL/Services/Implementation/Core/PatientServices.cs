@@ -9,6 +9,7 @@ using Eirene.BLL.Models.Core.Patient;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.DAL.Repository.Abstraction.Community;
 
 namespace Eirene.BLL.Services.Implementation.Core
 {
@@ -24,6 +25,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly IMapper _mapper;
         private readonly IEmailSender _emailSender;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
 
         public PatientServices(
             ILogger<PatientServices> logger,
@@ -35,7 +37,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             IApplicationUserRepository userRepository,
             IUnitOfWork unitOfWork,
             IEmailSender emailSender,
-            IBackgroundJobService backgroundJobService)
+            IBackgroundJobService backgroundJobService,
+            IUserCommunityGroupRepository userCommunityGroupRepository)
         {
             _patientRepository = patientRepository;
             _doctorRepository = doctorRepository;
@@ -47,6 +50,7 @@ namespace Eirene.BLL.Services.Implementation.Core
             _mapper = mapper;
             _emailSender = emailSender;
             _backgroundJobService = backgroundJobService;
+            _userCommunityGroupRepository = userCommunityGroupRepository;
         }
 
         public async Task<(bool IsSuccess, string? Error)> RequestSupervisionAsync(string patientUserId, string doctorId)
@@ -168,12 +172,11 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 var patientEntity = _mapper.Map<PatientProfile>(model);
                 patientEntity.Id = userId;
-
+                patientEntity.ProfilePhotoUrl = $"https://api.dicebear.com/9.x/notionists/png?seed={user.Email}";
                 await _patientRepository.AddAsync(patientEntity);
                 await _unitOfWork.SaveChangesAsync();
 
-                var createdPatient = await _patientRepository.GetByIdAsync(userId);
-                var patientDto = _mapper.Map<PatientModel>(createdPatient);
+                var patientDto = _mapper.Map<PatientModel>(patientEntity);
 
                 return (true, null, patientDto);
             }
@@ -373,6 +376,63 @@ namespace Eirene.BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "Error while patient {PatientId} rating doctor {DoctorId}", patientUserId, doctorId);
                 return (false, "An error occurred while saving the rating.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, bool? IsBanned)> CheckIfBanned(string userId, Guid groupId)
+        {
+            try
+            {
+                var patient = await _patientRepository.GetByIdAsync(userId);
+                if (patient == null)
+                {
+                    _logger.LogError("Patient profile is not found.");
+                    return (false, null);
+                }
+
+                var userGroupRecord = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (userGroupRecord == null)
+                {
+                    _logger.LogError("The record of the user {userId} in the group {groupId} does not exist.", userId, groupId);
+                    return (false, null);
+                }
+                _logger.LogInformation("The user {userId} is a member at group {groupId}.", userId, groupId);
+                return (true, userGroupRecord.IsBanned);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while trying to check wither patient {userId} is banned or not", userId);
+                return (false, false);
+            }
+        }
+
+        public async Task<(bool IsSuccess, bool IsTimedOut, DateTime? TimeoutUntil, string? Error)> CheckTimeoutAsync(string userId, Guid groupId)
+        {
+            try
+            {
+                var patient = await _patientRepository.GetByIdAsync(userId);
+                if (patient == null)
+                {
+                    _logger.LogError("Patient profile with id {userId} not found.", userId);
+                    return (false, false, null, "Patient profile not found.");
+                }
+
+                var userGroupRecord = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
+                if (userGroupRecord == null)
+                {
+                    _logger.LogError("Membership record for user {userId} in group {groupId} not found.", userId, groupId);
+                    return (false, false, null, "User is not a member of this group.");
+                }
+
+                bool isTimedOut = userGroupRecord.HasActiveTimeout(DateTime.UtcNow);
+                _logger.LogInformation("Timeout check for user {userId} in group {groupId}: {isTimedOut}", userId, groupId, isTimedOut);
+
+                return (true, isTimedOut, userGroupRecord.TimeoutUntil, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking timeout for user {userId} in group {groupId}", userId, groupId);
+                return (false, false, null, "An error occurred while checking timeout status.");
             }
         }
     }

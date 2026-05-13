@@ -18,5 +18,7 @@ namespace Eirene.BLL.Services.Abstraction.Community
         Task<bool> DeleteAsync(Guid id);
         Task<(bool IsSuccess, string Message)> JoinGroupAsync(Guid groupId, string userId);
         Task<(bool IsSuccess, string Message)> LeaveGroupAsync(Guid groupId, string userId);
+        Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetJoinedByUserIdAsync(string userId);
+        Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetUnjoinedByUserIdAsync(string userId);
     }
 }

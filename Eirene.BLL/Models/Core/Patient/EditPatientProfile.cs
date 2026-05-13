@@ -13,7 +13,7 @@ public class EditPatientProfile
     [StringLength(2000, ErrorMessage = "Medical History cannot exceed 2000 characters")]
     public string? MedicalHistory { get; set; }
     
-    [RegularExpression(@"^[^<>:\""|?*]+$", 
-        ErrorMessage = "Invalid file path.")]
+    [RegularExpression(@"^https?:\/\/[^\s/$.?#].[^\s]*$",
+        ErrorMessage = "Invalid URL.")]
     public string? ProfilePhotoUrl { get; set; }
 }

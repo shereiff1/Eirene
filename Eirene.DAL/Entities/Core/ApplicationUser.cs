@@ -11,6 +11,8 @@ namespace Eirene.DAL.Entities.Core
         public bool IsEmailVerified { get; set; } = false;
         public  string EmailVerificationCode { get; set; } = string.Empty;
         public DateTime EmailVerificationCodeExpiration { get; set; }
+        public string PasswordResetCode { get; set; } = string.Empty;
+        public DateTime PasswordResetCodeExpiration { get; set; }
         public DoctorProfile? DoctorProfile { get; set; }
         public PatientProfile? PatientProfile { get; set; }
         public ModeratorProfile? ModeratorProfile { get; set; }

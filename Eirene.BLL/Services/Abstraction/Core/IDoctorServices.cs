@@ -17,5 +17,6 @@ namespace Eirene.BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string? Error)> RemoveSupervisionOnPatient(string patientUserId);
         Task<(bool IsSuccess, string? Error)> DeleteDoctorProfile(string patientUserId);
         Task<(bool IsSuccess, List<DoctorRatingDTO>? Ratings)> GetDoctorRatingsAsync(string doctorId);
+        Task<(bool IsSuccess, string? Error, bool IsVerified)> CheckIfVerified(string userId);
     }
 }

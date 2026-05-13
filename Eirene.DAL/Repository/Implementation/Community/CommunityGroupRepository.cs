@@ -54,5 +54,23 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.Members)
                 .FirstOrDefaultAsync(g => g.Id == id);
         }
+
+        public async Task<List<CommunityGroup>> GetJoinedGroupsByUserIdAsync(string userId)
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.Posts)
+                .Where(g => g.UserCommunityGroups!.Any(ucg => ucg.UserId == userId))
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<List<CommunityGroup>> GetUnjoinedGroupsByUserIdAsync(string userId)
+        {
+            return await _context.CommunityGroups
+                .Include(g => g.Posts)
+                .Where(g => !g.UserCommunityGroups!.Any(ucg => ucg.UserId == userId))
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

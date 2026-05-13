@@ -4,6 +4,7 @@ public class CommunityCommentDTO
 {
     public Guid Id { get; set; }
     public Guid PostId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime PostedOn { get; set; }

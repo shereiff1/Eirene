@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.Models.Identity;
+using Eirene.BLL.Models.Identity;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,6 +39,20 @@ namespace Eirene.Controllers
                 return BadRequest(ModelState);
 
             var result = await _authService.LoginAsync(loginDto);
+
+            if (!result.Success)
+                return Unauthorized(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDTO googleLoginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.GoogleLoginAsync(googleLoginDto);
 
             if (!result.Success)
                 return Unauthorized(result);

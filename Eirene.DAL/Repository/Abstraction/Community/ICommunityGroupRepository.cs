@@ -14,5 +14,7 @@ namespace Eirene.DAL.Repository.Abstraction.Community
         Task<CommunityGroup?> GetByNameAsync(string name);
         Task<List<CommunityGroup>> GetByUserIdAsync(string userId);
         Task<CommunityGroup?> GetByIdWithMembersAsync(Guid id);
+        Task<List<CommunityGroup>> GetJoinedGroupsByUserIdAsync(string userId);
+        Task<List<CommunityGroup>> GetUnjoinedGroupsByUserIdAsync(string userId);
     }
 }

@@ -3,6 +3,7 @@ using Eirene.BLL.Models.Identity;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.DAL.Repository.Abstraction;
-
+using Google.Apis.Auth;
 
 namespace Eirene.BLL.Services.Implementation.Identity;
 
@@ -26,7 +27,11 @@ public class AuthServices : IAuthServices
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly string _otpSecret;
+    private readonly string? _googleWebClientId;
+    private readonly string? _googleIosClientId;
+    private readonly string? _googleAndroidClientId;
 
     public AuthServices(
         UserManager<ApplicationUser> userManager,
@@ -39,7 +44,8 @@ public class AuthServices : IAuthServices
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
         ILogger<AuthServices> logger,
-        IBackgroundJobService backgroundJobService)
+        IBackgroundJobService backgroundJobService,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -52,6 +58,10 @@ public class AuthServices : IAuthServices
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
         _backgroundJobService = backgroundJobService;
+        _httpContextAccessor = httpContextAccessor;
+        _googleWebClientId = configuration["Google:WebClientId"];
+        _googleIosClientId = configuration["Google:IosClientId"];
+        _googleAndroidClientId = configuration["Google:AndroidClientId"];
     }
 
     public async Task<RegistrationDTO> RegisterAsync(RegisterDTO registerDto)
@@ -83,7 +93,7 @@ public class AuthServices : IAuthServices
                 };
             }
 
-            string role = registerDto.Role ?? "Patient";
+            string role = registerDto.Role;
 
             if (!await _roleManager.RoleExistsAsync(role))
             {
@@ -152,7 +162,7 @@ public class AuthServices : IAuthServices
                 TokenHash = refreshTokenHash,
                 JwtId = jti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddDays(20),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
@@ -178,6 +188,89 @@ public class AuthServices : IAuthServices
                 Success = false,
                 Error = $"An error occurred during login: {ex.Message}"
             };
+        }
+    }
+
+    public async Task<AuthResultDTO> GoogleLoginAsync(GoogleLoginDTO googleLoginDto)
+    {
+        try
+        {
+            var audienceList = new[] { _googleWebClientId, _googleIosClientId, _googleAndroidClientId }
+                .Where(id => !string.IsNullOrEmpty(id))
+                .ToList();
+
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = audienceList.Count > 0 ? audienceList : null
+            };
+
+            var payload = await GoogleJsonWebSignature.ValidateAsync(googleLoginDto.IdToken, settings);
+
+            var user = await _userManager.FindByEmailAsync(payload.Email);
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = payload.Email,
+                    Email = payload.Email,
+                    FullName = payload.Name ?? payload.Email,
+                    EmailConfirmed = true,
+                    IsEmailVerified = true
+                };
+
+                var result = await _userManager.CreateAsync(user);
+                if (!result.Succeeded)
+                    return Fail("Error creating Google user account");
+
+                string role = "Patient";
+                if (!await _roleManager.RoleExistsAsync(role))
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else if (!user.EmailConfirmed && payload.EmailVerified)
+            {
+                user.EmailConfirmed = true;
+                user.IsEmailVerified = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            var refreshTokenHash = _tokenService.ComputeSha256Hash(refreshToken);
+            var dbToken = new RefreshToken
+            {
+                TokenHash = refreshTokenHash,
+                JwtId = jti,
+                UserId = user.Id,
+                ExpiryDate = DateTime.UtcNow.AddDays(20),
+                CreatedDate = DateTime.UtcNow,
+                IsUsed = false,
+                IsRevoked = false
+            };
+
+            await _refreshTokenRepository.AddAsync(dbToken);
+            await _unitOfWork.SaveChangesAsync();
+
+            var authResult = _mapper.Map<AuthResultDTO>(user);
+            authResult.RefreshToken = refreshToken;
+            authResult.RefreshTokenExpiration = dbToken.ExpiryDate;
+            authResult.AccessToken = accessToken;
+            authResult.Success = true;
+            authResult.Role = "Patient";
+            authResult.EmailConfirmed = user.EmailConfirmed;
+            return authResult;
+        }
+        catch (InvalidJwtException ex)
+        {
+            _logger.LogWarning(ex, "Invalid Google ID Token");
+            return Fail("Invalid Google ID Token");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GoogleLoginAsync failed");
+            return Fail($"An error occurred during Google login: {ex.Message}");
         }
     }
 
@@ -327,7 +420,7 @@ public class AuthServices : IAuthServices
                 TokenHash = newRefreshTokenHash,
                 JwtId = newJti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddDays(7),
+                ExpiryDate = DateTime.UtcNow.AddMinutes(7),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
@@ -372,7 +465,7 @@ public class AuthServices : IAuthServices
             user.EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(20);
             await _userManager.UpdateAsync(user);
 
-            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email, 
+            _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email,
                 "Email Verification Code",
                 $"Your verification code is: {code}"));
             // await _emailSender.SendEmailAsync(
@@ -409,22 +502,20 @@ public class AuthServices : IAuthServices
             if (!user.EmailConfirmed)
                 return Fail("Email is not confirmed");
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var code = GenerateOtp();
+            user.PasswordResetCode = HashOtp(code, _otpSecret);
+            user.PasswordResetCodeExpiration = DateTime.UtcNow.AddMinutes(15);
+            await _userManager.UpdateAsync(user);
 
             _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(
                 user.Email,
-                "Reset Password",
-                $"Your password reset token is: {token}"));
-            // await _emailSender.SendEmailAsync(
-            //     user.Email,
-            //     "Reset Password",
-            //     $"Your password reset token is: {token}"
-            // );
+                "Reset Your Password - Eirene",
+                $"Your password reset code is: {code}\n\nThis code will expire in 15 minutes.\nIf you didn't request this, you can ignore this email."));
 
             return new AuthResultDTO
             {
                 Success = true,
-                Message = "Password reset token has been sent to your email"
+                Message = "Password reset code has been sent to your email"
             };
         }
         catch (Exception ex)
@@ -446,13 +537,25 @@ public class AuthServices : IAuthServices
             if (user == null)
                 return Fail("User not found");
 
-            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+            if (user.PasswordResetCodeExpiration < DateTime.UtcNow)
+                return Fail("The reset code has expired. Please request a new one.");
+
+            var hashedCode = HashOtp(dto.Code, _otpSecret);
+            if (hashedCode != user.PasswordResetCode)
+                return Fail("Invalid reset code");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
 
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 return Fail($"Failed to reset password: {errors}");
             }
+
+            user.PasswordResetCode = string.Empty;
+            user.PasswordResetCodeExpiration = DateTime.MinValue;
+            await _userManager.UpdateAsync(user);
 
             return new AuthResultDTO
             {

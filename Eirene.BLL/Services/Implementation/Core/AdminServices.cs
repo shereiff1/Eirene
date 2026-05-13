@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Eirene.BLL.Enumerators;
+using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
+using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
@@ -21,6 +24,8 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly ICommunityGroupRepository _communityGroupRepository;
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IAdminProfileRepository _adminProfileRepository;
+        private readonly IDoctorProfileRepository _doctorProfileRepository;
+        private readonly IPatientProfileRepository _patientProfileRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AdminServices> _logger;
         private readonly IMapper _mapper;
@@ -30,6 +35,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IAdminProfileRepository adminProfileRepository,
+            IDoctorProfileRepository doctorProfileRepository,
+            IPatientProfileRepository patientProfileRepository,
             IUnitOfWork unitOfWork,
             ILogger<AdminServices> logger,
             IMapper mapper)
@@ -38,6 +45,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             _communityGroupRepository = communityGroupRepository;
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _adminProfileRepository = adminProfileRepository;
+            _doctorProfileRepository = doctorProfileRepository;
+            _patientProfileRepository = patientProfileRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
@@ -140,17 +149,66 @@ namespace Eirene.BLL.Services.Implementation.Core
                     _logger.LogWarning("Attempted to assign role to non-existent user {UserId}.", userId);
                     return false;
                 }
+
                 var currentRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
                 if (currentRole != null && currentRole == role)
                 {
                     _logger.LogWarning("User {UserId} already has role '{Role}'.", userId, role);
                     return true;
                 }
-                if (currentRole != null) await _userManager.RemoveFromRoleAsync(user, currentRole);
+
+                string? commonProfilePhotoUrl = null;
+                string? phoneNumber = null;
+
+                if (currentRole != null)
+                {
+                    switch (currentRole)
+                    {
+                        case Roles.Doctor:
+                            var doctorProfile = await _doctorProfileRepository.GetByIdAsync(userId);
+                            if (doctorProfile != null)
+                            {
+                                commonProfilePhotoUrl = doctorProfile.ProfilePhotoUrl;
+                                phoneNumber = doctorProfile.PhoneNumber;
+                                await _doctorProfileRepository.DeleteAsync(doctorProfile);
+                            }
+                            break;
+                        case Roles.Patient:
+                            var patientProfile = await _patientProfileRepository.GetByIdAsync(userId);
+                            if (patientProfile != null)
+                            {
+                                commonProfilePhotoUrl = patientProfile.ProfilePhotoUrl;
+                                await _patientProfileRepository.DeleteAsync(patientProfile);
+                            }
+                            break;
+                    }
+                    await _userManager.RemoveFromRoleAsync(user, currentRole);
+                }
+
+                switch (role)
+                {
+                    case Roles.Doctor:
+                        await _doctorProfileRepository.AddAsync(new DoctorProfile
+                        {
+                            Id = userId,
+                            PhoneNumber = phoneNumber ?? string.Empty,
+                            JoinedAt = DateTime.UtcNow
+                        });
+                        break;
+                    case Roles.Patient:
+                        await _patientProfileRepository.AddAsync(new PatientProfile
+                        {
+                            Id = userId,
+                            ProfilePhotoUrl = $"https://api.dicebear.com/9.x/notionists/png?seed={user.Email}"
+                        });
+                        break;
+                }
+
                 var result = await _userManager.AddToRoleAsync(user, role);
                 await _unitOfWork.SaveChangesAsync();
+
                 if (result.Succeeded)
-                    _logger.LogInformation("Successfully assigned role '{Role}' to user {UserId} by admin {AdminId}.", role, userId, adminId);
+                    _logger.LogInformation("Successfully assigned role '{Role}' to user {UserId} by admin {AdminId} and migrated profile.", role, userId, adminId);
                 else
                     _logger.LogWarning("Failed to assign role '{Role}' to user {UserId}. Errors: {Errors}", role, userId, string.Join(", ", result.Errors.Select(e => e.Description)));
 
@@ -342,6 +400,69 @@ namespace Eirene.BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "An error occurred while removing timeout for user {UserId} in group {GroupId}.", userId, groupId);
                 return (false, "An error occurred while removing the timeout.");
+            }
+        }
+
+        public async Task<List<CommunityGroupMembershipDTO>> GetBannedUsersByGroupAsync(Guid groupId)
+        {
+            var bannedMemberships = await _userCommunityGroupRepository.GetBannedUsersByGroupAsync(groupId);
+            return _mapper.Map<List<CommunityGroupMembershipDTO>>(bannedMemberships);
+        }
+
+        public async Task<List<CommunityGroupMembershipDTO>> GetTimedOutUsersByGroupAsync(Guid groupId)
+        {
+            var timedOutMemberships = await _userCommunityGroupRepository.GetTimedOutUsersByGroupAsync(groupId);
+            return _mapper.Map<List<CommunityGroupMembershipDTO>>(timedOutMemberships);
+        }
+
+        public async Task<(bool IsSuccess, List<DoctorModel>? Doctors)> GetPendingDoctorsAsync()
+        {
+            try
+            {
+                var pendingDoctors = await _doctorProfileRepository.FindAsync(d => !d.IsVerified);
+                if (pendingDoctors == null)
+                {
+                    return (false, null);
+                }
+                
+                var doctorModels = _mapper.Map<List<DoctorModel>>(pendingDoctors);
+                return (true, doctorModels);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving pending doctors.");
+                return (false, null);
+            }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> ApproveDoctorAsync(string doctorId)
+        {
+            try
+            {
+                var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
+                if (doctor == null)
+                {
+                    return (false, "Doctor profile not found.");
+                }
+
+                if (doctor.IsVerified)
+                {
+                    return (false, "Doctor is already verified.");
+                }
+
+                doctor.IsVerified = true;
+                doctor.UpdatedAt = DateTime.UtcNow;
+
+                await _doctorProfileRepository.UpdateAsync(doctor);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Doctor {DoctorId} has been verified.", doctorId);
+                return (true, "Doctor has been successfully verified.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while approving doctor {DoctorId}.", doctorId);
+                return (false, "An error occurred while approving the doctor.");
             }
         }
     }

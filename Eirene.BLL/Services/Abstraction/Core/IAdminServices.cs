@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
+using Eirene.BLL.Models.Core.Doctor;
 
 namespace Eirene.BLL.Services.Abstraction.Core
 {
@@ -16,5 +18,9 @@ namespace Eirene.BLL.Services.Abstraction.Core
         Task<(bool IsSuccess, string Message)> UnbanUserFromGroupAsync(Guid groupId, string userId);
         Task<(bool IsSuccess, string Message)> TimeoutUserInGroupAsync(Guid groupId, string userId, DateTime timeoutUntil);
         Task<(bool IsSuccess, string Message)> RemoveTimeoutUserInGroupAsync(Guid groupId, string userId);
+        Task<List<CommunityGroupMembershipDTO>> GetBannedUsersByGroupAsync(Guid groupId);
+        Task<List<CommunityGroupMembershipDTO>> GetTimedOutUsersByGroupAsync(Guid groupId);
+        Task<(bool IsSuccess, List<DoctorModel>? Doctors)> GetPendingDoctorsAsync();
+        Task<(bool IsSuccess, string Message)> ApproveDoctorAsync(string doctorId);
     }
 }

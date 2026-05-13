@@ -27,4 +27,13 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
             .Include(x => x.Patients)
             .FirstOrDefaultAsync(x => x.Id == (string)id);
     }
+
+    public override async Task<List<DoctorProfile>> FindAsync(System.Linq.Expressions.Expression<Func<DoctorProfile, bool>> predicate)
+    {
+        return await _context.Set<DoctorProfile>()
+            .Include(x => x.User)
+            .Include(x => x.Patients)
+            .Where(predicate)
+            .ToListAsync();
+    }
 }

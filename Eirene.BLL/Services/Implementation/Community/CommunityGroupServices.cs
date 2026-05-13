@@ -5,8 +5,10 @@ using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {
@@ -18,6 +20,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
@@ -25,7 +28,8 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _mapper = mapper;
@@ -33,6 +37,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
@@ -48,6 +53,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
+
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
 
                 _logger.LogInformation("Retrieved {Count} community groups", groupDTOs.Count);
                 return (true, groupDTOs);
@@ -72,6 +80,10 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var groupDTO = _mapper.Map<CommunityGroupDTO>(group);
+
+                if (!IsPrivilegedUser())
+                    SanitizeGroupPersonalData(groupDTO);
+
                 return (true, groupDTO);
             }
             catch (Exception ex)
@@ -101,6 +113,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
 
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+
                 _logger.LogInformation("Retrieved {Count} community groups for user {UserId}", groupDTOs.Count, userId);
                 return (true, groupDTOs);
             }
@@ -115,9 +130,29 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                if (string.IsNullOrEmpty(model.Name) || string.IsNullOrEmpty(model.CreatedByUserId))
+                var userId = _httpContextAccessor.HttpContext?.User
+                                     .FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Invalid community group data: Name or CreatedByUserId is empty");
+                    _logger.LogWarning("Unauthorized: No user ID found in token");
+                    return (false, null);
+                }
+
+                model.CreatedByUserId = userId;
+
+                var userRole = _httpContextAccessor.HttpContext?.User
+                    .FindFirstValue(ClaimTypes.Role);
+
+                if (userRole != "Admin")
+                {
+                    _logger.LogWarning("Forbidden: User {UserId} is not an Admin", model.CreatedByUserId);
+                    return (false, null);
+                }
+
+                if (string.IsNullOrEmpty(model.Name))
+                {
+                    _logger.LogWarning("Invalid community group data: Name is empty");
                     return (false, null);
                 }
 
@@ -137,6 +172,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                     var groupWithDetails = await _communityGroupRepository.GetByIdWithDetailsAsync(createdGroup.Id);
                     var groupDTO = _mapper.Map<CommunityGroupDTO>(groupWithDetails);
 
+                    if (!IsPrivilegedUser())
+                        SanitizeGroupPersonalData(groupDTO);
+
                     _logger.LogInformation(
                         "Community group '{GroupName}' created successfully with ID: {GroupId} by user {UserId}",
                         model.Name, createdGroup.Id, model.CreatedByUserId);
@@ -152,7 +190,6 @@ namespace Eirene.BLL.Services.Implementation.Community
                 return (false, null);
             }
         }
-
         public async Task<bool> UpdateAsync(EditCommunityGroup model)
         {
             try
@@ -205,6 +242,10 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var groupWithDetails = _mapper.Map<CommunityGroupWithDetails>(group);
+
+                if (!IsPrivilegedUser())
+                    SanitizeGroupWithDetailsPersonalData(groupWithDetails);
+
                 return (true, groupWithDetails);
             }
             catch (Exception ex)
@@ -329,6 +370,123 @@ namespace Eirene.BLL.Services.Implementation.Community
             {
                 _logger.LogError(ex, "Error leaving group {GroupId} for user {UserId}", groupId, userId);
                 return (false, "An error occurred while leaving the group.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetJoinedByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("UserId is null or empty");
+                    return (false, null);
+                }
+
+                var groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
+
+                if (groups == null || !groups.Any())
+                {
+                    _logger.LogInformation("No joined community groups found for user {UserId}", userId);
+                    return (true, new List<CommunityGroupDTO>());
+                }
+
+                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
+
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+
+                _logger.LogInformation("Retrieved {Count} joined community groups for user {UserId}", groupDTOs.Count, userId);
+                return (true, groupDTOs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving joined community groups for user {UserId}", userId);
+                return (false, null);
+            }
+        }
+
+        public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetUnjoinedByUserIdAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("UserId is null or empty");
+                    return (false, null);
+                }
+
+                var groups = await _communityGroupRepository.GetUnjoinedGroupsByUserIdAsync(userId);
+
+                if (groups == null || !groups.Any())
+                {
+                    _logger.LogInformation("No available community groups found for user {UserId}", userId);
+                    return (true, new List<CommunityGroupDTO>());
+                }
+
+                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
+
+                if (!IsPrivilegedUser())
+                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+
+                _logger.LogInformation("Retrieved {Count} available community groups for user {UserId}", groupDTOs.Count, userId);
+                return (true, groupDTOs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving available community groups for user {UserId}", userId);
+                return (false, null);
+            }
+        }
+
+        private bool IsPrivilegedUser()
+        {
+            var user = _httpContextAccessor?.HttpContext?.User;
+            return user?.IsInRole(Enumerators.Roles.Admin) == true || user?.IsInRole(Enumerators.Roles.Doctor) == true;
+        }
+
+        private static void SanitizeGroupPersonalData(CommunityGroupDTO group)
+        {
+            group.CreatedByUserName = string.Empty;
+        }
+
+        private static void SanitizeGroupWithDetailsPersonalData(CommunityGroupWithDetails group)
+        {
+            if (group.Members != null)
+            {
+                foreach (var member in group.Members)
+                {
+                    member.UserName = string.Empty;
+                    member.Email = string.Empty;
+                }
+            }
+
+            if (group.Posts != null)
+            {
+                foreach (var post in group.Posts)
+                {
+                    // post.UserId = string.Empty;
+                    if (post.Comments != null)
+                    {
+                        foreach (var comment in post.Comments)
+                        {
+                            SanitizeCommentPersonalData(comment);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void SanitizeCommentPersonalData(Models.Community.Comment.CommunityCommentDTO comment)
+        {
+            // comment.UserName = string.Empty;
+            // comment.UserId = string.Empty;
+            if (comment.Replies != null)
+            {
+                foreach (var reply in comment.Replies)
+                {
+                    SanitizeCommentPersonalData(reply);
+                }
             }
         }
     }

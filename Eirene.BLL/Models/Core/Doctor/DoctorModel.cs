@@ -17,6 +17,7 @@ public class DoctorModel
     public string? ProfilePhotoUrl { get; set; }
     public DateTime JoinedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public bool IsVerified { get; set; }
 
     public string ExperienceLevel => YearsOfExperience switch
     {

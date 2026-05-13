@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
@@ -26,7 +26,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetAllAsync();
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve community groups.");
+                return StatusCode(500, "Could not retrieve community groups.");
             return Ok(result.Groups);
         }
 
@@ -36,7 +36,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.Group == null)
-                return NotFound();
+                return NotFound("Community group not found.");
             return Ok(result.Group);
         }
 
@@ -54,10 +54,15 @@ namespace Eirene.Controllers
             );
         }
 
-        [HttpPut]
+        [HttpPut("{id}")]
         [Authorize(Roles = Roles.Admin)]
-        public async Task<IActionResult> Update([FromBody] EditCommunityGroup group)
+        public async Task<IActionResult> Update(Guid id, [FromBody] EditCommunityGroup group)
         {
+            if (group.Id != Guid.Empty && group.Id != id)
+            {
+                return BadRequest("ID mismatch between URL and body.");
+            }
+            group.Id = id;
             var updated = await _communityGroupServices.UpdateAsync(group);
             if (!updated)
                 return NotFound("Community group not found.");
@@ -87,7 +92,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/join")]
-        [Authorize(Roles = Roles.Patient)]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> JoinGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -101,7 +106,7 @@ namespace Eirene.Controllers
         }
 
         [HttpPost("{id}/leave")]
-        [Authorize(Roles = Roles.Patient)]
+        [Authorize(Roles = Roles.AllExceptDoctor)]
         public async Task<IActionResult> LeaveGroup(Guid id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -112,6 +117,34 @@ namespace Eirene.Controllers
             if (!result.IsSuccess)
                 return BadRequest(result.Message);
             return Ok(result.Message);
+        }
+
+        [HttpGet("my-groups")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> GetMyGroups()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.GetJoinedByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return StatusCode(500, "Could not retrieve joined community groups.");
+            return Ok(result.Groups);
+        }
+
+        [HttpGet("available-groups")]
+        [Authorize(Roles = Roles.AllUsers)]
+        public async Task<IActionResult> GetAvailableGroups()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var result = await _communityGroupServices.GetUnjoinedByUserIdAsync(userId);
+            if (!result.IsSuccess)
+                return StatusCode(500, "Could not retrieve available community groups.");
+            return Ok(result.Groups);
         }
     }
 }
