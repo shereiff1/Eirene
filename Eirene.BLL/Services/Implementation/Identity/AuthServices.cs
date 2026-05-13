@@ -3,6 +3,7 @@ using Eirene.BLL.Models.Identity;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ public class AuthServices : IAuthServices
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IBackgroundJobService _backgroundJobService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly string _otpSecret;
     private readonly string? _googleWebClientId;
     private readonly string? _googleIosClientId;
@@ -42,7 +44,8 @@ public class AuthServices : IAuthServices
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
         ILogger<AuthServices> logger,
-        IBackgroundJobService backgroundJobService)
+        IBackgroundJobService backgroundJobService,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -55,6 +58,7 @@ public class AuthServices : IAuthServices
         _logger = logger;
         _otpSecret = configuration["Security:OtpSecretKey"] ?? throw new InvalidOperationException("Security:OtpSecretKey is missing");
         _backgroundJobService = backgroundJobService;
+        _httpContextAccessor = httpContextAccessor;
         _googleWebClientId = configuration["Google:WebClientId"];
         _googleIosClientId = configuration["Google:IosClientId"];
         _googleAndroidClientId = configuration["Google:AndroidClientId"];
@@ -501,20 +505,23 @@ public class AuthServices : IAuthServices
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
+            var request = _httpContextAccessor.HttpContext!.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var encodedToken = Uri.EscapeDataString(token);
+            var encodedEmail = Uri.EscapeDataString(dto.Email);
+            var resetLink = $"{baseUrl}/api/Auth/reset-password?email={encodedEmail}&token={encodedToken}";
+
+            var emailBody = $"To reset your password, go to this link:\n\n{resetLink}\n\nIf you didn't request this, you can ignore this email.";
+
             _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(
                 user.Email,
-                "Reset Password",
-                $"Your password reset token is: {token}"));
-            // await _emailSender.SendEmailAsync(
-            //     user.Email,
-            //     "Reset Password",
-            //     $"Your password reset token is: {token}"
-            // );
+                "Reset Your Password - Eirene",
+                emailBody));
 
             return new AuthResultDTO
             {
                 Success = true,
-                Message = "Password reset token has been sent to your email"
+                Message = "Password reset link has been sent to your email"
             };
         }
         catch (Exception ex)
