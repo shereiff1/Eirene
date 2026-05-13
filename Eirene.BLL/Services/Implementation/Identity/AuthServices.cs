@@ -503,34 +503,20 @@ public class AuthServices : IAuthServices
             if (!user.EmailConfirmed)
                 return Fail("Email is not confirmed");
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // var request = _httpContextAccessor.HttpContext!.Request;
-            // var baseUrl = $"{request.Scheme}://{request.Host}";
-            // var encodedToken = Uri.EscapeDataString(token);
-            // var encodedEmail = Uri.EscapeDataString(dto.Email);
-            // var resetLink = $"{baseUrl}/api/Auth/reset-password?email={encodedEmail}&token={encodedToken}";
-            // var emailBody = $"To reset your password, go to this link:\n\n{resetLink}\n\nIf you didn't request this, you can ignore this email.";
-
-            var encodedToken = Uri.EscapeDataString(token);
-            var encodedEmail = Uri.EscapeDataString(dto.Email);
-            var resetLink = $"exp://192.168.1.11:8081/--/reset-password?email={encodedEmail}&token={encodedToken}";
-
-            var emailBody = $"<html><body>" +
-                $"<p>To reset your password, click the link below:</p>" +
-                $"<p><a href=\"{resetLink}\">{resetLink}</a></p>" +
-                $"<p>If you didn't request this, you can ignore this email.</p>" +
-                $"</body></html>";
+            var code = GenerateOtp();
+            user.PasswordResetCode = HashOtp(code, _otpSecret);
+            user.PasswordResetCodeExpiration = DateTime.UtcNow.AddMinutes(15);
+            await _userManager.UpdateAsync(user);
 
             _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(
                 user.Email,
                 "Reset Your Password - Eirene",
-                emailBody));
+                $"Your password reset code is: {code}\n\nThis code will expire in 15 minutes.\nIf you didn't request this, you can ignore this email."));
 
             return new AuthResultDTO
             {
                 Success = true,
-                Message = "Password reset link has been sent to your email"
+                Message = "Password reset code has been sent to your email"
             };
         }
         catch (Exception ex)
@@ -552,13 +538,25 @@ public class AuthServices : IAuthServices
             if (user == null)
                 return Fail("User not found");
 
-            var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+            if (user.PasswordResetCodeExpiration < DateTime.UtcNow)
+                return Fail("The reset code has expired. Please request a new one.");
+
+            var hashedCode = HashOtp(dto.Code, _otpSecret);
+            if (hashedCode != user.PasswordResetCode)
+                return Fail("Invalid reset code");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
 
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 return Fail($"Failed to reset password: {errors}");
             }
+
+            user.PasswordResetCode = string.Empty;
+            user.PasswordResetCodeExpiration = DateTime.MinValue;
+            await _userManager.UpdateAsync(user);
 
             return new AuthResultDTO
             {
