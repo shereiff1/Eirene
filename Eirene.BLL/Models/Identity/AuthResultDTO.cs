@@ -15,5 +15,4 @@ public class AuthResultDTO
     public string Error { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; } = false;
-
 }

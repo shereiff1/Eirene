@@ -182,22 +182,10 @@ namespace Eirene.Controllers
             if (!result.isSuccess)
                 return NotFound(new { message = "Doctor not found." });
 
-            var fileName = result.Doctor?.ProfilePhotoUrl;
-            if (string.IsNullOrEmpty(fileName))
-                return NotFound(new { message = "Profile picture not set." });
-
-            var relativePath = fileName.StartsWith("/") ? fileName.Substring(1) : fileName;
-
-            var path = Path.Combine(
-                _webHostEnvironment.ContentRootPath,
-                relativePath.Replace("/", Path.DirectorySeparatorChar.ToString())
-            );
-
-            if (!System.IO.File.Exists(path))
-                return NotFound(new { message = "Profile picture file not found on server." });
-
-            var imageBytes = await System.IO.File.ReadAllBytesAsync(path);
-            return File(imageBytes, "image/jpeg");
+            var imageUrl = result.Doctor?.ProfilePhotoUrl;
+            if (string.IsNullOrEmpty(imageUrl))
+                return NotFound("Profile picture not set.");
+            return Redirect(imageUrl);
         }
 
         [HttpGet("patients")]
