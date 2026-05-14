@@ -1,8 +1,6 @@
 namespace Eirene.BLL.AIModel;
 
-public class PythonSettings
+public class PythonModelSettings
 {
-    public string DllPath { get; set; } = string.Empty;
-    public string ScriptDirectory { get; set; } = string.Empty;
-    public string ModelPath { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = "http://127.0.0.1:5001";
 }

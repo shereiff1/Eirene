@@ -64,11 +64,18 @@ var secret = jwtSettings["Secret"];
 builder.Services.Configure<AIModelSettings>(
     builder.Configuration.GetSection("AIModel"));
 
-builder.Services.Configure<PythonSettings>(
-    builder.Configuration.GetSection("PythonSettings"));
+builder.Services.Configure<PythonModelSettings>(
+    builder.Configuration.GetSection("PythonModel"));
 
-builder.Services.AddSingleton<IPythonModelService, PythonModelService>();
-builder.Services.AddHttpClient<IAIModelService, AIModelService>();
+builder.Services.AddHttpClient<IPythonModelService, PythonModelService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IAIModelService, AIModelService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 
 builder.Services.AddAuthentication(options =>
 {

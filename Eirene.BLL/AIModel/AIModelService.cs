@@ -11,6 +11,8 @@ public class AIModelService : IAIModelService
     private readonly IPythonModelService _pythonModelService;
     private const string MODEL_NAME = "gemini-2.5-flash";
 
+    private const double SUICIDE_WATCH_ALERT_THRESHOLD = 0.4;
+
     public AIModelService(HttpClient httpClient, IOptions<AIModelSettings> options, IPythonModelService pythonModelService)
     {
         _httpClient = httpClient;
@@ -21,11 +23,11 @@ public class AIModelService : IAIModelService
     public async Task<string> AnalyzeUserAnswersAsync(string questionsAndAnswers)
     {
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={_settings.ApiKey}";
+         
+        Dictionary<string, double> modelPrediction =
+            await _pythonModelService.PredictMentalHealthIssueAsync(questionsAndAnswers);
 
-        int robertaPrediction = _pythonModelService.PredictMentalHealthIssue(questionsAndAnswers);
-        bool hasMentalHealthIssue = robertaPrediction == 1;
-
-        var request = CreateAnalysisRequest(questionsAndAnswers, hasMentalHealthIssue);
+        var request = CreateAnalysisRequest(modelPrediction);
         var content = new StringContent(
             JsonSerializer.Serialize(request),
             Encoding.UTF8,
@@ -43,7 +45,7 @@ public class AIModelService : IAIModelService
         return await ParseResponseAsync(response);
     }
 
-    private static object CreateAnalysisRequest(string questionsAndAnswers, bool hasMentalHealthIssue)
+    private static object CreateAnalysisRequest(Dictionary<string, double> predictionResult)
     {
         return new
         {
@@ -53,93 +55,158 @@ public class AIModelService : IAIModelService
                 {
                     parts = new[]
                     {
-                        new { text = BuildPrompt(questionsAndAnswers, hasMentalHealthIssue) }
+                        new { text = BuildPrompt(predictionResult) }
                     }
                 }
             },
             generationConfig = new
             {
-                temperature = 1.0,
-                topP = 0.95,
-                topK = 64,
-                maxOutputTokens = 65536,
+                temperature = 0.4,      // Low: consistent, structured clinical output
+                topP = 0.9,
+                topK = 40,
+                maxOutputTokens = 4096, // 5 tasks with rationales fits well under this
                 responseMimeType = "application/json"
             }
         };
     }
 
-    private static string BuildPrompt(string questionsAndAnswers, bool hasMentalHealthIssue)
+    private static string BuildPrompt(Dictionary<string, double> modelPrediction)
     {
-        string robertaContext = hasMentalHealthIssue
-            ? "Based on our primary analysis, the patient has been flagged as having a mental health issue."
-            : "Based on our primary analysis, the patient does not currently exhibit severe mental health issues.";
+        var sorted = modelPrediction
+            .OrderByDescending(kv => kv.Value)
+            .ToList();
 
-        return $@"You are a psychiatrist or mental health coach. {robertaContext}
-Given the following questions and patient answers:
-1. Analyze the responses to identify any specific psychological problems, patterns, or mental health issues.
-2. Generate at most 5 actionable tasks to help them. If they have a mental health issue, focus on coping mechanisms or cognitive behavioral therapy. If not, focus on general mental well-being.
+        string dominantCondition = sorted.First().Key;
+        double dominantConfidence = sorted.First().Value;
 
-Respond ONLY in valid JSON format:
+        string probabilityBreakdown = string.Join("\n", sorted.Select(kv =>
+            $"  - {FormatConditionName(kv.Key)}: {kv.Value:P1} confidence"));
+
+        var secondarySignals = sorted.Skip(1)
+            .Where(kv => kv.Value >= 0.05 && kv.Key != "control")
+            .ToList();
+
+        string secondaryContext = secondarySignals.Any()
+            ? $"Secondary signals also present: {string.Join(", ", secondarySignals.Select(kv => $"{FormatConditionName(kv.Key)} ({kv.Value:P1})"))}"
+            : "No significant secondary signals detected.";
+
+        bool isControl = dominantCondition.Equals("control", StringComparison.OrdinalIgnoreCase);
+        bool isHighConfidence = dominantConfidence >= 0.75;
+
+        // Safety override: flag suicidewatch even if not dominant
+        bool hasSuicideWatchSignal = modelPrediction.TryGetValue("suicidewatch", out double swProb)
+                                     && swProb >= SUICIDE_WATCH_ALERT_THRESHOLD
+                                     && dominantCondition != "suicidewatch";
+
+        string safetyOverride = hasSuicideWatchSignal
+            ? $"\n⚠️ SAFETY NOTE: Suicidal Ideation signal detected at {swProb:P1}. Even though it is not dominant, ensure at least one task addresses emotional safety and connection."
+            : string.Empty;
+
+        string clinicalContext = isControl
+            ? "The patient does not currently exhibit patterns strongly associated with a specific mental health condition. Focus on preventive well-being and resilience building."
+            : $"The patient most strongly aligns with {FormatConditionName(dominantCondition)} " +
+              $"({dominantConfidence:P1} confidence). " +
+              $"{(isHighConfidence ? "This is a high-confidence signal — tailor tasks specifically." : "This is a moderate-confidence signal — keep tasks broadly applicable.")} " +
+              secondaryContext +
+              safetyOverride;
+
+        string conditionGuidance = GetConditionGuidance(dominantCondition, isControl);
+
+        return $@"You are an experienced, empathetic mental health coach and CBT-trained therapist.
+
+## Clinical Context
+{clinicalContext}
+
+## Model Probability Distribution
+{probabilityBreakdown}
+
+## Your Task
+Based solely on the probability distribution above:
+1. Identify at most 3 specific psychological patterns or concerns likely associated with these results.
+2. Generate exactly 5 personalized, actionable tasks tailored to the dominant condition.
+
+## Task Design Guidelines
+{conditionGuidance}
+- Tasks must be concrete and doable within a day or week — no vague advice like ""seek help"".
+- Order tasks from easiest to most challenging.
+- Each task must include a brief ""why it helps"" rationale.
+- If confidence is below 60%, design tasks beneficial across multiple conditions.
+- Write directly to the patient: warm, clear, and free of clinical jargon.
+
+## Response Format
+Respond ONLY in valid JSON — no markdown, no text outside the JSON:
 {{
-  ""problems"": [""problem 1"", ""problem 2""],
-  ""tasks_for_user"": [""task 1"", ""task 2""]
-}}
-
-Questions and User Answers:
-{questionsAndAnswers}";
+  ""dominant_condition"": ""{FormatConditionName(dominantCondition)}"",
+  ""confidence_level"": ""{(isHighConfidence ? "high" : "moderate")}"",
+  ""problems"": [""pattern 1"", ""pattern 2"", ""pattern 3""],
+  ""tasks_for_user"": [
+    {{""task"": ""task description"", ""rationale"": ""why this helps"", ""difficulty"": ""easy|medium|hard""}},
+    {{""task"": ""task description"", ""rationale"": ""why this helps"", ""difficulty"": ""easy|medium|hard""}}
+  ]
+}}";
     }
+
+    private static string FormatConditionName(string key) => key switch
+    {
+        "suicidewatch" => "Suicidal Ideation",
+        "adhd" => "ADHD",
+        "depression" => "Depression",
+        "anxiety" => "Anxiety",
+        "control" => "No Significant Condition",
+        _ => System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(key)
+    };
+
+    private static string GetConditionGuidance(string condition, bool isControl) => condition switch
+    {
+        "anxiety" => @"- Prioritize grounding techniques (5-4-3-2-1 sensory), box breathing, and worry journaling.
+- Include one task to challenge avoidance behavior (gradual exposure).
+- Include one task to reduce physiological arousal (progressive muscle relaxation or cold water).",
+
+        "depression" => @"- Prioritize behavioral activation — small, rewarding activities to break inertia.
+- Include one social connection task (even low-effort: a text, a walk outside).
+- Include one task targeting negative thought patterns (CBT thought record or gratitude journaling).
+- Avoid overwhelming tasks; start with the smallest possible win.",
+
+        "suicidewatch" => @"- CRITICAL: Lead with a safety-oriented task (crisis line, trusted contact, safe environment check).
+- Include one immediate distress tolerance skill (TIPP: Temperature, Intense exercise, Paced breathing, Paired muscle relaxation).
+- Include one reason-for-living reflection exercise.
+- Keep all tasks gentle and non-shaming. Prioritize connection and safety above all else.",
+
+        "adhd" => @"- Focus on structure and externalizing systems (timers, written lists, body doubling).
+- Include one task using the Pomodoro technique or time-blocking.
+- Include one task to reduce environmental distractions.
+- Tasks should be short, specific, and immediately actionable.",
+
+        "control" => @"- Focus on preventive well-being: sleep hygiene, movement, and social connection.
+- Include one mindfulness or journaling task for emotional awareness.
+- Keep tasks light, positive, and habit-forming.",
+
+        _ => @"- Apply general CBT and well-being principles.
+- Balance emotional regulation, behavioral activation, and social connection."
+    };
 
     private static async Task<string> ParseResponseAsync(HttpResponseMessage response)
     {
         var json = await response.Content.ReadAsStringAsync();
+
         var result = JsonSerializer.Deserialize<AIModelResponse>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
 
-        return result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text
-               ?? throw new InvalidOperationException("No response text from The AI Model");
+        var text = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text
+                   ?? throw new InvalidOperationException("No response text from The AI Model");
+
+        // Validate the returned text is actually JSON before passing it up
+        try
+        {
+            JsonDocument.Parse(text);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"AI Model returned non-JSON content: {ex.Message}\nRaw: {text}");
+        }
+
+        return text;
     }
 }
-/*
-
- return $@"You are a physiatrist. Analyze the following questions and patient answers to notice responses and patterns that indicates mental health issues , respond with
-[1: if the patient has a mental health issues only (yes or no)]
-[2: if the patient has a mental health issue how severe it is (a percentage)]
-[3: if the patient has a mental health issue name the exact mental disorder]
-[4: if the patient has a mental health issues generate at most 5 tasks related to his exact disorder to help him get better , if the patient does not have mental health issues generate at most 5 general tasks to improve his mental health quality]
-.
-reasoning to solve this problem:
-1-analyze the patient responses ,look visible or deep patterns or indicators of mental disorders.
-2-search what is this pattern are symptoms of.
-3-identify severity.
-4-look for cognitive behavioral therapy tasks that helps overcoming this exact mental disorder.
-
-Respond ONLY in valid JSON format:
-{{
-  ""problems"": [""problem 1"", ""problem 2""],
-  ""tasks_for_user"": [""task 1"", ""task 2""]
-}}
-
-Questions and User Answers:
-{questionsAndAnswers}";
-    }
-
-
-
-$@"You are a diagnostic assistant. Analyze the following questions and answers.
-
-Tasks:
-1. Evaluate whether the user shows signs of any problems
-2. Explain clearly what problems you detect (if any)
-3. Recommend actionable tasks for the user
-
-Respond ONLY in valid JSON format:
-{{
-  ""problems"": [""problem 1"", ""problem 2""],
-  ""tasks_for_user"": [""task 1"", ""task 2""]
-}}
-
-Questions and User Answers:
-{questionsAndAnswers}";
- */

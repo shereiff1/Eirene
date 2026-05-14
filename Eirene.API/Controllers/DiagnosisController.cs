@@ -1,10 +1,11 @@
 using Eirene.BLL.AIModel;
+using Eirene.BLL.Models.Model_Result;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Eirene.DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text;
+using System.Text.Json;
 
 namespace Eirene.Controllers
 {
@@ -16,20 +17,17 @@ namespace Eirene.Controllers
         private readonly IAIModelService _modelService;
         private readonly ILogger<DiagnosisController> _logger;
         private readonly IQuestionAnswerServices _questionAnswerServices;
-        private readonly IQuestionServices _questionServices;
         private readonly IPatientTaskServices _taskServices;
 
         public DiagnosisController(
-            IAIModelService ModelService,
+            IAIModelService modelService,
             ILogger<DiagnosisController> logger,
             IQuestionAnswerServices questionAnswerServices,
-            IQuestionServices questionServices,
             IPatientTaskServices taskServices)
         {
-            _modelService = ModelService;
+            _modelService = modelService;
             _logger = logger;
             _questionAnswerServices = questionAnswerServices;
-            _questionServices = questionServices;
             _taskServices = taskServices;
         }
 
@@ -41,36 +39,36 @@ namespace Eirene.Controllers
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (string.IsNullOrEmpty(userId))
-                {
                     return Unauthorized(new { message = "User not authenticated." });
-                }
 
                 var answersResult = await _questionAnswerServices.GetAnswersForUserAsync(userId);
 
                 if (!answersResult.IsSuccess || answersResult.Answers == null || !answersResult.Answers.Any())
-                {
                     return BadRequest(new { message = "No answers found for this user. Please submit your answers first." });
-                }
-
-                var formattedQA = await FormatQuestionsAndAnswers(answersResult.Answers);
-
-                var analysisResult = await _modelService.AnalyzeUserAnswersAsync(formattedQA);
-                var IsAdded = await _taskServices.AddTasksFromModelAsync(analysisResult, userId);
-
-                if (!IsAdded)
+                 
+                var inputText = FormatAnswersAsText(answersResult.Answers);
+                 
+                var analysisJson = await _modelService.AnalyzeUserAnswersAsync(inputText);
+                 
+                var parsedResult = JsonSerializer.Deserialize<AITaskResponse>(analysisJson, new JsonSerializerOptions
                 {
-                    _logger.LogWarning("Failed to add tasks for user {UserId} based on analysis.", userId);
-                }
+                    PropertyNameCaseInsensitive = true
+                });
+
+                var isAdded = await _taskServices.AddTasksFromModelAsync(analysisJson, userId);
+
+                if (!isAdded)
+                    _logger.LogWarning("Failed to add tasks for user {UserId}.", userId);
 
                 return Ok(new
                 {
-                    analysis = analysisResult,
+                    analysis = parsedResult,
                     answersCount = answersResult.Answers.Count()
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error analyzing user answers. Details: {Message}", ex.Message);
+                _logger.LogError(ex, "Error analyzing user answers: {Message}", ex.Message);
                 return StatusCode(500, new
                 {
                     error = "An error occurred while analyzing answers.",
@@ -79,25 +77,12 @@ namespace Eirene.Controllers
                 });
             }
         }
-        private async Task<string> FormatQuestionsAndAnswers(IEnumerable<QuestionAnswer> answers)
+
+        private static string FormatAnswersAsText(IEnumerable<QuestionAnswer> answers)
         {
-            var sb = new StringBuilder();
-            int index = 1;
-
-            foreach (var answer in answers)
-            {
-                var questionResult = await _questionServices.GetByIdAsync(answer.QuestionId);
-
-                if (questionResult.IsSuccess && questionResult.question != null)
-                {
-                    sb.AppendLine($"Q{index}: {questionResult.question.QuestionContent}");
-                    sb.AppendLine($"A{index}: {answer.Answer}");
-                    sb.AppendLine();
-                    index++;
-                }
-            }
-
-            return sb.ToString();
+            return string.Join(" ", answers
+                .Where(a => !string.IsNullOrWhiteSpace(a.Answer))
+                .Select(a => a.Answer.Trim()));
         }
     }
 }
