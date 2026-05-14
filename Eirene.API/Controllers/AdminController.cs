@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,49 +15,57 @@ namespace EireneWebAPI.Controllers
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
-        private readonly IAdminServices _adminServices;
+        private readonly IAdminProfileService _adminProfileService;
+        private readonly IRoleManagementService _roleManagementService;
+        private readonly ICommunityModerationService _communityModerationService;
+        private readonly IUserContext _userContext;
 
-        public AdminController(IAdminServices adminServices)
+        public AdminController(
+            IAdminProfileService adminProfileService,
+            IRoleManagementService roleManagementService,
+            ICommunityModerationService communityModerationService,
+            IUserContext userContext)
         {
-            _adminServices = adminServices;
+            _adminProfileService = adminProfileService;
+            _roleManagementService = roleManagementService;
+            _communityModerationService = communityModerationService;
+            _userContext = userContext;
         }
 
-        private string GetCurrentUserId() =>
-            User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 
 
         [HttpPost("profile")]
         public async Task<IActionResult> CreateAdminProfile()
         {
-            var userId = GetCurrentUserId();
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User not authenticated.");
 
-            var result = await _adminServices.CreateAdminProfileAsync(userId);
-            if (!result.IsSuccess)
+            var result = await _adminProfileService.CreateAdminProfileAsync(userId);
+            if (result.IsFailure)
                 return BadRequest(result.Error);
 
-            return Ok(result.Admin);
+            return Ok(result.Value);
         }
 
         [HttpGet("profile/{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            var result = await _adminServices.GetByIdAsync(id);
-            if (!result.IsSuccess)
-                return NotFound($"Admin profile with ID '{id}' not found.");
+            var result = await _adminProfileService.GetByIdAsync(id);
+            if (result.IsFailure)
+                return NotFound(result.Error);
 
-            return Ok(result.Admin);
+            return Ok(result.Value);
         }
 
         [HttpGet("profiles")]
         public async Task<IActionResult> GetAll()
         {
-            var result = await _adminServices.GetAllAsync();
-            if (!result.IsSuccess)
-                return BadRequest("Could not retrieve admin profiles.");
+            var result = await _adminProfileService.GetAllAsync();
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(result.Admins);
+            return Ok(result.Value);
         }
 
 
@@ -66,9 +75,9 @@ namespace EireneWebAPI.Controllers
             if (string.IsNullOrWhiteSpace(model.userId) || string.IsNullOrWhiteSpace(model.role))
                 return BadRequest("User ID and Role are required.");
 
-            var success = await _adminServices.AssignRoleAsync(GetCurrentUserId(), model.userId, model.role);
-            if (!success)
-                return BadRequest("Failed to assign role. (Note: You cannot modify your own role).");
+            var result = await _roleManagementService.AssignRoleAsync(_userContext.UserId ?? string.Empty, model.userId, model.role);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
             return Ok(new { Message = $"Role '{model.role}' successfully assigned to user '{model.userId}'." });
         }
@@ -76,9 +85,9 @@ namespace EireneWebAPI.Controllers
         [HttpDelete("community-groups/{groupId}/members/{userId}")]
         public async Task<IActionResult> RemoveUserFromGroup(Guid groupId, string userId)
         {
-            var success = await _adminServices.ManageCommunityGroupMembershipAsync(groupId, userId, assign: false);
-            if (!success)
-                return BadRequest("Failed to remove user from the community group.");
+            var result = await _communityModerationService.ManageCommunityGroupMembershipAsync(groupId, userId, assign: false);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
             return Ok(new { Message = $"User '{userId}' successfully removed from group '{groupId}'." });
         }
@@ -89,11 +98,11 @@ namespace EireneWebAPI.Controllers
             if (string.IsNullOrWhiteSpace(model.UserId))
                 return BadRequest("User ID is required.");
 
-            var result = await _adminServices.BanUserFromGroupAsync(groupId, model.UserId);
-            if (!result.IsSuccess)
-                return BadRequest(result.Message);
+            var result = await _communityModerationService.BanUserFromGroupAsync(groupId, model.UserId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(new { result.Message });
+            return Ok(new { Message = "User was banned from the community group successfully." });
         }
 
         [HttpPost("community-group/{groupId}/unban")]
@@ -102,11 +111,11 @@ namespace EireneWebAPI.Controllers
             if (string.IsNullOrWhiteSpace(model.UserId))
                 return BadRequest("User ID is required.");
 
-            var result = await _adminServices.UnbanUserFromGroupAsync(groupId, model.UserId);
-            if (!result.IsSuccess)
-                return BadRequest(result.Message);
+            var result = await _communityModerationService.UnbanUserFromGroupAsync(groupId, model.UserId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(new { result.Message });
+            return Ok(new { Message = "User was unbanned from the community group successfully." });
         }
 
         [HttpPost("community-group/{groupId}/timeout")]
@@ -115,11 +124,11 @@ namespace EireneWebAPI.Controllers
             if (string.IsNullOrWhiteSpace(model.UserId))
                 return BadRequest("User ID is required.");
 
-            var result = await _adminServices.TimeoutUserInGroupAsync(groupId, model.UserId, model.TimeoutUntil);
-            if (!result.IsSuccess)
-                return BadRequest(result.Message);
+            var result = await _communityModerationService.TimeoutUserInGroupAsync(groupId, model.UserId, model.TimeoutUntil);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(new { result.Message });
+            return Ok(new { Message = "User timeout was applied successfully." });
         }
 
         [HttpPost("community-group/{groupId}/timeout/remove")]
@@ -128,45 +137,49 @@ namespace EireneWebAPI.Controllers
             if (string.IsNullOrWhiteSpace(model.UserId))
                 return BadRequest("User ID is required.");
 
-            var result = await _adminServices.RemoveTimeoutUserInGroupAsync(groupId, model.UserId);
-            if (!result.IsSuccess)
-                return BadRequest(result.Message);
+            var result = await _communityModerationService.RemoveTimeoutUserInGroupAsync(groupId, model.UserId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(new { result.Message });
+            return Ok(new { Message = "User timeout was removed successfully." });
         }
 
         [HttpGet("community-group/{groupId}/banned-users")]
         public async Task<IActionResult> GetBannedUsers(Guid groupId)
         {
-            var users = await _adminServices.GetBannedUsersByGroupAsync(groupId);
-            return Ok(users);
+            var result = await _communityModerationService.GetBannedUsersByGroupAsync(groupId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+            return Ok(result.Value);
         }
 
         [HttpGet("community-group/{groupId}/timed-out-users")]
         public async Task<IActionResult> GetTimedOutUsers(Guid groupId)
         {
-            var users = await _adminServices.GetTimedOutUsersByGroupAsync(groupId);
-            return Ok(users);
+            var result = await _communityModerationService.GetTimedOutUsersByGroupAsync(groupId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
+            return Ok(result.Value);
         }
 
         [HttpGet("doctors/pending")]
         public async Task<IActionResult> GetPendingDoctors()
         {
-            var result = await _adminServices.GetPendingDoctorsAsync();
-            if (!result.IsSuccess)
-                return BadRequest("Could not retrieve pending doctors.");
+            var result = await _roleManagementService.GetPendingDoctorsAsync();
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(result.Doctors);
+            return Ok(result.Value);
         }
 
         [HttpPost("doctors/{doctorId}/approve")]
         public async Task<IActionResult> ApproveDoctor(string doctorId)
         {
-            var result = await _adminServices.ApproveDoctorAsync(doctorId);
-            if (!result.IsSuccess)
-                return BadRequest(result.Message);
+            var result = await _roleManagementService.ApproveDoctorAsync(doctorId);
+            if (result.IsFailure)
+                return BadRequest(result.Error);
 
-            return Ok(new { Message = result.Message });
+            return Ok(new { Message = "Doctor has been successfully verified." });
         }
     }
 }

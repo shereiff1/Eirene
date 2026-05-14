@@ -25,6 +25,19 @@ namespace Eirene.DAL.Entities.Core
         public bool IsVerified { get; set; } = false;
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-        
+
+        public void Verify()
+        {
+            if (IsVerified)
+                throw new InvalidOperationException("Doctor is already verified.");
+
+            IsVerified = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void Update()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
 }
