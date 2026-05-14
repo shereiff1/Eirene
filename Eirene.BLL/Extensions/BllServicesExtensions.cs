@@ -38,10 +38,15 @@ public static class BllServicesExtensions
         services.AddScoped<ITreatmentPlanServices, TreatmentPlanServices>();
         services.AddScoped<IPatientTaskServices, PatientTaskServices>();
         services.AddScoped<IChatServices, ChatServices>();
-        services.AddScoped<IDoctorServices, DoctorServices>();
+        services.AddScoped<IDoctorProfileService, DoctorProfileService>();
+        services.AddScoped<ISupervisionService, SupervisionService>();
+        services.AddScoped<IDoctorRatingService, DoctorRatingService>();
+        services.AddScoped<IAdminProfileService, AdminProfileService>();
+        services.AddScoped<IRoleManagementService, RoleManagementService>();
+        services.AddScoped<ICommunityModerationService, CommunityModerationService>();
         services.AddScoped<IPatientServices, PatientServices>();
-        services.AddScoped<IAdminServices, AdminServices>();
         services.AddScoped<IBackgroundJobService, BackgroundJobServices>();
+        services.AddScoped<IUserContext, UserContext>();
 
         var storageProvider = configuration["Storage:Provider"];
         if (storageProvider == "CloudinarySettings")

@@ -2,7 +2,6 @@ using Eirene.BLL.Models.Identity;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-
 namespace Eirene.Controllers
 {
     [ApiController]
@@ -11,11 +10,13 @@ namespace Eirene.Controllers
     {
         private readonly IAuthServices _authService;
         private readonly ILogger<AuthController> _logger;
+        private readonly IUserContext _userContext;
 
-        public AuthController(IAuthServices authService, ILogger<AuthController> logger)
+        public AuthController(IAuthServices authService, ILogger<AuthController> logger, IUserContext userContext)
         {
             _authService = authService;
             _logger = logger;
+            _userContext = userContext;
         }
 
         [HttpPost("register")]
@@ -68,7 +69,7 @@ namespace Eirene.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated" });
 

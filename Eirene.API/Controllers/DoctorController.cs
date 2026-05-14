@@ -3,6 +3,7 @@ using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.API.Filters;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,15 +17,28 @@ namespace Eirene.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DoctorController> _logger;
-        private readonly IDoctorServices _services;
+        private readonly IDoctorProfileService _doctorProfileService;
+        private readonly ISupervisionService _supervisionService;
+        private readonly IDoctorRatingService _doctorRatingService;
         private readonly IPictureService _pictureService;
+        private readonly IUserContext _userContext;
 
-        public DoctorController(IDoctorServices services, IPictureService pictureService,
-            ILogger<DoctorController> logger, IWebHostEnvironment webHostEnvironment, IConfiguration configuration)
+        public DoctorController(
+            IDoctorProfileService doctorProfileService,
+            ISupervisionService supervisionService,
+            IDoctorRatingService doctorRatingService,
+            IPictureService pictureService,
+            IUserContext userContext,
+            ILogger<DoctorController> logger,
+            IWebHostEnvironment webHostEnvironment,
+            IConfiguration configuration)
         {
             _logger = logger;
-            _services = services;
+            _doctorProfileService = doctorProfileService;
+            _supervisionService = supervisionService;
+            _doctorRatingService = doctorRatingService;
             _pictureService = pictureService;
+            _userContext = userContext;
             _configuration = configuration;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -33,10 +47,10 @@ namespace Eirene.Controllers
         [Authorize(Roles = Roles.AllUsers)]
         public async Task<IActionResult> GetAll()
         {
-            var results = await _services.GetAllAsync();
-            if (!results.IsSuccess)
+            var result = await _doctorProfileService.GetAllAsync();
+            if (result.IsFailure)
                 return BadRequest(new { message = "Could not retrieve Doctors." });
-            return Ok(results.Doctors);
+            return Ok(result.Value);
         }
 
         [HttpPost("profile")]
@@ -46,15 +60,15 @@ namespace Eirene.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
 
-            var result = await _services.CreateDoctorProfileAsync(model, userId);
-            if (!result.IsSuccess)
+            var result = await _doctorProfileService.CreateDoctorProfileAsync(model, userId);
+            if (result.IsFailure)
                 return BadRequest(new { message = result.Error });
 
-            return Ok(result.Doctor);
+            return Ok(result.Value);
         }
 
         [HttpPut("profile")]
@@ -64,26 +78,26 @@ namespace Eirene.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
 
-            var result = await _services.UpdateDoctorProfileAsync(model, userId);
-            if (!result.IsSuccess)
+            var result = await _doctorProfileService.UpdateDoctorProfileAsync(model, userId);
+            if (result.IsFailure)
                 return BadRequest(new { message = result.Error });
 
-            return Ok(result.Doctor);
+            return Ok(result.Value);
         }
 
         [HttpGet("{id}")]
         [Authorize(Roles = Roles.AllUsers)]
         public async Task<IActionResult> GetById(string id)
         {
-            var result = await _services.GetByIdAsync(id);
-            if (!result.isSuccess)
+            var result = await _doctorProfileService.GetByIdAsync(id);
+            if (result.IsFailure)
                 return NotFound(new { message = "Doctor not found." });
 
-            return Ok(result.Doctor);
+            return Ok(result.Value);
         }
 
         [HttpGet("supervision-requests")]
@@ -91,15 +105,15 @@ namespace Eirene.Controllers
         [VerifiedDoctor]
         public async Task<IActionResult> GetSupervisionRequests()
         {
-            var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var doctorId = _userContext.UserId;
             if (string.IsNullOrEmpty(doctorId))
                 return Unauthorized(new { message = "User not authenticated." });
 
-            var result = await _services.GetSupervisionRequestsAsync(doctorId);
-            if (!result.IsSuccess)
+            var result = await _supervisionService.GetSupervisionRequestsAsync(doctorId);
+            if (result.IsFailure)
                 return BadRequest(new { message = "Could not retrieve supervision requests." });
 
-            return Ok(result.Requests);
+            return Ok(result.Value);
         }
 
         [HttpPut("supervision-requests/{requestId}")]
@@ -107,12 +121,12 @@ namespace Eirene.Controllers
         [VerifiedDoctor]
         public async Task<IActionResult> RespondToSupervisionRequest(string requestId, [FromBody] bool accept)
         {
-            var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var doctorId = _userContext.UserId;
             if (string.IsNullOrEmpty(doctorId))
                 return Unauthorized(new { message = "User not authenticated." });
 
-            var result = await _services.RespondToSupervisionRequestAsync(requestId, accept, doctorId);
-            if (!result.IsSuccess)
+            var result = await _supervisionService.RespondToSupervisionRequestAsync(requestId, accept, doctorId);
+            if (result.IsFailure)
                 return BadRequest(new { message = result.Error });
 
             return Ok(new
@@ -125,7 +139,7 @@ namespace Eirene.Controllers
         [Authorize(Roles = Roles.Doctor)]
         public async Task<IActionResult> UploadProfilePicture(IFormFile file)
         {
-            var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var doctorId = _userContext.UserId;
             if (string.IsNullOrEmpty(doctorId))
                 return Unauthorized(new { message = "User not authenticated." });
 
@@ -136,8 +150,8 @@ namespace Eirene.Controllers
             {
                 ProfilePhotoUrl = result.Url
             };
-            var finalResult = await _services.UpdateDoctorProfileAsync(editModel, doctorId);
-            if (!finalResult.IsSuccess)
+            var finalResult = await _doctorProfileService.UpdateDoctorProfileAsync(editModel, doctorId);
+            if (finalResult.IsFailure)
                 return BadRequest(finalResult.Error);
             return Ok(new
             {
@@ -152,11 +166,11 @@ namespace Eirene.Controllers
         [VerifiedDoctor]
         public async Task<IActionResult> GetDoctorRatings(string doctorId)
         {
-            var result = await _services.GetDoctorRatingsAsync(doctorId);
-            if (!result.IsSuccess)
+            var result = await _doctorRatingService.GetDoctorRatingsAsync(doctorId);
+            if (result.IsFailure)
                 return BadRequest(new { message = "Could not retrieve doctor ratings." });
 
-            return Ok(result.Ratings);
+            return Ok(result.Value);
         }
 
         [HttpDelete("cancel-supervision")]
@@ -164,12 +178,12 @@ namespace Eirene.Controllers
         [VerifiedDoctor]
         public async Task<IActionResult> CancelDoctorSupervision()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
-            var result = await _services.RemoveSupervisionOnPatient(userId);
-            if (!result.IsSuccess)
+            var result = await _supervisionService.RemoveSupervisionOnPatient(userId);
+            if (result.IsFailure)
                 return BadRequest(new { message = result.Error });
             return Ok(new { message = "Supervision is cancelled successfully." });
         }
@@ -178,11 +192,11 @@ namespace Eirene.Controllers
         [Authorize(Roles = Roles.AllUsers)]
         public async Task<IActionResult> GetDoctorProfilePicture(string userId)
         {
-            var result = await _services.GetByIdAsync(userId);
-            if (!result.isSuccess)
+            var result = await _doctorProfileService.GetByIdAsync(userId);
+            if (!result.IsSuccess)
                 return NotFound(new { message = "Doctor not found." });
 
-            var imageUrl = result.Doctor?.ProfilePhotoUrl;
+            var imageUrl = result.Value?.ProfilePhotoUrl;
             if (string.IsNullOrEmpty(imageUrl))
                 return NotFound("Profile picture not set.");
             return Redirect(imageUrl);
@@ -193,26 +207,26 @@ namespace Eirene.Controllers
         [VerifiedDoctor]
         public async Task<IActionResult> GetDoctorsPatients()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
 
-            var result = await _services.GetDoctorsPatientsAsync(userId);
-            if (!result.IsSuccess)
+            var result = await _supervisionService.GetDoctorsPatientsAsync(userId);
+            if (result.IsFailure)
                 return BadRequest(new { message = "Could not retrieve patients." });
 
-            return Ok(result.Patients);
+            return Ok(result.Value);
         }
 
         [HttpDelete("profile")]
         [Authorize(Roles = Roles.DoctorOrAdmin)]
         public async Task<IActionResult> DeleteDoctorProfile()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
-            var result = await _services.DeleteDoctorProfile(userId);
-            if (!result.IsSuccess)
+            var result = await _doctorProfileService.DeleteDoctorProfile(userId);
+            if (result.IsFailure)
                 return BadRequest(new { message = result.Error });
             return Ok(new { message = "Doctor profile deleted successfully." });
         }
@@ -220,7 +234,7 @@ namespace Eirene.Controllers
         [Authorize(Roles = Roles.Doctor)]
         public async Task<IActionResult> CheckIfVerified()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _userContext.UserId;
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(new
@@ -228,12 +242,12 @@ namespace Eirene.Controllers
                     message = "User not authenticated.",
                 });
             }
-            var result = await _services.CheckIfVerified(userId);
-            if (!result.IsSuccess)
+            var result = await _doctorProfileService.CheckIfVerified(userId);
+            if (result.IsFailure)
             {
                 return BadRequest(new { message = result.Error });
             }
-            return Ok(new { isVerified = result.IsVerified });
+            return Ok(new { isVerified = result.Value });
         }
     }
 }

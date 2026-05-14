@@ -16,4 +16,22 @@ public class SupervisionRequest
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? RespondedAt { get; set; }
+
+    public void Accept()
+    {
+        if (Status != SupervisionRequestStatus.Pending)
+            throw new InvalidOperationException("This request has already been responded to.");
+
+        Status = SupervisionRequestStatus.Accepted;
+        RespondedAt = DateTime.UtcNow;
+    }
+
+    public void Decline()
+    {
+        if (Status != SupervisionRequestStatus.Pending)
+            throw new InvalidOperationException("This request has already been responded to.");
+
+        Status = SupervisionRequestStatus.Declined;
+        RespondedAt = DateTime.UtcNow;
+    }
 }
