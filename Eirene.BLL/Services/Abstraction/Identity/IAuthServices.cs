@@ -10,8 +10,8 @@ namespace Eirene.BLL.Services.Abstraction.Identity
         Task<ConfirmMailDTO> ConfirmEmailCodeAsync(string Email, string ConfirmationCode);
         Task LogoutAsync(string userId);
         Task<AuthResultDTO> RefreshTokenAsync(string accessToken, string refreshToken);
-        Task<AuthResultDTO> ResendVerificationCodeAsync(string Email);
-        Task<AuthResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto);
-        Task<AuthResultDTO> ResetPasswordAsync(ResetPasswordDTO dto);
+        Task<MessageResultDTO> ResendVerificationCodeAsync(string Email);
+        Task<MessageResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto);
+        Task<MessageResultDTO> ResetPasswordAsync(ResetPasswordDTO dto);
     }
 }

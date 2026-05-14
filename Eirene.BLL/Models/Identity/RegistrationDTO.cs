@@ -13,4 +13,6 @@ public class RegistrationDTO
     public string Error { get; set; } = string.Empty;
     [JsonIgnore]
     public bool Success { get; set; }
+    [JsonIgnore]
+    public string ErrorCode { get; set; } = string.Empty;
 }

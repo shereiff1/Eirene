@@ -26,7 +26,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetAllAsync();
             if (!result.IsSuccess)
-                return StatusCode(500, "Could not retrieve community groups.");
+                return StatusCode(500, new { message = "Could not retrieve community groups." });
             return Ok(result.Groups);
         }
 
@@ -36,7 +36,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.Group == null)
-                return NotFound("Community group not found.");
+                return NotFound(new { message = "Community group not found." });
             return Ok(result.Group);
         }
 
@@ -46,7 +46,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.CreateAsync(group);
             if (!result.IsSuccess || result.CreatedGroup == null)
-                return BadRequest("Failed to create community group.");
+                return BadRequest(new { message = "Failed to create community group." });
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = result.CreatedGroup.Id },
@@ -60,12 +60,12 @@ namespace Eirene.Controllers
         {
             if (group.Id != Guid.Empty && group.Id != id)
             {
-                return BadRequest("ID mismatch between URL and body.");
+                return BadRequest(new { message = "ID mismatch between URL and body." });
             }
             group.Id = id;
             var updated = await _communityGroupServices.UpdateAsync(group);
             if (!updated)
-                return NotFound("Community group not found.");
+                return NotFound(new { message = "Community group not found." });
             return NoContent();
         }
 
@@ -76,7 +76,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityGroupServices.GetByIdWithFullDetailsAsync(id);
             if (!result.IsSuccess || result.Group == null)
-                return NotFound();
+                return NotFound(new { message = "Community group not found." });
             return Ok(result.Group);
         }
 
@@ -87,7 +87,7 @@ namespace Eirene.Controllers
         {
             var deleted = await _communityGroupServices.DeleteAsync(id);
             if (!deleted)
-                return NotFound("Community group not found.");
+                return NotFound(new { message = "Community group not found." });
             return NoContent();
         }
 
@@ -97,12 +97,12 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
 
             var result = await _communityGroupServices.JoinGroupAsync(id, userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
-            return Ok(result.Message);
+                return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message });
         }
 
         [HttpPost("{id}/leave")]
@@ -111,12 +111,12 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
 
             var result = await _communityGroupServices.LeaveGroupAsync(id, userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
-            return Ok(result.Message);
+                return BadRequest(new { message = result.Message });
+            return Ok(new { message = result.Message });
         }
 
         [HttpGet("my-groups")]
@@ -125,11 +125,11 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
 
             var result = await _communityGroupServices.GetJoinedByUserIdAsync(userId);
             if (!result.IsSuccess)
-                return StatusCode(500, "Could not retrieve joined community groups.");
+                return StatusCode(500, new { message = "Could not retrieve joined community groups." });
             return Ok(result.Groups);
         }
 
@@ -139,11 +139,11 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
 
             var result = await _communityGroupServices.GetUnjoinedByUserIdAsync(userId);
             if (!result.IsSuccess)
-                return StatusCode(500, "Could not retrieve available community groups.");
+                return StatusCode(500, new { message = "Could not retrieve available community groups." });
             return Ok(result.Groups);
         }
     }

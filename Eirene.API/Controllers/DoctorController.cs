@@ -35,7 +35,7 @@ namespace Eirene.Controllers
         {
             var results = await _services.GetAllAsync();
             if (!results.IsSuccess)
-                return BadRequest("Could not retrieve Doctors.");
+                return BadRequest(new { message = "Could not retrieve Doctors." });
             return Ok(results.Doctors);
         }
 
@@ -48,11 +48,11 @@ namespace Eirene.Controllers
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _services.CreateDoctorProfileAsync(model, userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
 
             return Ok(result.Doctor);
         }
@@ -66,11 +66,11 @@ namespace Eirene.Controllers
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _services.UpdateDoctorProfileAsync(model, userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
 
             return Ok(result.Doctor);
         }
@@ -81,7 +81,7 @@ namespace Eirene.Controllers
         {
             var result = await _services.GetByIdAsync(id);
             if (!result.isSuccess)
-                return NotFound("Doctor not found.");
+                return NotFound(new { message = "Doctor not found." });
 
             return Ok(result.Doctor);
         }
@@ -93,11 +93,11 @@ namespace Eirene.Controllers
         {
             var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(doctorId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _services.GetSupervisionRequestsAsync(doctorId);
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve supervision requests.");
+                return BadRequest(new { message = "Could not retrieve supervision requests." });
 
             return Ok(result.Requests);
         }
@@ -109,11 +109,11 @@ namespace Eirene.Controllers
         {
             var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(doctorId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _services.RespondToSupervisionRequestAsync(requestId, accept, doctorId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
 
             return Ok(new
             {
@@ -127,11 +127,11 @@ namespace Eirene.Controllers
         {
             var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(doctorId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _pictureService.UploadPictureAsync(file);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
             var editModel = new EditDoctorProfile
             {
                 ProfilePhotoUrl = result.Url
@@ -154,7 +154,7 @@ namespace Eirene.Controllers
         {
             var result = await _services.GetDoctorRatingsAsync(doctorId);
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve doctor ratings.");
+                return BadRequest(new { message = "Could not retrieve doctor ratings." });
 
             return Ok(result.Ratings);
         }
@@ -167,10 +167,10 @@ namespace Eirene.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
             var result = await _services.RemoveSupervisionOnPatient(userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
             return Ok(new { message = "Supervision is cancelled successfully." });
         }
 
@@ -180,11 +180,11 @@ namespace Eirene.Controllers
         {
             var result = await _services.GetByIdAsync(userId);
             if (!result.isSuccess)
-                return NotFound("Doctor not found.");
+                return NotFound(new { message = "Doctor not found." });
 
             var fileName = result.Doctor?.ProfilePhotoUrl;
             if (string.IsNullOrEmpty(fileName))
-                return NotFound("Profile picture not set.");
+                return NotFound(new { message = "Profile picture not set." });
 
             var relativePath = fileName.StartsWith("/") ? fileName.Substring(1) : fileName;
 
@@ -194,7 +194,7 @@ namespace Eirene.Controllers
             );
 
             if (!System.IO.File.Exists(path))
-                return NotFound("Profile picture file not found on server.");
+                return NotFound(new { message = "Profile picture file not found on server." });
 
             var imageBytes = await System.IO.File.ReadAllBytesAsync(path);
             return File(imageBytes, "image/jpeg");
@@ -207,11 +207,11 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _services.GetDoctorsPatientsAsync(userId);
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve patients.");
+                return BadRequest(new { message = "Could not retrieve patients." });
 
             return Ok(result.Patients);
         }
@@ -222,10 +222,10 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
             var result = await _services.DeleteDoctorProfile(userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
             return Ok(new { message = "Doctor profile deleted successfully." });
         }
         [HttpGet("is-verified")]
@@ -243,7 +243,7 @@ namespace Eirene.Controllers
             var result = await _services.CheckIfVerified(userId);
             if (!result.IsSuccess)
             {
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
             }
             return Ok(new { isVerified = result.IsVerified });
         }

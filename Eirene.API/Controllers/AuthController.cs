@@ -27,7 +27,12 @@ namespace Eirene.Controllers
             var result = await _authService.RegisterAsync(registerDto);
 
             if (!result.Success)
-                return BadRequest(result);
+            {
+                if (result.ErrorCode == "CONFLICT")
+                    return Conflict(new { message = result.Error });
+
+                return BadRequest(new { message = result.Error });
+            }
 
             return Ok(result);
         }
@@ -41,7 +46,7 @@ namespace Eirene.Controllers
             var result = await _authService.LoginAsync(loginDto);
 
             if (!result.Success)
-                return Unauthorized(result);
+                return Unauthorized(new { message = result.Error });
 
             return Ok(result);
         }
@@ -55,7 +60,7 @@ namespace Eirene.Controllers
             var result = await _authService.GoogleLoginAsync(googleLoginDto);
 
             if (!result.Success)
-                return Unauthorized(result);
+                return Unauthorized(new { message = result.Error });
 
             return Ok(result);
         }
@@ -65,7 +70,7 @@ namespace Eirene.Controllers
         {
             var userId = User.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
 
             await _authService.LogoutAsync(userId);
             return Ok(new { message = "Logged out successfully" });
@@ -77,7 +82,13 @@ namespace Eirene.Controllers
             var result = await _authService.ConfirmEmailCodeAsync(confirmEmailCode.Email, confirmEmailCode.Code);
 
             if (!result.Success)
-                return BadRequest(result);
+            {
+                if (result.ErrorCode == "NOT_FOUND")
+                    return NotFound(new { message = result.Message });
+
+                // INVALID_CODE or EXPIRED_CODE
+                return UnprocessableEntity(new { message = result.Message });
+            }
 
             return Ok(result);
         }
@@ -88,7 +99,14 @@ namespace Eirene.Controllers
             var result = await _authService.ResendVerificationCodeAsync(resendCodeDTO.Email);
 
             if (!result.Success)
-                return BadRequest(result);
+            {
+                if (result.ErrorCode == "NOT_FOUND")
+                    return NotFound(new { message = result.Error });
+                if (result.ErrorCode == "CONFLICT")
+                    return Conflict(new { message = result.Error });
+
+                return BadRequest(new { message = result.Error });
+            }
 
             return Ok(result);
         }
@@ -102,7 +120,7 @@ namespace Eirene.Controllers
             var result = await _authService.RefreshTokenAsync(tokenRequestDto.AccessToken, tokenRequestDto.RefreshToken);
 
             if (!result.Success)
-                return BadRequest(result);
+                return Unauthorized(new { message = result.Error });
 
             return Ok(result);
         }
@@ -116,7 +134,12 @@ namespace Eirene.Controllers
             var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
 
             if (!result.Success)
-                return BadRequest(result);
+            {
+                if (result.ErrorCode == "NOT_FOUND")
+                    return NotFound(new { message = result.Error });
+
+                return BadRequest(new { message = result.Error });
+            }
 
             return Ok(result);
         }
@@ -130,7 +153,14 @@ namespace Eirene.Controllers
             var result = await _authService.ResetPasswordAsync(resetPasswordDto);
 
             if (!result.Success)
-                return BadRequest(result);
+            {
+                if (result.ErrorCode == "NOT_FOUND")
+                    return NotFound(new { message = result.Error });
+                if (result.ErrorCode == "EXPIRED_CODE" || result.ErrorCode == "INVALID_CODE")
+                    return UnprocessableEntity(new { message = result.Error });
+
+                return BadRequest(new { message = result.Error });
+            }
 
             return Ok(result);
         }

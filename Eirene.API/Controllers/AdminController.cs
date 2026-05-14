@@ -30,11 +30,11 @@ namespace EireneWebAPI.Controllers
         {
             var userId = GetCurrentUserId();
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
+                return Unauthorized(new { message = "User not authenticated." });
 
             var result = await _adminServices.CreateAdminProfileAsync(userId);
             if (!result.IsSuccess)
-                return BadRequest(result.Error);
+                return BadRequest(new { message = result.Error });
 
             return Ok(result.Admin);
         }
@@ -44,7 +44,7 @@ namespace EireneWebAPI.Controllers
         {
             var result = await _adminServices.GetByIdAsync(id);
             if (!result.IsSuccess)
-                return NotFound($"Admin profile with ID '{id}' not found.");
+                return NotFound(new { message = $"Admin profile with ID '{id}' not found." });
 
             return Ok(result.Admin);
         }
@@ -54,7 +54,7 @@ namespace EireneWebAPI.Controllers
         {
             var result = await _adminServices.GetAllAsync();
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve admin profiles.");
+                return BadRequest(new { message = "Could not retrieve admin profiles." });
 
             return Ok(result.Admins);
         }
@@ -64,11 +64,11 @@ namespace EireneWebAPI.Controllers
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleModel model)
         {
             if (string.IsNullOrWhiteSpace(model.userId) || string.IsNullOrWhiteSpace(model.role))
-                return BadRequest("User ID and Role are required.");
+                return BadRequest(new { message = "User ID and Role are required." });
 
             var success = await _adminServices.AssignRoleAsync(GetCurrentUserId(), model.userId, model.role);
             if (!success)
-                return BadRequest("Failed to assign role. (Note: You cannot modify your own role).");
+                return BadRequest(new { message = "Failed to assign role. (Note: You cannot modify your own role)." });
 
             return Ok(new { Message = $"Role '{model.role}' successfully assigned to user '{model.userId}'." });
         }
@@ -78,7 +78,7 @@ namespace EireneWebAPI.Controllers
         {
             var success = await _adminServices.ManageCommunityGroupMembershipAsync(groupId, userId, assign: false);
             if (!success)
-                return BadRequest("Failed to remove user from the community group.");
+                return BadRequest(new { message = "Failed to remove user from the community group." });
 
             return Ok(new { Message = $"User '{userId}' successfully removed from group '{groupId}'." });
         }
@@ -87,11 +87,11 @@ namespace EireneWebAPI.Controllers
         public async Task<IActionResult> BanUserFromGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
         {
             if (string.IsNullOrWhiteSpace(model.UserId))
-                return BadRequest("User ID is required.");
+                return BadRequest(new { message = "User ID is required." });
 
             var result = await _adminServices.BanUserFromGroupAsync(groupId, model.UserId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
             return Ok(new { result.Message });
         }
@@ -100,11 +100,11 @@ namespace EireneWebAPI.Controllers
         public async Task<IActionResult> UnbanUserFromGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
         {
             if (string.IsNullOrWhiteSpace(model.UserId))
-                return BadRequest("User ID is required.");
+                return BadRequest(new { message = "User ID is required." });
 
             var result = await _adminServices.UnbanUserFromGroupAsync(groupId, model.UserId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
             return Ok(new { result.Message });
         }
@@ -113,11 +113,11 @@ namespace EireneWebAPI.Controllers
         public async Task<IActionResult> TimeoutUserInGroup(Guid groupId, [FromBody] CommunityGroupUserTimeoutRequest model)
         {
             if (string.IsNullOrWhiteSpace(model.UserId))
-                return BadRequest("User ID is required.");
+                return BadRequest(new { message = "User ID is required." });
 
             var result = await _adminServices.TimeoutUserInGroupAsync(groupId, model.UserId, model.TimeoutUntil);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
             return Ok(new { result.Message });
         }
@@ -126,11 +126,11 @@ namespace EireneWebAPI.Controllers
         public async Task<IActionResult> RemoveTimeoutUserInGroup(Guid groupId, [FromBody] CommunityGroupUserActionRequest model)
         {
             if (string.IsNullOrWhiteSpace(model.UserId))
-                return BadRequest("User ID is required.");
+                return BadRequest(new { message = "User ID is required." });
 
             var result = await _adminServices.RemoveTimeoutUserInGroupAsync(groupId, model.UserId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
             return Ok(new { result.Message });
         }
@@ -154,7 +154,7 @@ namespace EireneWebAPI.Controllers
         {
             var result = await _adminServices.GetPendingDoctorsAsync();
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve pending doctors.");
+                return BadRequest(new { message = "Could not retrieve pending doctors." });
 
             return Ok(result.Doctors);
         }
@@ -164,7 +164,7 @@ namespace EireneWebAPI.Controllers
         {
             var result = await _adminServices.ApproveDoctorAsync(doctorId);
             if (!result.IsSuccess)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
 
             return Ok(new { Message = result.Message });
         }

@@ -27,7 +27,7 @@ public class BlogController : ControllerBase
     {
         var result = await _blogServices.GetAllAsync();
         if (!result.IsSuccess)
-            return BadRequest("Could not retrieve blogs.");
+            return BadRequest(new { message = "Could not retrieve blogs." });
 
         return Ok(result.Posts);
     }
@@ -38,7 +38,7 @@ public class BlogController : ControllerBase
     {
         var result = await _blogServices.GetByDoctorIdAsync(doctorId);
         if (!result.IsSuccess)
-            return BadRequest("Could not retrieve blogs.");
+            return BadRequest(new { message = "Could not retrieve blogs." });
 
         return Ok(result.Posts);
     }
@@ -49,7 +49,7 @@ public class BlogController : ControllerBase
     {
         var result = await _blogServices.GetByIdAsync(id);
         if (!result.IsSuccess || result.Post == null)
-            return NotFound();
+            return NotFound(new { message = "Blog not found." });
 
         return Ok(result.Post);
     }
@@ -63,12 +63,12 @@ public class BlogController : ControllerBase
 
         var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(doctorId))
-            return Unauthorized("User ID not found.");
+            return Unauthorized(new { message = "User not authenticated." });
 
         var result = await _blogServices.CreateAsync(blog, doctorId);
 
         if (!result.IsSuccess || result.CreatedPost == null)
-            return BadRequest("Failed to create blog.");
+            return BadRequest(new { message = "Failed to create blog." });
 
         return CreatedAtAction(
             nameof(GetById),
@@ -86,14 +86,14 @@ public class BlogController : ControllerBase
 
         var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(doctorId))
-            return Unauthorized("User ID not found.");
+            return Unauthorized(new { message = "User not authenticated." });
 
         blog.DoctorId = doctorId;
 
         var updated = await _blogServices.UpdateAsync(blog);
 
         if (!updated)
-            return NotFound("Blog not found.");
+            return NotFound(new { message = "Blog not found." });
 
         return NoContent();
     }
@@ -105,7 +105,7 @@ public class BlogController : ControllerBase
         var deleted = await _blogServices.DeleteAsync(id);
 
         if (!deleted)
-            return NotFound("Blog not found.");
+            return NotFound(new { message = "Blog not found." });
 
         return NoContent();
     }

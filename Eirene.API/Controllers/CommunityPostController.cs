@@ -24,7 +24,7 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetAllAsync();
         if (!result.IsSuccess)
-            return StatusCode(500, "Could not retrieve community posts.");
+            return StatusCode(500, new { message = "Could not retrieve community posts." });
         return Ok(result.Posts);
     }
 
@@ -35,8 +35,8 @@ public class CommunityPostController : ControllerBase
         if (!result.IsSuccess)
         {
             if (result.Post == null)
-                return NotFound("Post not found.");
-            return Forbid();
+                return NotFound(new { message = "Post not found." });
+            return StatusCode(403, new { message = "Access denied" });
         }
         return Ok(result.Post);
     }
@@ -48,10 +48,10 @@ public class CommunityPostController : ControllerBase
         if (!result.IsSuccess)
         {
             if (result.Message == "Unauthorized")
-                return Unauthorized();
+                return Unauthorized(new { message = "User not authenticated" });
             if (result.Message == "You are not a member of this community group.")
-                return StatusCode(403, result.Message);
-            return StatusCode(500, result.Message);
+                return StatusCode(403, new { message = result.Message });
+            return StatusCode(500, new { message = result.Message });
         }
         return Ok(result.Posts);
     }
@@ -61,7 +61,7 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.GetByUserIdAsync(userId);
         if (!result.IsSuccess)
-            return StatusCode(500, "Could not retrieve user's posts.");
+            return StatusCode(500, new { message = "Could not retrieve user's posts." });
         return Ok(result.Posts);
     }
 
@@ -71,7 +71,7 @@ public class CommunityPostController : ControllerBase
     {
         var result = await _communityPostServices.CreateAsync(post);
         if (!result.IsSuccess || result.CreatedPost == null)
-            return BadRequest(result.Message);
+            return BadRequest(new { message = result.Message });
         return CreatedAtAction(
             nameof(GetById),
             new { id = result.CreatedPost.Id },
@@ -85,7 +85,7 @@ public class CommunityPostController : ControllerBase
     {
         var updated = await _communityPostServices.UpdateAsync(post);
         if (!updated)
-            return NotFound("Post not found.");
+            return NotFound(new { message = "Post not found." });
         return NoContent();
     }
 
@@ -95,7 +95,7 @@ public class CommunityPostController : ControllerBase
     {
         var deleted = await _communityPostServices.DeleteAsync(id);
         if (!deleted)
-            return NotFound("Post not found.");
+            return NotFound(new { message = "Post not found." });
         return NoContent();
     }
 }

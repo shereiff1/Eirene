@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.AIModel;
+using Eirene.BLL.AIModel;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Eirene.DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Authorization;
@@ -42,14 +42,14 @@ namespace Eirene.Controllers
 
                 if (string.IsNullOrEmpty(userId))
                 {
-                    return Unauthorized("User not authenticated.");
+                    return Unauthorized(new { message = "User not authenticated." });
                 }
 
                 var answersResult = await _questionAnswerServices.GetAnswersForUserAsync(userId);
 
                 if (!answersResult.IsSuccess || answersResult.Answers == null || !answersResult.Answers.Any())
                 {
-                    return BadRequest("No answers found for this user. Please submit your answers first.");
+                    return BadRequest(new { message = "No answers found for this user. Please submit your answers first." });
                 }
 
                 var formattedQA = await FormatQuestionsAndAnswers(answersResult.Answers);

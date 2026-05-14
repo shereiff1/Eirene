@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.Enumerators;
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Comment;
 using Eirene.BLL.Services.Abstraction.Community;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +24,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityCommentServices.GetByPostIdAsync(postId);
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve comments.");
+                return BadRequest(new { message = "Could not retrieve comments." });
             return Ok(result.Comments);
         }
 
@@ -34,7 +34,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityCommentServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.Comment == null)
-                return NotFound();
+                return NotFound(new { message = "Comment not found." });
             return Ok(result.Comment);
         }
 
@@ -44,7 +44,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityCommentServices.GetRepliesByCommentIdAsync(commentId);
             if (!result.IsSuccess)
-                return BadRequest("Could not retrieve replies.");
+                return BadRequest(new { message = "Could not retrieve replies." });
             return Ok(result.Replies);
         }
 
@@ -54,7 +54,7 @@ namespace Eirene.Controllers
         {
             var result = await _communityCommentServices.CreateAsync(comment);
             if (!result.IsSuccess || result.CreatedComment == null)
-                return BadRequest(result.Message);
+                return BadRequest(new { message = result.Message });
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = result.CreatedComment.Id },
@@ -68,7 +68,7 @@ namespace Eirene.Controllers
         {
             var updated = await _communityCommentServices.UpdateAsync(comment);
             if (!updated)
-                return NotFound("Comment not found.");
+                return NotFound(new { message = "Comment not found." });
             return NoContent();
         }
 
@@ -78,7 +78,7 @@ namespace Eirene.Controllers
         {
             var deleted = await _communityCommentServices.DeleteAsync(id);
             if (!deleted)
-                return NotFound("Comment not found.");
+                return NotFound(new { message = "Comment not found." });
             return NoContent();
         }
     }

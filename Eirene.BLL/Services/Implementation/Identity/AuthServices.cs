@@ -74,7 +74,8 @@ public class AuthServices : IAuthServices
                 return new RegistrationDTO
                 {
                     Success = false,
-                    Error = "User with this email already exists"
+                    Error = "User with this email already exists",
+                    ErrorCode = "CONFLICT"
                 };
             }
 
@@ -286,7 +287,8 @@ public class AuthServices : IAuthServices
                 return new ConfirmMailDTO
                 {
                     Success = false,
-                    Message = "User not found"
+                    Message = "User not found",
+                    ErrorCode = "NOT_FOUND"
                 };
             }
 
@@ -314,13 +316,12 @@ public class AuthServices : IAuthServices
                 }
                 else
                 {
-
                     return new ConfirmMailDTO
                     {
                         Success = false,
-                        Message = "The confirmation code is not correct"
+                        Message = "The confirmation code is not correct",
+                        ErrorCode = "INVALID_CODE"
                     };
-
                 }
             }
             else
@@ -328,9 +329,9 @@ public class AuthServices : IAuthServices
                 return new ConfirmMailDTO
                 {
                     Success = false,
-                    Message = "The confirmation code has expired"
+                    Message = "The confirmation code has expired",
+                    ErrorCode = "EXPIRED_CODE"
                 };
-
             }
         }
         catch (Exception ex)
@@ -450,16 +451,16 @@ public class AuthServices : IAuthServices
         }
     }
 
-    public async Task<AuthResultDTO> ResendVerificationCodeAsync(string Email)
+    public async Task<MessageResultDTO> ResendVerificationCodeAsync(string Email)
     {
         try
         {
             var user = await _userManager.FindByEmailAsync(Email);
             if (user == null)
-                return Fail("User not found");
+                return FailMessage("User not found", "NOT_FOUND");
 
             if (user.EmailConfirmed)
-                return Fail("Email is already confirmed");
+                return FailMessage("Email is already confirmed", "CONFLICT");
 
             var code = GenerateOtp();
             user.EmailVerificationCode = HashOtp(code, _otpSecret);
@@ -469,13 +470,8 @@ public class AuthServices : IAuthServices
             _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync(user.Email,
                 "Email Verification Code",
                 $"Your verification code is: {code}"));
-            // await _emailSender.SendEmailAsync(
-            //     user.Email,
-            //     "Email Verification Code",
-            //     $"Your verification code is: {code}"
-            // );
 
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = true,
                 Message = "Verification code sent successfully"
@@ -484,7 +480,7 @@ public class AuthServices : IAuthServices
         catch (Exception ex)
         {
             _logger.LogError(ex, "ResendVerificationCodeAsync failed");
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = false,
                 Error = "Failed to send verification code"
@@ -492,16 +488,16 @@ public class AuthServices : IAuthServices
         }
     }
 
-    public async Task<AuthResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto)
+    public async Task<MessageResultDTO> ForgotPasswordAsync(ForgotPasswordDTO dto)
     {
         try
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return Fail("User not found");
+                return FailMessage("User not found", "NOT_FOUND");
 
             if (!user.EmailConfirmed)
-                return Fail("Email is not confirmed");
+                return FailMessage("Email is not confirmed", "UNCONFIRMED");
 
             var code = GenerateOtp();
             user.PasswordResetCode = HashOtp(code, _otpSecret);
@@ -513,7 +509,7 @@ public class AuthServices : IAuthServices
                 "Reset Your Password - Eirene",
                 $"Your password reset code is: {code}\n\nThis code will expire in 15 minutes.\nIf you didn't request this, you can ignore this email."));
 
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = true,
                 Message = "Password reset code has been sent to your email"
@@ -522,7 +518,7 @@ public class AuthServices : IAuthServices
         catch (Exception ex)
         {
             _logger.LogError(ex, "ForgotPasswordAsync failed for email: {Email}", dto.Email);
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = false,
                 Error = $"An error occurred during forgot password: {ex.Message}"
@@ -530,20 +526,20 @@ public class AuthServices : IAuthServices
         }
     }
 
-    public async Task<AuthResultDTO> ResetPasswordAsync(ResetPasswordDTO dto)
+    public async Task<MessageResultDTO> ResetPasswordAsync(ResetPasswordDTO dto)
     {
         try
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return Fail("User not found");
+                return FailMessage("User not found", "NOT_FOUND");
 
             if (user.PasswordResetCodeExpiration < DateTime.UtcNow)
-                return Fail("The reset code has expired. Please request a new one.");
+                return FailMessage("The reset code has expired. Please request a new one.", "EXPIRED_CODE");
 
             var hashedCode = HashOtp(dto.Code, _otpSecret);
             if (hashedCode != user.PasswordResetCode)
-                return Fail("Invalid reset code");
+                return FailMessage("Invalid reset code", "INVALID_CODE");
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
@@ -551,14 +547,14 @@ public class AuthServices : IAuthServices
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                return Fail($"Failed to reset password: {errors}");
+                return FailMessage($"Failed to reset password: {errors}");
             }
 
             user.PasswordResetCode = string.Empty;
             user.PasswordResetCodeExpiration = DateTime.MinValue;
             await _userManager.UpdateAsync(user);
 
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = true,
                 Message = "Password has been successfully reset"
@@ -567,7 +563,7 @@ public class AuthServices : IAuthServices
         catch (Exception ex)
         {
             _logger.LogError(ex, "ResetPasswordAsync failed for email: {Email}", dto.Email);
-            return new AuthResultDTO
+            return new MessageResultDTO
             {
                 Success = false,
                 Error = $"An error occurred during reset password: {ex.Message}"
@@ -607,4 +603,6 @@ public class AuthServices : IAuthServices
     }
     private static AuthResultDTO Fail(string error) =>
         new() { Success = false, Error = error };
+    private static MessageResultDTO FailMessage(string error, string errorCode = "") =>
+        new() { Success = false, Error = error, ErrorCode = errorCode };
 }

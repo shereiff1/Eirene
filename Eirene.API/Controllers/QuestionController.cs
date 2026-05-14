@@ -1,4 +1,4 @@
-﻿using Eirene.BLL.ModelVMs.Treatment;
+using Eirene.BLL.ModelVMs.Treatment;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +22,7 @@ namespace Eirene.Controllers
             var result = await _questionServices.GetAllAsync();
             if (result.questions == null || !result.IsSuccess)
             {
-                return BadRequest("Could not retrieve Questions.");
+                return BadRequest(new { message = "Could not retrieve Questions." });
             }
             return Ok(result.questions);
         }
@@ -32,7 +32,7 @@ namespace Eirene.Controllers
         {
             var result = await _questionServices.GetByIdAsync(id);
             if (!result.IsSuccess || result.question == null)
-                return NotFound();
+                return NotFound(new { message = "Question not found." });
             return Ok(result.question);
         }
 
@@ -43,7 +43,7 @@ namespace Eirene.Controllers
                 return BadRequest(ModelState);
             var result = await _questionServices.CreateAsync(question);
             if (!result.IsSuccess || result.AddedQuestion == null)
-                return BadRequest("Failed to create question.");
+                return BadRequest(new { message = "Failed to create question." });
             return CreatedAtAction(
                 nameof(Create),
                 new { id = result.AddedQuestion.Id },
@@ -58,7 +58,7 @@ namespace Eirene.Controllers
                 return BadRequest(ModelState);
             var result = await _questionServices.UpdateAsync(question);
             if (!result.IsSuccess || result.editedQuestion == null)
-                return BadRequest("Failed to update question.");
+                return BadRequest(new { message = "Failed to update question." });
             return Ok(result.editedQuestion);
         }
         [HttpDelete("{id}")]
@@ -66,7 +66,7 @@ namespace Eirene.Controllers
         {
             var result = await _questionServices.DeleteAsync(id);
             if (!result)
-                return BadRequest("Failed to delete question.");
+                return BadRequest(new { message = "Failed to delete question." });
             return Ok(result);
         }
     }
