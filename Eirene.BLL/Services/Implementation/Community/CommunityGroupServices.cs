@@ -310,7 +310,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
-                if (membership != null || user)
+                if (membership != null || IsAdmin())
                 {
                     _logger.LogInformation("User {UserId} is already a member of group {GroupId}", userId, groupId);
                     return (false, "You are already a member of this group.");
@@ -383,7 +383,15 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (false, null);
                 }
 
-                var groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
+                List<CommunityGroup> groups;
+                if (IsAdmin())
+                {
+                    groups = await _communityGroupRepository.GetAllWithDetailsAsync();
+                }
+                else
+                {
+                    groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
+                }
 
                 if (groups == null || !groups.Any())
                 {
@@ -416,6 +424,11 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (false, null);
                 }
 
+                if (IsAdmin())
+                {
+                    return (true, new List<CommunityGroupDTO>());
+                }
+
                 var groups = await _communityGroupRepository.GetUnjoinedGroupsByUserIdAsync(userId);
 
                 if (groups == null || !groups.Any())
@@ -437,6 +450,12 @@ namespace Eirene.BLL.Services.Implementation.Community
                 _logger.LogError(ex, "Error retrieving available community groups for user {UserId}", userId);
                 return (false, null);
             }
+        }
+
+        private bool IsAdmin()
+        {
+            var user = _httpContextAccessor?.HttpContext?.User;
+            return user?.IsInRole(Enumerators.Roles.Admin) == true;
         }
 
         private bool IsPrivilegedUser()
