@@ -20,6 +20,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserContext _userContext;
+        private bool _httpContextAccessor;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
@@ -463,8 +464,7 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private bool IsAdmin()
         {
-            var user = _httpContextAccessor?.HttpContext?.User;
-            return user?.IsInRole(Enumerators.Roles.Admin) == true;
+            return _userContext.IsInRole("Admin");
         }
 
         private bool IsPrivilegedUser()
