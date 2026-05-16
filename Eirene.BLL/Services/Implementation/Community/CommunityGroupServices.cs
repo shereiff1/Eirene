@@ -6,6 +6,8 @@ using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.BLL.Services.Abstraction.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {

@@ -6,6 +6,7 @@ using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.BLL.Services.Abstraction.Identity;
+using Microsoft.Extensions.Logging;
 namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityPostServices : ICommunityPostServices
