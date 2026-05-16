@@ -1,5 +1,7 @@
 using Eirene.BLL.AIModel;
 using Eirene.BLL.Models.Model_Result;
+using Eirene.BLL.Models.Treatment.Task;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Treatment;
@@ -12,17 +14,19 @@ public class PatientTaskServices : IPatientTaskServices
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPatientTaskRepository _taskRepository;
     private readonly ITreatmentPlanRepository _treatmentPlanRepository;
-
+    private readonly IUserContext _userContext;
     public PatientTaskServices(
         ILogger<PatientTaskServices> logger,
         IUnitOfWork unitOfWork,
         IPatientTaskRepository taskRepository,
-        ITreatmentPlanRepository treatmentPlanRepository)
+        ITreatmentPlanRepository treatmentPlanRepository,
+        IUserContext userContext)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
         _taskRepository = taskRepository;
         _treatmentPlanRepository = treatmentPlanRepository;
+        _userContext = userContext;
     }
 
     public async Task<bool> AddTasksFromModelAsync(string modelResult, string userId)
@@ -30,7 +34,7 @@ public class PatientTaskServices : IPatientTaskServices
         try
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            
+
             AITaskResponse? aiResponse = null;
             try
             {
@@ -91,7 +95,7 @@ public class PatientTaskServices : IPatientTaskServices
                     }
                     catch (JsonException)
                     {
-                         // Ignore
+                        // Ignore
                     }
                 }
 
@@ -135,24 +139,25 @@ public class PatientTaskServices : IPatientTaskServices
         }
     }
 
-    public async Task<IEnumerable<Eirene.BLL.Models.Treatment.Task.PatientTaskResponseDTO>> GetTasksForUserAsync(string userId)
+    public async Task<IEnumerable<PatientTaskResponseDTO>> GetTasksForUserAsync(string userId)
     {
         var tasks = await _taskRepository.FindAsync(t => t.PatientId == userId);
-        return tasks.Select(t => new Eirene.BLL.Models.Treatment.Task.PatientTaskResponseDTO
+        return tasks.Select(t => new PatientTaskResponseDTO
         {
             Id = t.Id,
             Description = t.Description,
             IsCompleted = t.IsCompleted,
-            CreatedAt = t.CreatedAt
+            CreatedAt = t.CreatedAt,
+            PatientId = t.PatientId,
         }).OrderByDescending(t => t.CreatedAt);
     }
 
-    public async Task<Eirene.BLL.Models.Treatment.Task.PatientTaskResponseDTO?> GetTaskByIdAsync(Guid taskId)
+    public async Task<PatientTaskResponseDTO?> GetTaskByIdAsync(Guid taskId)
     {
         var task = await _taskRepository.GetByIdAsync(taskId);
         if (task == null) return null;
 
-        return new Eirene.BLL.Models.Treatment.Task.PatientTaskResponseDTO
+        return new PatientTaskResponseDTO
         {
             Id = task.Id,
             Description = task.Description,
@@ -166,6 +171,9 @@ public class PatientTaskServices : IPatientTaskServices
         var task = await _taskRepository.GetByIdAsync(taskId);
         if (task == null) return false;
 
+        var userId = _userContext.UserId;
+
+        if (userId != task.PatientId) return false;
         task.IsCompleted = isCompleted;
         var updated = await _taskRepository.UpdateAsync(task);
         if (updated)

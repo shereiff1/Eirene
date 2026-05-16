@@ -54,9 +54,8 @@ namespace Eirene.API.Controllers
                 if (task == null)
                     return NotFound(new { message = "Task not found." });
 
-                // Optional: Ensure task belongs to the user if tasks are private
-                // If you added PatientId to PatientTaskResponseDTO, check it here
-                // For now, assuming either users can view their own, or task ID is unguessable
+                if (userId != task.PatientId)
+                    return Unauthorized(new { message = "This task is not assigned to you" });
 
                 return Ok(task);
             }
@@ -76,8 +75,6 @@ namespace Eirene.API.Controllers
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized(new { message = "User not authenticated." });
 
-                // Optionally, we could verify the task belongs to the user here
-                
                 var success = await _taskServices.UpdateTaskStatusAsync(id, request.IsCompleted);
 
                 if (!success)
