@@ -4,7 +4,7 @@ using Eirene.BLL.Services.Abstraction.Tracking;
 using Eirene.DAL.Entities.Tracking;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Tracking;
-using Microsoft.AspNetCore.Http;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace Eirene.BLL.Services.Implementation.Tracking
@@ -14,17 +14,17 @@ namespace Eirene.BLL.Services.Implementation.Tracking
         private readonly IJournalRepository _journalRepository;
         private readonly ILogger<JournalServices> _logger;
         private readonly IMapper _mapper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserContext _userContext;
         private readonly IUnitOfWork _unitOfWork;
 
         public JournalServices(IJournalRepository journalRepository, ILogger<JournalServices> logger, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork
+            IUserContext userContext, IUnitOfWork unitOfWork
         )
         {
             _journalRepository = journalRepository;
             _logger = logger;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _userContext = userContext;
             _unitOfWork = unitOfWork;
         }
 
@@ -73,7 +73,7 @@ namespace Eirene.BLL.Services.Implementation.Tracking
                 var userId = GetCurrentUserId();
 
                 var journal = await _journalRepository.GetByIdAsync(id);
-                if (userId != journal?.PatientId)
+                if (journal != null && userId != journal.PatientId && !_userContext.IsInRole(Eirene.BLL.Enumerators.Roles.Admin))
                 {
                     _logger.LogError("Unauthorized attempt to delete a journal entry.");
                     return false;
@@ -144,7 +144,7 @@ namespace Eirene.BLL.Services.Implementation.Tracking
                 if (journal == null)
                     return false;
 
-                if (journal.PatientId != userId)
+                if (journal.PatientId != userId && !_userContext.IsInRole(Eirene.BLL.Enumerators.Roles.Admin))
                     return false;
 
                 if (journal.CreatedAt.Date != DateTime.UtcNow.Date)
@@ -166,12 +166,10 @@ namespace Eirene.BLL.Services.Implementation.Tracking
 
         private string GetCurrentUserId()
         {
-            var user = _httpContextAccessor.HttpContext?.User;
-
-            if (user == null || !user.Identity!.IsAuthenticated)
+            if (!_userContext.IsAuthenticated || string.IsNullOrEmpty(_userContext.UserId))
                 throw new Exception("User is not authenticated.");
 
-            return user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+            return _userContext.UserId;
         }
     }
 }
