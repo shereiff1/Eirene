@@ -6,8 +6,7 @@ using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.DAL.Repository.Abstraction;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-
+using Eirene.BLL.Services.Abstraction.Identity;
 namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityCommentServices : ICommunityCommentServices
@@ -18,7 +17,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly ICommunityPostRepository _communityPostRepository;
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserContext _userContext;
 
         public CommunityCommentServices(
             ILogger<CommunityCommentServices> logger,
@@ -27,7 +26,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityPostRepository communityPostRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor)
+            IUserContext userContext)
         {
             _logger = logger;
             _mapper = mapper;
@@ -35,7 +34,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _communityPostRepository = communityPostRepository;
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
-            _httpContextAccessor = httpContextAccessor;
+            _userContext = userContext;
         }
 
         public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(Guid postId)
@@ -181,11 +180,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var userId = _httpContextAccessor
-                    ?.HttpContext
-                    ?.User
-                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                    ?.Value;
+                var userId = _userContext.UserId;
 
                 if (string.IsNullOrEmpty(userId) || string.IsNullOrWhiteSpace(model.Content))
                 {
@@ -318,22 +313,17 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private string? GetCurrentUserId()
         {
-            return _httpContextAccessor
-                ?.HttpContext
-                ?.User
-                ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                ?.Value;
+            return _userContext.UserId;
         }
 
         private bool IsCurrentUserAdmin()
         {
-            return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
+            return _userContext.IsInRole(Roles.Admin);
         }
 
         private bool IsPrivilegedUser()
         {
-            var user = _httpContextAccessor?.HttpContext?.User;
-            return user?.IsInRole(Roles.Admin) == true || user?.IsInRole(Roles.Doctor) == true;
+            return _userContext.IsInRole(Roles.Admin) || _userContext.IsInRole(Roles.Doctor);
         }
 
         private static void SanitizeCommentPersonalData(CommunityCommentDTO comment)
@@ -353,11 +343,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var userId = _httpContextAccessor
-                    ?.HttpContext
-                    ?.User
-                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                    ?.Value;
+                var userId = _userContext.UserId;
 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -380,7 +366,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 // Authorization check
-                if (existingComment.UserId != userId)
+                if (existingComment.UserId != userId && !_userContext.IsInRole(Roles.Admin))
                 {
                     _logger.LogWarning("User {UserId} is not authorized to edit comment {CommentId}", userId, model.Id);
                     return false;
@@ -417,6 +403,13 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (comment == null || comment.IsDeleted)
                 {
                     _logger.LogWarning("Comment with ID {CommentId} not found or already deleted", id);
+                    return false;
+                }
+
+                var userId = _userContext.UserId;
+                if (comment.UserId != userId && !_userContext.IsInRole(Roles.Admin))
+                {
+                    _logger.LogWarning("User {UserId} is not authorized to delete comment {CommentId}", userId, id);
                     return false;
                 }
 

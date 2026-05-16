@@ -5,10 +5,7 @@ using Eirene.BLL.Enumerators;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Eirene.BLL.Services.Abstraction.Identity;
-
 namespace Eirene.BLL.Services.Implementation.Community
 {
     public class CommunityPostServices : ICommunityPostServices
@@ -19,7 +16,6 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly ICommunityGroupRepository _communityGroupRepository;
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUserContext _userContext;
         public CommunityPostServices(
             ILogger<CommunityPostServices> logger,
@@ -28,7 +24,6 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor,
             IUserContext userContext)
         {
             _logger = logger;
@@ -37,7 +32,6 @@ namespace Eirene.BLL.Services.Implementation.Community
             _communityGroupRepository = communityGroupRepository;
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
-            _httpContextAccessor = httpContextAccessor;
             _userContext = userContext;
         }
 
@@ -211,11 +205,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var userId = _httpContextAccessor
-                    ?.HttpContext
-                    ?.User
-                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                    ?.Value;
+                var userId = _userContext.UserId;
 
                 if (string.IsNullOrWhiteSpace(model.Content) || string.IsNullOrEmpty(userId))
                 {
@@ -312,22 +302,17 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private string? GetCurrentUserId()
         {
-            return _httpContextAccessor
-                ?.HttpContext
-                ?.User
-                ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                ?.Value;
+            return _userContext.UserId;
         }
 
         private bool IsCurrentUserAdmin()
         {
-            return _httpContextAccessor?.HttpContext?.User?.IsInRole(Roles.Admin) == true;
+            return _userContext.IsInRole(Roles.Admin);
         }
 
         private bool IsPrivilegedUser()
         {
-            var user = _httpContextAccessor?.HttpContext?.User;
-            return user?.IsInRole(Roles.Admin) == true || user?.IsInRole(Roles.Doctor) == true;
+            return _userContext.IsInRole(Roles.Admin) || _userContext.IsInRole(Roles.Doctor);
         }
 
         private static void SanitizePostPersonalData(CommunityPostDTO post)
@@ -360,11 +345,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var userId = _httpContextAccessor
-                    ?.HttpContext
-                    ?.User
-                    ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
-                    ?.Value;
+                var userId = _userContext.UserId;
 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -386,7 +367,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return false;
                 }
 
-                if (existingPost.UserId != userId)
+                if (existingPost.UserId != userId && !_userContext.IsInRole(Roles.Admin))
                 {
                     _logger.LogWarning("User {UserId} is not authorized to edit post {PostId}", userId, model.Id);
                     return false;
@@ -427,7 +408,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return false;
                 }
 
-                if (post.UserId != userId)
+                if (post.UserId != userId && !_userContext.IsInRole(Roles.Admin))
                 {
                     _logger.LogInformation("This is not the user post to delete");
                     return false;

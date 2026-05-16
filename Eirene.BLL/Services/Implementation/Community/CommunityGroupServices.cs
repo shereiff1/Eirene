@@ -5,10 +5,7 @@ using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using System.Security.Claims;
+using Eirene.BLL.Services.Abstraction.Identity;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {
@@ -20,7 +17,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserContext _userContext;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
@@ -29,7 +26,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
-            IHttpContextAccessor httpContextAccessor)
+            IUserContext userContext)
         {
             _logger = logger;
             _mapper = mapper;
@@ -37,7 +34,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
-            _httpContextAccessor = httpContextAccessor;
+            _userContext = userContext;
         }
 
         public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
@@ -130,8 +127,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var userId = _httpContextAccessor.HttpContext?.User
-                                     .FindFirstValue(ClaimTypes.NameIdentifier);
+                var userId = _userContext.UserId;
 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -141,10 +137,7 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 model.CreatedByUserId = userId;
 
-                var userRole = _httpContextAccessor.HttpContext?.User
-                    .FindFirstValue(ClaimTypes.Role);
-
-                if (userRole != "Admin")
+                if (!_userContext.IsInRole(Enumerators.Roles.Admin))
                 {
                     _logger.LogWarning("Forbidden: User {UserId} is not an Admin", model.CreatedByUserId);
                     return (false, null);
@@ -199,6 +192,13 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (existingGroup == null)
                 {
                     _logger.LogWarning("Community group with ID {GroupId} not found", model.Id);
+                    return false;
+                }
+
+                var userId = _userContext.UserId;
+                if (existingGroup.CreatedByUserId != userId && !_userContext.IsInRole(Enumerators.Roles.Admin))
+                {
+                    _logger.LogWarning("User {UserId} is not authorized to update group {GroupId}", userId, model.Id);
                     return false;
                 }
 
@@ -264,6 +264,13 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (group == null)
                 {
                     _logger.LogWarning("Community group with ID {GroupId} not found", id);
+                    return false;
+                }
+
+                var userId = _userContext.UserId;
+                if (group.CreatedByUserId != userId && !_userContext.IsInRole(Enumerators.Roles.Admin))
+                {
+                    _logger.LogWarning("User {UserId} is not authorized to delete group {GroupId}", userId, id);
                     return false;
                 }
 
@@ -441,8 +448,7 @@ namespace Eirene.BLL.Services.Implementation.Community
 
         private bool IsPrivilegedUser()
         {
-            var user = _httpContextAccessor?.HttpContext?.User;
-            return user?.IsInRole(Enumerators.Roles.Admin) == true || user?.IsInRole(Enumerators.Roles.Doctor) == true;
+            return _userContext.IsInRole(Enumerators.Roles.Admin) || _userContext.IsInRole(Enumerators.Roles.Doctor);
         }
 
         private static void SanitizeGroupPersonalData(CommunityGroupDTO group)
