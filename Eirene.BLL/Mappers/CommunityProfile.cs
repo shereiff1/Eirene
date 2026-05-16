@@ -19,7 +19,7 @@ namespace Eirene.BLL.Mappers
                 .ForMember(dest => dest.CreatedByUserName,
                     opt => opt.MapFrom(src => src.CreatedBy != null ? src.CreatedBy.FullName : string.Empty))
                 .ForMember(dest => dest.PostsCount,
-                    opt => opt.MapFrom(src => src.Posts != null ? src.Posts.Count : 0));
+                    opt => opt.MapFrom(src => src.Posts != null ? src.Posts.Count(p => !p.IsDeleted) : 0));
 
             CreateMap<AddCommunityGroup, CommunityGroup>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -115,7 +115,7 @@ namespace Eirene.BLL.Mappers
                 .ForMember(dest => dest.Members,
                     opt => opt.MapFrom(src => src.Members))
                 .ForMember(dest => dest.PostsCount,
-                    opt => opt.MapFrom(src => src.Posts != null ? src.Posts.Count : 0));
+                    opt => opt.MapFrom(src => src.Posts != null ? src.Posts.Count(p => !p.IsDeleted) : 0));
 
             // ApplicationUser to UserDTO
             CreateMap<ApplicationUser, UserDTO>()
