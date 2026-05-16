@@ -1,33 +1,29 @@
-# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution
-COPY Eirene.sln .
-
-# Copy project files
-COPY Eirene.API/Eirene.API.csproj Eirene.API/
-COPY EireneMVC/EireneMVC.csproj EireneMVC/
-COPY Eirene.BLL/Eirene.BLL.csproj Eirene.BLL/
-COPY Eirene.DAL/Eirene.DAL.csproj Eirene.DAL/
+# Copy the solution and project files first to cache layer
+COPY ["Eirene.sln", "./"]
+COPY ["Eirene.API/Eirene.API.csproj", "Eirene.API/"]
+COPY ["Eirene.BLL/Eirene.BLL.csproj", "Eirene.BLL/"]
+COPY ["Eirene.DAL/Eirene.DAL.csproj", "Eirene.DAL/"]
+COPY ["EireneMVC/EireneMVC.csproj", "EireneMVC/"]
 
 # Restore dependencies
-RUN dotnet restore Eirene.sln
+RUN dotnet restore "Eirene.sln"
 
-# Copy everything else
+# Copy the remaining source code
 COPY . .
 
-# Publish API
-WORKDIR /src/Eirene.API
-RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+# Build and publish the API project
+WORKDIR "/src/Eirene.API"
+RUN dotnet publish "Eirene.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+# Final runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
-
 COPY --from=build /app/publish .
 
-ENV ASPNETCORE_URLS=http://+:8080
+# Expose the port (Railway injects the PORT env var dynamically)
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "Eirene.API.dll"]

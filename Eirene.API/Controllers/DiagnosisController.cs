@@ -45,11 +45,11 @@ namespace Eirene.Controllers
 
                 if (!answersResult.IsSuccess || answersResult.Answers == null || !answersResult.Answers.Any())
                     return BadRequest(new { message = "No answers found for this user. Please submit your answers first." });
-                 
+
                 var inputText = FormatAnswersAsText(answersResult.Answers);
-                 
+
                 var analysisJson = await _modelService.AnalyzeUserAnswersAsync(inputText);
-                 
+
                 var parsedResult = JsonSerializer.Deserialize<AITaskResponse>(analysisJson, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -78,11 +78,23 @@ namespace Eirene.Controllers
             }
         }
 
-        private static string FormatAnswersAsText(IEnumerable<QuestionAnswer> answers)
+      private static string FormatAnswersAsText(IEnumerable<QuestionAnswer> answers)
         {
-            return string.Join(" ", answers
+            var sentences = answers
                 .Where(a => !string.IsNullOrWhiteSpace(a.Answer))
-                .Select(a => a.Answer.Trim()));
+                .Select(a =>
+                {
+                    var question = a.Question?.QuestionContent?.Trim().TrimEnd('?', '.', '!') ?? "";
+                    var answer = a.Answer.Trim();
+
+                    var combined = $"{question}, {answer}";
+
+                    return combined.EndsWith('.') || combined.EndsWith('!') || combined.EndsWith('?')
+                        ? combined
+                        : combined + ".";
+                });
+
+            return string.Join(" ", sentences);
         }
     }
 }
