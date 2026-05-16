@@ -1,4 +1,4 @@
-﻿using Eirene.DAL.Enumerators;
+using Eirene.DAL.Enumerators;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
@@ -433,6 +433,50 @@ namespace Eirene.BLL.Services.Implementation.Core
             {
                 _logger.LogError(ex, "Error checking timeout for user {userId} in group {groupId}", userId, groupId);
                 return (false, false, null, "An error occurred while checking timeout status.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, bool IsDiagnosed, string? Error)> CheckIfDiagnosedAsync(string userId)
+        {
+            try
+            {
+                var patient = await _patientRepository.GetByIdAsync(userId);
+                if (patient == null)
+                {
+                    _logger.LogError("Patient profile with id {userId} not found.", userId);
+                    return (false, false, "Patient profile not found.");
+                }
+
+                return (true, patient.IsDiagnosed, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if patient {userId} is diagnosed", userId);
+                return (false, false, "An error occurred while checking diagnosis status.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string? Error)> MarkAsDiagnosedAsync(string userId)
+        {
+            try
+            {
+                var patient = await _patientRepository.GetByIdAsync(userId);
+                if (patient == null)
+                {
+                    _logger.LogError("Patient profile with id {userId} not found.", userId);
+                    return (false, "Patient profile not found.");
+                }
+
+                patient.IsDiagnosed = true;
+                await _patientRepository.UpdateAsync(patient);
+                await _unitOfWork.SaveChangesAsync();
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking patient {userId} as diagnosed", userId);
+                return (false, "An error occurred while updating diagnosis status.");
             }
         }
     }

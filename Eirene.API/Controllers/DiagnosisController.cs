@@ -1,5 +1,6 @@
 using Eirene.BLL.AIModel;
 using Eirene.BLL.Models.Model_Result;
+using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Eirene.DAL.Entities.Treatment;
 using Microsoft.AspNetCore.Authorization;
@@ -18,17 +19,20 @@ namespace Eirene.Controllers
         private readonly ILogger<DiagnosisController> _logger;
         private readonly IQuestionAnswerServices _questionAnswerServices;
         private readonly IPatientTaskServices _taskServices;
+        private readonly IPatientServices _patientServices;
 
         public DiagnosisController(
             IAIModelService modelService,
             ILogger<DiagnosisController> logger,
             IQuestionAnswerServices questionAnswerServices,
-            IPatientTaskServices taskServices)
+            IPatientTaskServices taskServices,
+            IPatientServices patientServices)
         {
             _modelService = modelService;
             _logger = logger;
             _questionAnswerServices = questionAnswerServices;
             _taskServices = taskServices;
+            _patientServices = patientServices;
         }
 
         [HttpPost("analyze")]
@@ -59,6 +63,10 @@ namespace Eirene.Controllers
 
                 if (!isAdded)
                     _logger.LogWarning("Failed to add tasks for user {UserId}.", userId);
+
+                var markResult = await _patientServices.MarkAsDiagnosedAsync(userId);
+                if (!markResult.IsSuccess)
+                    _logger.LogWarning("Failed to mark patient profile as diagnosed for user {UserId}.", userId);
 
                 return Ok(new
                 {

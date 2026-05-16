@@ -242,5 +242,23 @@ namespace Eirene.Controllers
                 timeoutUntil = result.TimeoutUntil
             });
         }
+
+        [HttpGet("is-diagnosed")]
+        [Authorize(Roles = Roles.Patient)]
+        public async Task<IActionResult> IsDiagnosed()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { message = "User not authenticated." });
+
+            var result = await _patientServices.CheckIfDiagnosedAsync(userId);
+            if (!result.IsSuccess)
+                return BadRequest(new { message = result.Error });
+
+            return Ok(new
+            {
+                isDiagnosed = result.IsDiagnosed
+            });
+        }
     }
 }

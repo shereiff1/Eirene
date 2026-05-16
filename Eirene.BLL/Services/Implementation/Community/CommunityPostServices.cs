@@ -7,6 +7,7 @@ using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Eirene.BLL.Services.Abstraction.Identity;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {
@@ -19,7 +20,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
+        private readonly IUserContext _userContext;
         public CommunityPostServices(
             ILogger<CommunityPostServices> logger,
             IMapper mapper,
@@ -27,7 +28,8 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IUserContext userContext)
         {
             _logger = logger;
             _mapper = mapper;
@@ -36,6 +38,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
+            _userContext = userContext;
         }
 
         public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetAllAsync()
@@ -415,11 +418,18 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
+                var userId = _userContext.UserId;
                 var post = await _communityPostRepository.GetByIdAsync(id);
 
                 if (post == null || post.IsDeleted)
                 {
                     _logger.LogWarning("Post with ID {PostId} not found or already deleted", id);
+                    return false;
+                }
+
+                if (post.UserId != userId)
+                {
+                    _logger.LogInformation("This is not the user post to delete");
                     return false;
                 }
 
