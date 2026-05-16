@@ -310,7 +310,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
-                if (membership != null)
+                if (membership != null || user)
                 {
                     _logger.LogInformation("User {UserId} is already a member of group {GroupId}", userId, groupId);
                     return (false, "You are already a member of this group.");
