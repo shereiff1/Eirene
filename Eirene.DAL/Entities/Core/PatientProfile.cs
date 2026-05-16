@@ -13,7 +13,7 @@ public class PatientProfile
     public string Id { get; set; } = string.Empty;
 
     public ApplicationUser User { get; set; } = null!;
-    
+
     public string? DoctorProfileId { get; set; }
     public DoctorProfile? Doctor { get; set; }
 
@@ -22,10 +22,12 @@ public class PatientProfile
     public string EmergencyContact { get; set; } = string.Empty;
     public string MedicalHistory { get; set; } = string.Empty;
     public string? ProfilePhotoUrl { get; set; }
-
+    
     public ICollection<Journal> Journals { get; set; } = new List<Journal>();
     public ICollection<MoodTracker> MoodTrackers { get; set; } = new List<MoodTracker>();
     public ICollection<TreatmentPlan> TreatmentPlans { get; set; } = new List<TreatmentPlan>();
     public ICollection<Diagnosis> Diagnoses { get; set; } = new List<Diagnosis>();
     public ICollection<SupervisionRequest> SupervisionRequests { get; set; } = new List<SupervisionRequest>();
+
+    public bool IsDiagnosed { get; set; } = false;
 }

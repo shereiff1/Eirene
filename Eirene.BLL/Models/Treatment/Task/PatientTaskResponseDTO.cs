@@ -8,4 +8,5 @@ public class PatientTaskResponseDTO
     public string Description { get; set; } = string.Empty;
     public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string PatientId { get; set; } = string.Empty;
 }
