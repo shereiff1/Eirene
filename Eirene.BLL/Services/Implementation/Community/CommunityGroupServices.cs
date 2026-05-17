@@ -20,7 +20,6 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserContext _userContext;
-        private bool _httpContextAccessor;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
