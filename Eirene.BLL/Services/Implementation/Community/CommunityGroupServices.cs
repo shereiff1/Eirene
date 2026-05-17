@@ -276,13 +276,6 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return false;
                 }
 
-                var groupWithPosts = await _communityGroupRepository.GetByIdWithDetailsAsync(id);
-                if (groupWithPosts?.Posts != null && groupWithPosts.Posts.Any(p => !p.IsDeleted))
-                {
-                    _logger.LogWarning("Cannot delete community group {GroupId}: It contains active posts", id);
-                    return false;
-                }
-
                 var result = await _communityGroupRepository.DeleteAsync(group);
                 await _unitOfWork.SaveChangesAsync();
 

@@ -162,7 +162,8 @@ public class PatientTaskServices : IPatientTaskServices
             Id = task.Id,
             Description = task.Description,
             IsCompleted = task.IsCompleted,
-            CreatedAt = task.CreatedAt
+            CreatedAt = task.CreatedAt,
+            PatientId = task.PatientId
         };
     }
 

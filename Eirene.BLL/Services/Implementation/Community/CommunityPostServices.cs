@@ -401,7 +401,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             try
             {
                 var userId = _userContext.UserId;
-                var post = await _communityPostRepository.GetByIdAsync(id);
+                var post = await _communityPostRepository.GetByIdWithDetailsAsync(id);
 
                 if (post == null || post.IsDeleted)
                 {
@@ -416,6 +416,22 @@ namespace Eirene.BLL.Services.Implementation.Community
                 }
 
                 post.IsDeleted = true;
+
+                if (post.Comments != null)
+                {
+                    foreach (var comment in post.Comments)
+                    {
+                        comment.IsDeleted = true;
+                        if (comment.Replies != null)
+                        {
+                            foreach (var reply in comment.Replies)
+                            {
+                                reply.IsDeleted = true;
+                            }
+                        }
+                    }
+                }
+
                 var result = await _communityPostRepository.UpdateAsync(post);
                 await _unitOfWork.SaveChangesAsync();
 
