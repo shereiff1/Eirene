@@ -36,6 +36,19 @@ namespace Eirene.BLL.Mappers
                 .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<SupervisionRequest, SupervisionRequestDTO>()
+                .ForMember(dest => dest.PatientFullName, opt => opt.MapFrom(src => src.Patient.User.FullName))
+                .ForMember(dest => dest.PatientProfilePhotoUrl, opt => opt.MapFrom(src => src.Patient.ProfilePhotoUrl));
+
+            CreateMap<SupervisionRequest, DoctorPatientDTO>()
+                .ForMember(dest => dest.RequestId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.PatientId, opt => opt.MapFrom(src => src.PatientProfileId))
+                .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.Patient.User.FullName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Patient.User.Email))
+                .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.Patient.DateOfBirth))
+                .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.Patient.ProfilePhotoUrl))
+                .ForMember(dest => dest.AcceptedAt, opt => opt.MapFrom(src => src.RespondedAt ?? src.CreatedAt));
         }
     }
 }
