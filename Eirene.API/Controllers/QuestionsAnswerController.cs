@@ -3,118 +3,117 @@ using Eirene.BLL.Services.Abstraction.Treatment;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace Eirene.Controllers
+namespace Eirene.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class QuestionsAnswerController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class QuestionsAnswerController : ControllerBase
+    private readonly ILogger<QuestionsAnswerController> _logger;
+    private readonly IQuestionAnswerServices _questionAnswerServices;
+    private readonly IQuestionServices _questionServices;
+
+
+    public QuestionsAnswerController(
+        ILogger<QuestionsAnswerController> logger,
+        IQuestionAnswerServices questionAnswerServices,
+        IQuestionServices questionServices)
     {
-        private readonly ILogger<QuestionsAnswerController> _logger;
-        private readonly IQuestionAnswerServices _questionAnswerServices;
-        private readonly IQuestionServices _questionServices;
+        _logger = logger;
+        _questionAnswerServices = questionAnswerServices;
+        _questionServices = questionServices;
+    }
 
-
-        public QuestionsAnswerController(
-            ILogger<QuestionsAnswerController> logger,
-            IQuestionAnswerServices questionAnswerServices,
-            IQuestionServices questionServices)
+    [HttpGet("questions")]
+    public async Task<IActionResult> GetAllQuestions()
+    {
+        try
         {
-            _logger = logger;
-            _questionAnswerServices = questionAnswerServices;
-            _questionServices = questionServices;
+            var (IsSuccess, Questions) = await _questionServices.GetAllAsync();
+            if (!IsSuccess || Questions == null || !Questions.Any())
+            {
+                return NotFound(new { message = "No questions found." });
+            }
+
+            return Ok(Questions);
         }
-
-        [HttpGet("questions")]
-        public async Task<IActionResult> GetAllQuestions()
+        catch (Exception ex)
         {
-            try
-            {
-                var (IsSuccess, Questions) = await _questionServices.GetAllAsync();
-                if (!IsSuccess || Questions == null || !Questions.Any())
-                {
-                    return NotFound(new { message = "No questions found." });
-                }
-
-                return Ok(Questions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving questions");
-                return StatusCode(500, new { message = "An error occurred while retrieving questions." });
-            }
+            _logger.LogError(ex, "Error retrieving questions");
+            return StatusCode(500, new { message = "An error occurred while retrieving questions." });
         }
+    }
 
-        [HttpGet("my-answers")]
-        public async Task<IActionResult> GetMyAnswers()
+    [HttpGet("my-answers")]
+    public async Task<IActionResult> GetMyAnswers()
+    {
+        try
         {
-            try
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "User not authenticated." });
-                }
-
-                var (IsSuccess, Answers) = await _questionAnswerServices.GetAnswersForUserAsync(userId);
-
-                if (Answers == null || !Answers.Any())
-                {
-                    return Ok(new { message = "No answers found for this user." });
-                }
-
-                if (!IsSuccess)
-                {
-                    return StatusCode(500, new { message = "An error occurred while retrieving answers." });
-                }
-
-                return Ok(Answers);
+                return Unauthorized(new { message = "User not authenticated." });
             }
-            catch (Exception ex)
+
+            var (IsSuccess, Answers) = await _questionAnswerServices.GetAnswersForUserAsync(userId);
+
+            if (Answers == null || !Answers.Any())
             {
-                _logger.LogError(ex, "Error retrieving answers");
+                return Ok(new { message = "No answers found for this user." });
+            }
+
+            if (!IsSuccess)
+            {
                 return StatusCode(500, new { message = "An error occurred while retrieving answers." });
             }
+
+            return Ok(Answers);
         }
-
-        [HttpPost("submit")]
-        public async Task<IActionResult> SubmitAnswers([FromBody] QuestionsAnswer questionsAnswer)
+        catch (Exception ex)
         {
-            try
+            _logger.LogError(ex, "Error retrieving answers");
+            return StatusCode(500, new { message = "An error occurred while retrieving answers." });
+        }
+    }
+
+    [HttpPost("submit")]
+    public async Task<IActionResult> SubmitAnswers([FromBody] QuestionsAnswer questionsAnswer)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "User not authenticated." });
-                }
-
-                if (questionsAnswer.Answers == null || !questionsAnswer.Answers.Any())
-                {
-                    return BadRequest(new { message = "No answers provided." });
-                }
-
-                var answersToAdd = questionsAnswer.Answers
-                    .Select(a => (a.QuestionId, a.Answer))
-                    .ToList();
-
-                var (IsSuccess, Answers) = await _questionAnswerServices.AddMultipleAnswersAsync(userId, answersToAdd);
-
-                if (!IsSuccess)
-                {
-                    return BadRequest(new { message = "Failed to save some or all answers." });
-                }
-
-                return Ok(new { Message = "Answers submitted successfully", Answers });
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                _logger.LogError(ex, "Error submitting answers");
-                return StatusCode(500, new { message = "An error occurred while submitting answers." });
+                return Unauthorized(new { message = "User not authenticated." });
             }
+
+            if (questionsAnswer.Answers == null || !questionsAnswer.Answers.Any())
+            {
+                return BadRequest(new { message = "No answers provided." });
+            }
+
+            var answersToAdd = questionsAnswer.Answers
+                .Select(a => (a.QuestionId, a.Answer))
+                .ToList();
+
+            var (IsSuccess, Answers) = await _questionAnswerServices.AddMultipleAnswersAsync(userId, answersToAdd);
+
+            if (!IsSuccess)
+            {
+                return BadRequest(new { message = "Failed to save some or all answers." });
+            }
+
+            return Ok(new { Message = "Answers submitted successfully", Answers });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting answers");
+            return StatusCode(500, new { message = "An error occurred while submitting answers." });
         }
     }
 }

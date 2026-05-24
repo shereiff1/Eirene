@@ -20,12 +20,12 @@ public class AIModelService : IAIModelService
         _pythonModelService = pythonModelService;
     }
 
-    public async Task<string> AnalyzeUserAnswersAsync(string questionsAndAnswers)
+    public async Task<string> AnalyzeUserAnswersAsync(string inputText)
     {
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent?key={_settings.ApiKey}";
+        var url = $"{_settings.BaseUrl}/models/{MODEL_NAME}:generateContent?key={_settings.ApiKey}";
          
         Dictionary<string, double> modelPrediction =
-            await _pythonModelService.PredictMentalHealthIssueAsync(questionsAndAnswers);
+            await _pythonModelService.PredictMentalHealthIssueAsync(inputText);
 
         var request = CreateAnalysisRequest(modelPrediction);
         var content = new StringContent(
@@ -93,13 +93,12 @@ public class AIModelService : IAIModelService
         bool isControl = dominantCondition.Equals("control", StringComparison.OrdinalIgnoreCase);
         bool isHighConfidence = dominantConfidence >= 0.75;
 
-        // Safety override: flag suicidewatch even if not dominant
         bool hasSuicideWatchSignal = modelPrediction.TryGetValue("suicidewatch", out double swProb)
                                      && swProb >= SUICIDE_WATCH_ALERT_THRESHOLD
                                      && dominantCondition != "suicidewatch";
 
         string safetyOverride = hasSuicideWatchSignal
-            ? $"\n⚠️ SAFETY NOTE: Suicidal Ideation signal detected at {swProb:P1}. Even though it is not dominant, ensure at least one task addresses emotional safety and connection."
+            ? $"\n SAFETY NOTE: Suicidal Ideation signal detected at {swProb:P1}. Even though it is not dominant, ensure at least one task addresses emotional safety and connection."
             : string.Empty;
 
         string clinicalContext = isControl
@@ -197,7 +196,6 @@ Respond ONLY in valid JSON — no markdown, no text outside the JSON:
         var text = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text
                    ?? throw new InvalidOperationException("No response text from The AI Model");
 
-        // Validate the returned text is actually JSON before passing it up
         try
         {
             JsonDocument.Parse(text);

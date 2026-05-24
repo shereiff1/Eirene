@@ -1,4 +1,3 @@
-using Eirene.BLL.AIModel;
 using Eirene.BLL.Models.Model_Result;
 using Eirene.BLL.Models.Treatment.Task;
 using Eirene.BLL.Services.Abstraction.Identity;
@@ -6,7 +5,6 @@ using Eirene.BLL.Services.Abstraction.Treatment;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Treatment;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 public class PatientTaskServices : IPatientTaskServices
 {
@@ -29,83 +27,16 @@ public class PatientTaskServices : IPatientTaskServices
         _userContext = userContext;
     }
 
-    public async Task<bool> AddTasksFromModelAsync(string modelResult, string userId)
+    public async Task<bool> AddTasksFromModelAsync(AITaskResponse modelResult, string userId)
     {
         try
         {
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var taskTexts = modelResult.TasksForUser?
+                .Select(t => t.Task)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .ToList();
 
-            AITaskResponse? aiResponse = null;
-            try
-            {
-                aiResponse = JsonSerializer.Deserialize<AITaskResponse>(modelResult, options);
-                if (aiResponse?.TasksForUser != null && aiResponse.TasksForUser.Any())
-                {
-                    _logger.LogInformation("Parsed as direct AITaskResponse");
-                }
-                else
-                {
-                    aiResponse = null;
-                }
-            }
-            catch (JsonException)
-            {
-                // Ignore and try next method
-            }
-
-            var taskTexts = new List<string>();
-
-            if (aiResponse != null)
-            {
-                taskTexts = aiResponse.TasksForUser.Select(t => t.Task).ToList();
-            }
-            else
-            {
-                AnalysisDTO? analysisDto = null;
-
-                try
-                {
-                    analysisDto = JsonSerializer.Deserialize<AnalysisDTO>(modelResult, options);
-                    if (analysisDto?.Tasks_For_User != null && analysisDto.Tasks_For_User.Any())
-                    {
-                        _logger.LogInformation("Parsed as direct AnalysisDTO");
-                    }
-                    else
-                    {
-                        analysisDto = null;
-                    }
-                }
-                catch (JsonException)
-                {
-                    // Ignore and try next method
-                }
-
-
-                if (analysisDto == null)
-                {
-                    try
-                    {
-                        var modelDto = JsonSerializer.Deserialize<ModelResultDTO>(modelResult, options);
-
-                        if (modelDto != null && !string.IsNullOrWhiteSpace(modelDto.Analysis))
-                        {
-                            analysisDto = JsonSerializer.Deserialize<AnalysisDTO>(modelDto.Analysis, options);
-                            _logger.LogInformation("Parsed as wrapped ModelResultDTO");
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                        // Ignore
-                    }
-                }
-
-                if (analysisDto?.Tasks_For_User != null)
-                {
-                    taskTexts = analysisDto.Tasks_For_User;
-                }
-            }
-
-            if (!taskTexts.Any())
+            if (taskTexts == null || taskTexts.Count == 0)
             {
                 _logger.LogError("No valid tasks found in model result for user {UserId}", userId);
                 return false;
@@ -115,7 +46,7 @@ public class PatientTaskServices : IPatientTaskServices
             await _treatmentPlanRepository.AddAsync(treatmentPlan);
             await _unitOfWork.SaveChangesAsync();
 
-            foreach (var taskText in taskTexts.Where(t => !string.IsNullOrWhiteSpace(t)))
+            foreach (var taskText in taskTexts)
             {
                 await _taskRepository.AddAsync(new Eirene.DAL.Entities.Treatment.PatientTask
                 {
