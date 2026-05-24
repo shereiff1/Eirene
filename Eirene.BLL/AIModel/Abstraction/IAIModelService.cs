@@ -1,5 +1,4 @@
-
-namespace Eirene.BLL.AIModel;
+namespace Eirene.BLL.AIModel.Abstraction;
 
 public interface IAIModelService
 {

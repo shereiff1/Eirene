@@ -1,19 +1,20 @@
 using System.Text;
 using System.Text.Json;
+using Eirene.BLL.AIModel.Abstraction;
 using Microsoft.Extensions.Options;
 
-namespace Eirene.BLL.AIModel;
+namespace Eirene.BLL.AIModel.Implementation;
 
 public class AIModelService : IAIModelService
 {
     private readonly HttpClient _httpClient;
-    private readonly AIModelSettings _settings;
+    private readonly AISettings _settings;
     private readonly IPythonModelService _pythonModelService;
     private const string MODEL_NAME = "gemini-2.5-flash";
 
     private const double SUICIDE_WATCH_ALERT_THRESHOLD = 0.4;
 
-    public AIModelService(HttpClient httpClient, IOptions<AIModelSettings> options, IPythonModelService pythonModelService)
+    public AIModelService(HttpClient httpClient, IOptions<AISettings> options, IPythonModelService pythonModelService)
     {
         _httpClient = httpClient;
         _settings = options.Value;
@@ -22,7 +23,7 @@ public class AIModelService : IAIModelService
 
     public async Task<string> AnalyzeUserAnswersAsync(string inputText)
     {
-        var url = $"{_settings.BaseUrl}/models/{MODEL_NAME}:generateContent?key={_settings.ApiKey}";
+        var url = $"{_settings.GeminiBaseUrl}/models/{MODEL_NAME}:generateContent?key={_settings.GeminiApiKey}";
          
         Dictionary<string, double> modelPrediction =
             await _pythonModelService.PredictMentalHealthIssueAsync(inputText);
@@ -188,7 +189,7 @@ Respond ONLY in valid JSON — no markdown, no text outside the JSON:
     {
         var json = await response.Content.ReadAsStringAsync();
 
-        var result = JsonSerializer.Deserialize<AIModelResponse>(json, new JsonSerializerOptions
+        var result = JsonSerializer.Deserialize<GeminiResponse>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });

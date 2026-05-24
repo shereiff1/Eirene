@@ -1,4 +1,4 @@
-using Eirene.BLL.AIModel;
+using Eirene.BLL.AIModel.Abstraction;
 using Eirene.BLL.Models.Model_Result;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Services.Abstraction.Treatment;

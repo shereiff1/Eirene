@@ -1,14 +1,15 @@
 using System.Net.Http.Json;
+using Eirene.BLL.AIModel.Abstraction;
 using Microsoft.Extensions.Options;
 
-namespace Eirene.BLL.AIModel;
+namespace Eirene.BLL.AIModel.Implementation;
 
 public class PythonModelService : IPythonModelService
 {
     private readonly HttpClient _httpClient;
-    private readonly PythonModelSettings _settings;
+    private readonly AISettings _settings;
 
-    public PythonModelService(HttpClient httpClient, IOptions<PythonModelSettings> settings)
+    public PythonModelService(HttpClient httpClient, IOptions<AISettings> settings)
     {
         _httpClient = httpClient;
         _settings = settings.Value;
@@ -17,7 +18,7 @@ public class PythonModelService : IPythonModelService
     public async Task<Dictionary<string, double>> PredictMentalHealthIssueAsync(string text)
     {
         var response = await _httpClient.PostAsJsonAsync(
-            $"{_settings.BaseUrl}/predict",
+            $"{_settings.PythonBaseUrl}/predict",
             new { text }
         );
 

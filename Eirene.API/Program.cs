@@ -1,4 +1,6 @@
 using Eirene.BLL.AIModel;
+using Eirene.BLL.AIModel.Abstraction;
+using Eirene.BLL.AIModel.Implementation;
 using Eirene.BLL.Extensions;
 using Eirene.BLL.Hubs;
 using Eirene.BLL.Mappers;
@@ -61,11 +63,8 @@ builder.Services.AddHttpContextAccessor();
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secret = jwtSettings["Secret"];
 
-builder.Services.Configure<AIModelSettings>(
+builder.Services.Configure<AISettings>(
     builder.Configuration.GetSection("AIModel"));
-
-builder.Services.Configure<PythonModelSettings>(
-    builder.Configuration.GetSection("PythonModel"));
 
 builder.Services.AddHttpClient<IPythonModelService, PythonModelService>(client =>
 {
