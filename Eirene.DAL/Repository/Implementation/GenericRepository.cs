@@ -8,7 +8,7 @@ namespace Eirene.DAL.Repository.Implementation
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected readonly EireneDBContext _context;
-        private readonly DbSet<T> _dbSet;
+        protected readonly DbSet<T> _dbSet;
 
         public GenericRepository(EireneDBContext context)
         {
@@ -30,22 +30,22 @@ namespace Eirene.DAL.Repository.Implementation
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task<T?> AddAsync(T entity)
+        public async Task<T> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
             return entity;
         }
 
-        public async Task<bool> UpdateAsync(T entity)
+        public Task<bool> UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
-            return true;
+            return Task.FromResult(true);
         }
 
-        public async Task<bool> DeleteAsync(T entity)
+        public Task<bool> DeleteAsync(T entity)
         {
             _dbSet.Remove(entity);
-            return true;
+            return Task.FromResult(true);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Eirene.DAL.Database;
 
 public class EireneDBContext : IdentityDbContext<ApplicationUser>
 {
-    public EireneDBContext(DbContextOptions options) : base(options)
+    public EireneDBContext(DbContextOptions<EireneDBContext> options) : base(options)
     {
     }
 
@@ -20,6 +20,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<ModeratorProfile> ModeratorProfiles { get; set; }
     public DbSet<AdminProfile> AdminProfiles { get; set; }
     public DbSet<Journal> Journals { get; set; }
+    public DbSet<MoodTracker> MoodTrackers { get; set; }
     public DbSet<Blog> Blogs { get; set; }
     public DbSet<CommunityComment> CommunityComments { get; set; }
     public DbSet<CommunityGroup> CommunityGroups { get; set; }
@@ -28,11 +29,13 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
     public DbSet<Question> Questions { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<TreatmentPlan> TreatmentPlans { get; set; }
     public DbSet<PatientTask> PatientTasks { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<SupervisionRequest> SupervisionRequests { get; set; }
     public DbSet<DoctorRating> DoctorRatings { get; set; }
+    public DbSet<Diagnosis> Diagnoses { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

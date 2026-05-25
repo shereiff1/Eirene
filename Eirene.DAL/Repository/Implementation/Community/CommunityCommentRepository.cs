@@ -1,12 +1,11 @@
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.DAL.Database;
-using Eirene.DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eirene.DAL.Repository.Implementation.Community
 {
-    public class CommunityCommentRepository : GenericRepository<CommunityComment>, ICommunityCommentRepository
+    internal class CommunityCommentRepository : GenericRepository<CommunityComment>, ICommunityCommentRepository
     {
         public CommunityCommentRepository(EireneDBContext context) : base(context)
         {
@@ -15,27 +14,25 @@ namespace Eirene.DAL.Repository.Implementation.Community
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .FirstOrDefaultAsync(c => c.Id.Equals(id));
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<IEnumerable<CommunityComment>> GetByPostIdWithDetailsAsync(Guid postId)
+        public async Task<List<CommunityComment>> GetByPostIdWithDetailsAsync(Guid postId)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .Where(c => c.PostId.Equals(postId))
+                .Where(c => c.PostId == postId)
                 .OrderByDescending(c => c.PostedOn)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<CommunityComment>> GetRepliesByCommentIdAsync(Guid commentId)
+        public async Task<List<CommunityComment>> GetRepliesByCommentIdAsync(Guid commentId)
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .Where(c => c.ParentCommentId.Equals(commentId))
+                .Where(c => c.ParentCommentId == commentId)
                 .OrderBy(c => c.PostedOn)
                 .ToListAsync();
         }
-
-
     }
 }

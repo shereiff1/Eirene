@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eirene.DAL.Repository.Implementation.Communication
 {
-    public class ChatRepository : IChatRepository
+    internal class ChatRepository : IChatRepository
     {
         private readonly EireneDBContext _dbContext;
 
@@ -33,7 +33,6 @@ namespace Eirene.DAL.Repository.Implementation.Communication
             };
 
             await _dbContext.Conversations.AddAsync(conversation);
-            await _dbContext.SaveChangesAsync();
 
             return conversation;
         }
@@ -45,7 +44,7 @@ namespace Eirene.DAL.Repository.Implementation.Communication
                 .FirstOrDefaultAsync(c => c.Id == conversationId);
         }
 
-        public async Task<IEnumerable<ChatMessage>> GetMessagesAsync(Guid conversationId)
+        public async Task<List<ChatMessage>> GetMessagesAsync(Guid conversationId)
         {
             return await _dbContext.ChatMessages
                 .Where(m => m.ConversationId == conversationId)
@@ -72,7 +71,6 @@ namespace Eirene.DAL.Repository.Implementation.Communication
             };
 
             await _dbContext.ChatMessages.AddAsync(chatMessage);
-            await _dbContext.SaveChangesAsync();
 
             return chatMessage;
         }

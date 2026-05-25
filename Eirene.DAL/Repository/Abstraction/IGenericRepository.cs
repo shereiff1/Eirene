@@ -1,6 +1,4 @@
-
 using System.Linq.Expressions;
-
 
 namespace Eirene.DAL.Repository.Abstraction
 {
@@ -12,7 +10,7 @@ namespace Eirene.DAL.Repository.Abstraction
 
         Task<T?> GetByIdAsync(object id);
 
-        Task<T?> AddAsync(T entity);
+        Task<T> AddAsync(T entity);
 
         Task<bool> UpdateAsync(T entity);
 

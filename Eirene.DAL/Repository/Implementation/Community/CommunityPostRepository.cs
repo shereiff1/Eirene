@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eirene.DAL.Repository.Implementation.Community
 {
-    public class CommunityPostRepository : GenericRepository<CommunityPost>, ICommunityPostRepository
+    internal class CommunityPostRepository : GenericRepository<CommunityPost>, ICommunityPostRepository
     {
         public CommunityPostRepository(EireneDBContext context)
             : base(context)
@@ -13,7 +13,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
         }
         private IQueryable<CommunityPost> IncludePostDetails()
         {
-            return _context.CommunityPosts
+            return _context.Set<CommunityPost>()
                 .Include(p => p.User)
                 .Include(p => p.CommunityGroup)
                 .Include(p => p.Comments)
@@ -36,7 +36,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
         public async Task<List<CommunityPost>> GetByGroupIdWithDetailsAsync(Guid groupId)
         {
             return await IncludePostDetails()
-                .Where(p => p.CommunityGroupId.Equals(groupId))
+                .Where(p => p.CommunityGroupId == groupId)
                 .OrderByDescending(p => p.PostedOn)
                 .ToListAsync();
         }
@@ -44,7 +44,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
         public async Task<CommunityPost?> GetByIdWithDetailsAsync(Guid id)
         {
             return await IncludePostDetails()
-                .FirstOrDefaultAsync(p => p.Id.Equals(id));
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<List<CommunityPost>> GetByUserIdWithDetailsAsync(string userId)

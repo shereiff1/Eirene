@@ -1,12 +1,12 @@
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction.Core;
-using Eirene.DAL.Repository.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using Eirene.DAL.Database;
+using Microsoft.AspNetCore.Identity;
 
 namespace Eirene.DAL.Repository.Implementation.Core
 {
-    public class ApplicationUserRepository : GenericRepository<ApplicationUser>, IApplicationUserRepository
+    internal class ApplicationUserRepository : GenericRepository<ApplicationUser>, IApplicationUserRepository
     {
         public ApplicationUserRepository(EireneDBContext context)
             : base(context)
@@ -29,10 +29,12 @@ namespace Eirene.DAL.Repository.Implementation.Core
                 .FirstOrDefaultAsync(u => u.Id == userId);
         }
 
-
         public async Task<List<ApplicationUser>> GetUsersByRoleAsync(string roleName)
         {
             return await _context.Set<ApplicationUser>()
+                .Where(u => _context.UserRoles
+                    .Any(ur => ur.UserId == u.Id &&
+                        _context.Roles.Any(r => r.Id == ur.RoleId && r.Name == roleName)))
                 .ToListAsync();
         }
     }

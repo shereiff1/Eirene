@@ -16,10 +16,5 @@ namespace Eirene.DAL.Repository.Implementation
         {
             return await _context.SaveChangesAsync();
         }
-
-        public void Dispose()
-        {
-            _context.Dispose();
-        }
     }
 }

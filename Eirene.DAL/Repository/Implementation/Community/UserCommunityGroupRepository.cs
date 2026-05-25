@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eirene.DAL.Repository.Implementation.Community;
 
-public class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup>, IUserCommunityGroupRepository
+internal class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup>, IUserCommunityGroupRepository
 {
     public UserCommunityGroupRepository(EireneDBContext context)
         : base(context)
@@ -14,13 +14,13 @@ public class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup
 
     public async Task<UserCommunityGroup?> GetByGroupAndUserAsync(Guid groupId, string userId)
     {
-        return await _context.UserCommunityGroups
+        return await _context.Set<UserCommunityGroup>()
             .FirstOrDefaultAsync(ug => ug.CommunityGroupId == groupId && ug.UserId == userId);
     }
 
     public async Task<UserCommunityGroup?> GetByGroupAndUserWithDetailsAsync(Guid groupId, string userId)
     {
-        return await _context.UserCommunityGroups
+        return await _context.Set<UserCommunityGroup>()
             .Include(ug => ug.User)
             .Include(ug => ug.CommunityGroup)
             .FirstOrDefaultAsync(ug => ug.CommunityGroupId == groupId && ug.UserId == userId);
@@ -28,7 +28,7 @@ public class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup
 
     public async Task<List<UserCommunityGroup>> GetBannedUsersByGroupAsync(Guid groupId)
     {
-        return await _context.UserCommunityGroups
+        return await _context.Set<UserCommunityGroup>()
             .Include(ug => ug.User)
             .Where(ug => ug.CommunityGroupId == groupId && ug.IsBanned)
             .ToListAsync();
@@ -37,7 +37,7 @@ public class UserCommunityGroupRepository : GenericRepository<UserCommunityGroup
     public async Task<List<UserCommunityGroup>> GetTimedOutUsersByGroupAsync(Guid groupId)
     {
         var now = DateTime.UtcNow;
-        return await _context.UserCommunityGroups
+        return await _context.Set<UserCommunityGroup>()
             .Include(ug => ug.User)
             .Where(ug => ug.CommunityGroupId == groupId && ug.TimeoutUntil.HasValue && ug.TimeoutUntil.Value > now)
             .ToListAsync();

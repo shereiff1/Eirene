@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Eirene.DAL.Enumerators;
 using Eirene.DAL.Entities.Tracking;
 using Eirene.DAL.Entities.Treatment;
 

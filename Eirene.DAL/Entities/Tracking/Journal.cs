@@ -1,5 +1,5 @@
 using Eirene.DAL.Entities.Core;
-using System.Globalization;
+
 namespace Eirene.DAL.Entities.Tracking;
 
 public class Journal
