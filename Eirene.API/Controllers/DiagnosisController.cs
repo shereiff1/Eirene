@@ -78,9 +78,7 @@ public class DiagnosisController : ControllerBase
             _logger.LogError(ex, "Error analyzing user answers: {Message}", ex.Message);
             return StatusCode(500, new
             {
-                error = "An error occurred while analyzing answers.",
-                details = ex.Message,
-                innerError = ex.InnerException?.Message
+                error = "An error occurred while analyzing answers."
             });
         }
     }

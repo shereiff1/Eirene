@@ -193,6 +193,12 @@ public class PatientController : ControllerBase
         var imageUrl = result.Patient?.ProfilePhotoUrl;
         if (string.IsNullOrEmpty(imageUrl))
             return NotFound(new { message = "Profile picture not set." });
+
+        if (!imageUrl.StartsWith("/") &&
+            !(Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri) &&
+              uri.Scheme == "https" && uri.Host.Contains("cloudinary.com")))
+            return BadRequest(new { message = "Invalid profile picture URL." });
+
         return Redirect(imageUrl);
     }
 

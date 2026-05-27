@@ -1,5 +1,6 @@
 using Eirene.BLL.Models.Treatment.Question;
 using Eirene.BLL.Services.Abstraction.Treatment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -7,6 +8,7 @@ namespace Eirene.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class QuestionsAnswerController : ControllerBase
 {
     private readonly ILogger<QuestionsAnswerController> _logger;

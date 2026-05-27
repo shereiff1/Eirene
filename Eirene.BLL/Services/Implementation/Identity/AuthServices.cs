@@ -95,6 +95,16 @@ public class AuthServices : IAuthServices
             }
 
             string role = registerDto.Role;
+            var allowedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Patient", "Doctor" };
+            if (!allowedRoles.Contains(role))
+            {
+                return new RegistrationDTO
+                {
+                    Success = false,
+                    Error = "Invalid role specified. Allowed roles: Patient, Doctor.",
+                    ErrorCode = "INVALID_ROLE"
+                };
+            }
 
             if (!await _roleManager.RoleExistsAsync(role))
             {
@@ -124,7 +134,7 @@ public class AuthServices : IAuthServices
             return new RegistrationDTO
             {
                 Success = false,
-                Error = $"An error occurred during registration: {ex.Message}"
+                Error = "An error occurred during registration."
             };
         }
     }
@@ -187,7 +197,7 @@ public class AuthServices : IAuthServices
             return new AuthResultDTO
             {
                 Success = false,
-                Error = $"An error occurred during login: {ex.Message}"
+                Error = "An error occurred during login."
             };
         }
     }
@@ -271,7 +281,7 @@ public class AuthServices : IAuthServices
         catch (Exception ex)
         {
             _logger.LogError(ex, "GoogleLoginAsync failed");
-            return Fail($"An error occurred during Google login: {ex.Message}");
+            return Fail("An error occurred during Google login.");
         }
     }
 
@@ -339,7 +349,7 @@ public class AuthServices : IAuthServices
             return new ConfirmMailDTO
             {
                 Success = false,
-                Message = $"An error occurred during email confirmation: {ex.Message}"
+                Message = "An error occurred during email confirmation."
             };
         }
     }
@@ -421,7 +431,7 @@ public class AuthServices : IAuthServices
                 TokenHash = newRefreshTokenHash,
                 JwtId = newJti,
                 UserId = user.Id,
-                ExpiryDate = DateTime.UtcNow.AddMinutes(7),
+                ExpiryDate = DateTime.UtcNow.AddDays(7),
                 CreatedDate = DateTime.UtcNow,
                 IsUsed = false,
                 IsRevoked = false
@@ -445,7 +455,7 @@ public class AuthServices : IAuthServices
             return new AuthResultDTO
             {
                 Success = false,
-                Error = $"An error occurred during token refresh: {ex.Message}"
+                Error = "An error occurred during token refresh."
             };
         }
     }
@@ -520,7 +530,7 @@ public class AuthServices : IAuthServices
             return new MessageResultDTO
             {
                 Success = false,
-                Error = $"An error occurred during forgot password: {ex.Message}"
+                Error = "An error occurred during forgot password."
             };
         }
     }
@@ -565,7 +575,7 @@ public class AuthServices : IAuthServices
             return new MessageResultDTO
             {
                 Success = false,
-                Error = $"An error occurred during reset password: {ex.Message}"
+                Error = "An error occurred during reset password."
             };
         }
     }

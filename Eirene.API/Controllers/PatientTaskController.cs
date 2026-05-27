@@ -74,10 +74,17 @@ public class PatientTaskController : ControllerBase
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });
 
+            var task = await _taskServices.GetTaskByIdAsync(id);
+            if (task == null)
+                return NotFound(new { message = "Task not found." });
+
+            if (userId != task.PatientId)
+                return StatusCode(403, new { message = "You can only update your own tasks." });
+
             var success = await _taskServices.UpdateTaskStatusAsync(id, request.IsCompleted);
 
             if (!success)
-                return NotFound(new { message = "Task not found or could not be updated." });
+                return BadRequest(new { message = "Task could not be updated." });
 
             return Ok(new { message = "Task status updated successfully." });
         }

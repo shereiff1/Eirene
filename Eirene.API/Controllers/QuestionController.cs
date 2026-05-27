@@ -1,11 +1,14 @@
+using Eirene.BLL.Enumerators;
 using Eirene.BLL.ModelVMs.Treatment;
 using Eirene.BLL.Services.Abstraction.Treatment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Eirene.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class QuestionController : ControllerBase
 {
     private readonly ILogger<QuestionController> _logger;
@@ -37,6 +40,7 @@ public class QuestionController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Create([FromBody] AddQuestion question)
     {
         if (!ModelState.IsValid)
@@ -52,6 +56,7 @@ public class QuestionController : ControllerBase
     }
 
     [HttpPut]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Update([FromBody] EditQuestion question)
     {
         if (!ModelState.IsValid)
@@ -62,6 +67,7 @@ public class QuestionController : ControllerBase
         return Ok(result.editedQuestion);
     }
     [HttpDelete("{id}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _questionServices.DeleteAsync(id);
