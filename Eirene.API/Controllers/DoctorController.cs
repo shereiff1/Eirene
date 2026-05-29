@@ -14,8 +14,6 @@ namespace Eirene.Controllers;
 [Authorize]
 public class DoctorController : ControllerBase
 {
-    private readonly IWebHostEnvironment _webHostEnvironment;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<DoctorController> _logger;
     private readonly IDoctorProfileService _doctorProfileService;
     private readonly ISupervisionService _supervisionService;
@@ -29,9 +27,7 @@ public class DoctorController : ControllerBase
         IDoctorRatingService doctorRatingService,
         IPictureService pictureService,
         IUserContext userContext,
-        ILogger<DoctorController> logger,
-        IWebHostEnvironment webHostEnvironment,
-        IConfiguration configuration)
+        ILogger<DoctorController> logger)
     {
         _logger = logger;
         _doctorProfileService = doctorProfileService;
@@ -39,8 +35,6 @@ public class DoctorController : ControllerBase
         _doctorRatingService = doctorRatingService;
         _pictureService = pictureService;
         _userContext = userContext;
-        _configuration = configuration;
-        _webHostEnvironment = webHostEnvironment;
     }
 
     [HttpGet]
@@ -163,7 +157,6 @@ public class DoctorController : ControllerBase
 
     [HttpGet("ratings/{doctorId}")]
     [Authorize(Roles = Roles.AllUsers)]
-    [VerifiedDoctor]
     public async Task<IActionResult> GetDoctorRatings(string doctorId)
     {
         var result = await _doctorRatingService.GetDoctorRatingsAsync(doctorId);

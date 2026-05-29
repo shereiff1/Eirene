@@ -1,12 +1,11 @@
 using Eirene.BLL.Enumerators;
-using Eirene.BLL.Services.Abstraction.Core;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Models.Core.Patient;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Enumerators;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SupervisionRequestStatus = Eirene.DAL.Enumerators.SupervisionRequestStatus;
 
 namespace Eirene.Controllers;
@@ -16,23 +15,20 @@ namespace Eirene.Controllers;
 [Authorize]
 public class PatientController : ControllerBase
 {
-    private readonly IWebHostEnvironment _webHostEnvironment;
-    private readonly IConfiguration _configuration;
     private readonly IPatientServices _patientServices;
     private readonly IPictureService _pictureService;
     private readonly ILogger<PatientController> _logger;
+    private readonly IUserContext _userContext;
 
     public PatientController(IPatientServices patientServices,
         IPictureService pictureService,
         ILogger<PatientController> logger,
-        IWebHostEnvironment webHostEnvironment,
-        IConfiguration configuration)
+        IUserContext userContext)
     {
         _patientServices = patientServices;
         _pictureService = pictureService;
         _logger = logger;
-        _webHostEnvironment = webHostEnvironment;
-        _configuration = configuration;
+        _userContext = userContext;
     }
 
     [HttpGet]
@@ -63,7 +59,7 @@ public class PatientController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -81,7 +77,7 @@ public class PatientController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -96,7 +92,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> DeletePatientProfile()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -111,7 +107,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> RequestSupervision(string doctorId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -127,7 +123,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> UploadProfilePicture(IFormFile pictureFile)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
 
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
@@ -153,7 +149,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> CancelDoctorSupervision(string doctorId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
 
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
@@ -170,7 +166,7 @@ public class PatientController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -206,7 +202,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> getSupervisionRequests([FromQuery] SupervisionRequestStatus? status = null)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -220,7 +216,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> isPatientBanned(Guid groupID)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
         var result = await _patientServices.CheckIfBanned(userId, groupID);
@@ -236,7 +232,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> CheckTimeout(Guid groupId)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -255,7 +251,7 @@ public class PatientController : ControllerBase
     [Authorize(Roles = Roles.Patient)]
     public async Task<IActionResult> IsDiagnosed()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 

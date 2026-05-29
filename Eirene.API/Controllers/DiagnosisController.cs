@@ -1,10 +1,10 @@
 using Eirene.BLL.AIModel.Abstraction;
 using Eirene.BLL.Models.Model_Result;
 using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.BLL.Services.Abstraction.Treatment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace Eirene.Controllers;
@@ -19,19 +19,22 @@ public class DiagnosisController : ControllerBase
     private readonly IQuestionAnswerServices _questionAnswerServices;
     private readonly IPatientTaskServices _taskServices;
     private readonly IPatientServices _patientServices;
+    private readonly IUserContext _userContext;
 
     public DiagnosisController(
         IAIModelService modelService,
         ILogger<DiagnosisController> logger,
         IQuestionAnswerServices questionAnswerServices,
         IPatientTaskServices taskServices,
-        IPatientServices patientServices)
+        IPatientServices patientServices,
+        IUserContext userContext)
     {
         _modelService = modelService;
         _logger = logger;
         _questionAnswerServices = questionAnswerServices;
         _taskServices = taskServices;
         _patientServices = patientServices;
+        _userContext = userContext;
     }
 
     [HttpPost("analyze")]
@@ -39,7 +42,7 @@ public class DiagnosisController : ControllerBase
     {
         try
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = _userContext.UserId;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { message = "User not authenticated." });

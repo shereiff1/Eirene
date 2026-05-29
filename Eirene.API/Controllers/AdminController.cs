@@ -1,6 +1,3 @@
-using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
@@ -8,7 +5,7 @@ using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EireneWebAPI.Controllers;
+namespace Eirene.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

@@ -1,11 +1,11 @@
 using Eirene.BLL.Models.Communication;
 using Eirene.BLL.Services.Abstraction.Communication;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Entities.Communication;
 using Eirene.DAL.Entities.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Eirene.Controllers;
 
@@ -16,18 +16,20 @@ public class ChatController : ControllerBase
 {
     private readonly IChatServices _chatServices;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserContext _userContext;
 
-    public ChatController(IChatServices chatServices, UserManager<ApplicationUser> userManager)
+    public ChatController(IChatServices chatServices, UserManager<ApplicationUser> userManager, IUserContext userContext)
     {
         _chatServices = chatServices;
         _userManager = userManager;
+        _userContext = userContext;
     }
 
 
     [HttpPost("conversations")]
     public async Task<ActionResult<Conversation>> CreateConversation([FromQuery] string to)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUserId = _userContext.UserId;
 
         if (string.IsNullOrEmpty(currentUserId))
             return Unauthorized(new { message = "User not authenticated" });
@@ -39,7 +41,7 @@ public class ChatController : ControllerBase
         if (targetUser == null)
             return NotFound(new { message = "Target user not found." });
 
-        var currentUserRole = User.FindFirstValue(ClaimTypes.Role);
+        var currentUserRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
         var targetUserRoles = await _userManager.GetRolesAsync(targetUser);
         var targetUserRole = targetUserRoles.FirstOrDefault();
 
@@ -72,7 +74,7 @@ public class ChatController : ControllerBase
     [HttpGet("conversations/{conversationId}/messages")]
     public async Task<ActionResult<IEnumerable<ChatMessage>>> GetMessages(Guid conversationId)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUserId = _userContext.UserId;
         if (string.IsNullOrEmpty(currentUserId))
             return Unauthorized(new { message = "User not authenticated" });
 
@@ -90,7 +92,7 @@ public class ChatController : ControllerBase
     [HttpPost("messages")]
     public async Task<ActionResult<ChatMessage>> SendMessage([FromBody] SendMessageDto request)
     {
-        var senderId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var senderId = _userContext.UserId;
 
         if (string.IsNullOrEmpty(senderId))
             return Unauthorized(new { message = "User not authenticated" });

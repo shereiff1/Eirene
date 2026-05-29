@@ -1,9 +1,9 @@
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.ModelVMs.Content;
 using Eirene.BLL.Services.Abstraction.Content;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace Eirene.Controllers;
 
@@ -14,11 +14,13 @@ public class BlogController : ControllerBase
 {
     private readonly ILogger<BlogController> _logger;
     private readonly IBlogServices _blogServices;
+    private readonly IUserContext _userContext;
 
-    public BlogController(IBlogServices blogServices, ILogger<BlogController> logger)
+    public BlogController(IBlogServices blogServices, ILogger<BlogController> logger, IUserContext userContext)
     {
         _blogServices = blogServices;
         _logger = logger;
+        _userContext = userContext;
     }
 
     [HttpGet]
@@ -61,7 +63,7 @@ public class BlogController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var doctorId = _userContext.UserId;
         if (string.IsNullOrEmpty(doctorId))
             return Unauthorized(new { message = "User not authenticated." });
 
@@ -84,7 +86,7 @@ public class BlogController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var doctorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var doctorId = _userContext.UserId;
         if (string.IsNullOrEmpty(doctorId))
             return Unauthorized(new { message = "User not authenticated." });
 

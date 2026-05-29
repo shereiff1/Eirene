@@ -49,7 +49,7 @@ public class QuestionController : ControllerBase
         if (!result.IsSuccess || result.AddedQuestion == null)
             return BadRequest(new { message = "Failed to create question." });
         return CreatedAtAction(
-            nameof(Create),
+            nameof(GetById),
             new { id = result.AddedQuestion.Id },
             result.AddedQuestion
         );
@@ -73,6 +73,6 @@ public class QuestionController : ControllerBase
         var result = await _questionServices.DeleteAsync(id);
         if (!result)
             return BadRequest(new { message = "Failed to delete question." });
-        return Ok(result);
+        return NoContent();
     }
 }

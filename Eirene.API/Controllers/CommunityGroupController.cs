@@ -1,9 +1,9 @@
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 
 namespace Eirene.Controllers;
@@ -15,10 +15,13 @@ public class CommunityGroupController : ControllerBase
 {
     private readonly ILogger<CommunityGroupController> _logger;
     private readonly ICommunityGroupServices _communityGroupServices;
-    public CommunityGroupController(ILogger<CommunityGroupController> logger, ICommunityGroupServices communityGroupServices)
+    private readonly IUserContext _userContext;
+
+    public CommunityGroupController(ILogger<CommunityGroupController> logger, ICommunityGroupServices communityGroupServices, IUserContext userContext)
     {
         _logger = logger;
         _communityGroupServices = communityGroupServices;
+        _userContext = userContext;
     }
     [HttpGet]
     [Authorize(Roles = Roles.AllUsers)]
@@ -95,7 +98,7 @@ public class CommunityGroupController : ControllerBase
     [Authorize(Roles = Roles.AllExceptDoctor)]
     public async Task<IActionResult> JoinGroup(Guid id)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated" });
 
@@ -109,7 +112,7 @@ public class CommunityGroupController : ControllerBase
     [Authorize(Roles = Roles.AllExceptDoctor)]
     public async Task<IActionResult> LeaveGroup(Guid id)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated" });
 
@@ -123,7 +126,7 @@ public class CommunityGroupController : ControllerBase
     [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetMyGroups()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated" });
 
@@ -137,7 +140,7 @@ public class CommunityGroupController : ControllerBase
     [Authorize(Roles = Roles.AllUsers)]
     public async Task<IActionResult> GetAvailableGroups()
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated" });
 
