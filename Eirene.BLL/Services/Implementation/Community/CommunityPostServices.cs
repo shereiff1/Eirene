@@ -1,6 +1,7 @@
 using AutoMapper;
 using Eirene.BLL.Models.Community.Post;
 using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Enumerators;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction;
@@ -18,6 +19,8 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
+        private readonly IContentModerationService _contentModerationService;
+
         public CommunityPostServices(
             ILogger<CommunityPostServices> logger,
             IMapper mapper,
@@ -25,7 +28,8 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityGroupRepository communityGroupRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            IUserContext userContext)
+            IUserContext userContext,
+            IContentModerationService contentModerationService)
         {
             _logger = logger;
             _mapper = mapper;
@@ -34,6 +38,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _userContext = userContext;
+            _contentModerationService = contentModerationService;
         }
 
         public async Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetAllAsync()
@@ -232,6 +237,18 @@ namespace Eirene.BLL.Services.Implementation.Community
                         membershipValidationResult.Message);
 
                     return (false, membershipValidationResult.Message, null);
+                }
+
+                // ── Toxicity moderation check ──
+                var moderationResult = await _contentModerationService
+                    .ModerateAsync(model.Content, userId, model.CommunityGroupId);
+
+                if (!moderationResult.IsAllowed)
+                {
+                    _logger.LogWarning(
+                        "Post from user {UserId} rejected by moderation: {Reason}",
+                        userId, moderationResult.RejectionReason);
+                    return (false, moderationResult.RejectionReason!, null);
                 }
 
                 var post = _mapper.Map<CommunityPost>(model);

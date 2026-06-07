@@ -77,6 +77,11 @@ builder.Services.AddHttpClient<IPythonModelService, PythonModelService>(client =
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+builder.Services.AddHttpClient<IToxicityService, ToxicityService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 builder.Services.AddHttpClient<IAIModelService, AIModelService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(60);

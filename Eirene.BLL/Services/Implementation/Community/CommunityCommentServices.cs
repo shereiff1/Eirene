@@ -2,6 +2,7 @@ using AutoMapper;
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Community.Comment;
 using Eirene.BLL.Services.Abstraction.Community;
+using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Community;
 using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.DAL.Repository.Abstraction;
@@ -18,6 +19,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserContext _userContext;
+        private readonly IContentModerationService _contentModerationService;
 
         public CommunityCommentServices(
             ILogger<CommunityCommentServices> logger,
@@ -26,7 +28,8 @@ namespace Eirene.BLL.Services.Implementation.Community
             ICommunityPostRepository communityPostRepository,
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
-            IUserContext userContext)
+            IUserContext userContext,
+            IContentModerationService contentModerationService)
         {
             _logger = logger;
             _mapper = mapper;
@@ -35,6 +38,7 @@ namespace Eirene.BLL.Services.Implementation.Community
             _userCommunityGroupRepository = userCommunityGroupRepository;
             _unitOfWork = unitOfWork;
             _userContext = userContext;
+            _contentModerationService = contentModerationService;
         }
 
         public async Task<(bool IsSuccess, List<CommunityCommentDTO>? Comments)> GetByPostIdAsync(Guid postId)
@@ -225,6 +229,18 @@ namespace Eirene.BLL.Services.Implementation.Community
                             model.ParentCommentId.Value, model.PostId);
                         return (false, "Parent comment does not belong to the selected post.", null);
                     }
+                }
+
+                // ── Toxicity moderation check ──
+                var moderationResult = await _contentModerationService
+                    .ModerateAsync(model.Content, userId, post.CommunityGroupId);
+
+                if (!moderationResult.IsAllowed)
+                {
+                    _logger.LogWarning(
+                        "Comment from user {UserId} rejected by moderation: {Reason}",
+                        userId, moderationResult.RejectionReason);
+                    return (false, moderationResult.RejectionReason!, null);
                 }
 
                 var comment = _mapper.Map<CommunityComment>(model);

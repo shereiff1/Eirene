@@ -44,6 +44,7 @@ public static class BllServicesExtensions
         services.AddScoped<IAdminProfileService, AdminProfileService>();
         services.AddScoped<IRoleManagementService, RoleManagementService>();
         services.AddScoped<ICommunityModerationService, CommunityModerationService>();
+        services.AddScoped<IContentModerationService, ContentModerationService>();
         services.AddScoped<IPatientServices, PatientServices>();
         services.AddScoped<IBackgroundJobService, BackgroundJobServices>();
         services.AddScoped<IUserContext, UserContext>();
