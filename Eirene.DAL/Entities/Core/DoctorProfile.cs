@@ -20,6 +20,9 @@ namespace Eirene.DAL.Entities.Core
         public ICollection<PatientProfile> Patients { get; set; } = new List<PatientProfile>();
         public ICollection<SupervisionRequest> SupervisionRequests { get; set; } = new List<SupervisionRequest>();
         public ICollection<DoctorRating> DoctorRatings { get; set; } = new List<DoctorRating>();
+        public DoctorVerification? DoctorVerification { get; set; }
+        public ICollection<DoctorDocument> DoctorDocuments { get; set; } = new List<DoctorDocument>();
+        public ICollection<DoctorAuditLog> DoctorAuditLogs { get; set; } = new List<DoctorAuditLog>();
         public string? ProfilePhotoUrl { get; set; }
         public bool isActive { get; set; } = true;
         public bool IsVerified { get; set; } = false;

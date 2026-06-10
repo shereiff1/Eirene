@@ -2,6 +2,7 @@ using Eirene.BLL.Models.Community.Membership;
 using Eirene.BLL.Models.Core.Admin;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.BLL.Services.Abstraction.Identity;
+using Eirene.BLL.Models.Core.Admin.Verification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,17 +16,20 @@ public class AdminController : ControllerBase
     private readonly IAdminProfileService _adminProfileService;
     private readonly IRoleManagementService _roleManagementService;
     private readonly ICommunityModerationService _communityModerationService;
+    private readonly IDoctorVerificationService _doctorVerificationService;
     private readonly IUserContext _userContext;
 
     public AdminController(
         IAdminProfileService adminProfileService,
         IRoleManagementService roleManagementService,
         ICommunityModerationService communityModerationService,
+        IDoctorVerificationService doctorVerificationService,
         IUserContext userContext)
     {
         _adminProfileService = adminProfileService;
         _roleManagementService = roleManagementService;
         _communityModerationService = communityModerationService;
+        _doctorVerificationService = doctorVerificationService;
         _userContext = userContext;
     }
 
@@ -162,20 +166,34 @@ public class AdminController : ControllerBase
     [HttpGet("doctors/pending")]
     public async Task<IActionResult> GetPendingDoctors()
     {
-        var result = await _roleManagementService.GetPendingDoctorsAsync();
+        var result = await _doctorVerificationService.GetPendingDoctorsAsync();
         if (result.IsFailure)
             return BadRequest(new { message = result.Error });
 
         return Ok(result.Value);
     }
 
-    [HttpPost("doctors/{doctorId}/approve")]
-    public async Task<IActionResult> ApproveDoctor(string doctorId)
+    [HttpPut("doctors/{id}/review")]
+    public async Task<IActionResult> ReviewDoctor(string id, [FromBody] ReviewDoctorRequest request)
     {
-        var result = await _roleManagementService.ApproveDoctorAsync(doctorId);
+        var adminId = _userContext.UserId;
+        if (string.IsNullOrEmpty(adminId))
+            return Unauthorized(new { message = "Admin not authenticated." });
+
+        var result = await _doctorVerificationService.ReviewDoctorAsync(adminId, id, request);
         if (result.IsFailure)
             return BadRequest(new { message = result.Error });
 
-        return Ok(new { Message = "Doctor has been successfully verified." });
+        return Ok(result.Value);
+    }
+
+    [HttpGet("doctors/{id}/audit-log")]
+    public async Task<IActionResult> GetDoctorAuditLog(string id)
+    {
+        var result = await _doctorVerificationService.GetDoctorAuditLogAsync(id);
+        if (result.IsFailure)
+            return BadRequest(new { message = result.Error });
+
+        return Ok(result.Value);
     }
 }

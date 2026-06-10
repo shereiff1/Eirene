@@ -36,6 +36,9 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<SupervisionRequest> SupervisionRequests { get; set; }
     public DbSet<DoctorRating> DoctorRatings { get; set; }
     public DbSet<Diagnosis> Diagnoses { get; set; }
+    public DbSet<DoctorVerification> DoctorVerifications { get; set; }
+    public DbSet<DoctorDocument> DoctorDocuments { get; set; }
+    public DbSet<DoctorAuditLog> DoctorAuditLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -183,5 +186,29 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(r => r.PatientProfileId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.Entity<DoctorVerification>()
+            .HasOne(v => v.Doctor)
+            .WithOne(d => d.DoctorVerification)
+            .HasForeignKey<DoctorVerification>(v => v.DoctorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DoctorDocument>()
+            .HasOne(d => d.Doctor)
+            .WithMany(p => p.DoctorDocuments)
+            .HasForeignKey(d => d.DoctorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DoctorAuditLog>()
+            .HasOne(l => l.Doctor)
+            .WithMany(p => p.DoctorAuditLogs)
+            .HasForeignKey(l => l.DoctorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<DoctorAuditLog>()
+            .HasOne(l => l.Admin)
+            .WithMany()
+            .HasForeignKey(l => l.AdminId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
