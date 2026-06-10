@@ -249,6 +249,6 @@ Distributed under the **MIT License**. See [`LICENSE`](./LICENSE) for full detai
 
 Built with care by passionate developers who believe technology can make healthcare more human. 💙
 
-*Eirene — peace, in every sense of the word.*
+*Eirene | peace.*
 
 </div>
