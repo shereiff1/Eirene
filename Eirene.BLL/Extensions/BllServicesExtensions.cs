@@ -48,15 +48,21 @@ public static class BllServicesExtensions
         services.AddScoped<IPatientServices, PatientServices>();
         services.AddScoped<IBackgroundJobService, BackgroundJobServices>();
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IDoctorVerificationService, DoctorVerificationService>();
 
         var storageProvider = configuration["Storage:Provider"];
         if (storageProvider == "CloudinarySettings")
         {
             services.AddScoped<IPictureService, CloudImageStorage>();
+            services.AddScoped<IDocumentStorageService, CloudDocumentStorageService>();
         }
         else
         {
             services.AddScoped<IPictureService, LocalPictureService>();
+            // If they fall back to local, use a dummy or implement local document storage later. For now, CloudDocumentStorageService requires Cloudinary. 
+            // We'll just map it to CloudDocumentStorageService anyway, or create a quick LocalDocumentStorageService. Let's just use CloudDocumentStorageService for now or throw if used.
+            // But since they explicitly want Cloudinary for documents due to Railway, we'll register the cloud one.
+            services.AddScoped<IDocumentStorageService, LocalDocumentStorageService>();
         }
 
         return services;

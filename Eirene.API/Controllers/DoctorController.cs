@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Eirene.BLL.Enumerators;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
+using Eirene.BLL.Models.Core.Doctor.Verification;
 using Eirene.API.Filters;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,7 @@ public class DoctorController : ControllerBase
     private readonly ISupervisionService _supervisionService;
     private readonly IDoctorRatingService _doctorRatingService;
     private readonly IPictureService _pictureService;
+    private readonly IDoctorVerificationService _doctorVerificationService;
     private readonly IUserContext _userContext;
 
     public DoctorController(
@@ -26,6 +28,7 @@ public class DoctorController : ControllerBase
         ISupervisionService supervisionService,
         IDoctorRatingService doctorRatingService,
         IPictureService pictureService,
+        IDoctorVerificationService doctorVerificationService,
         IUserContext userContext,
         ILogger<DoctorController> logger)
     {
@@ -34,6 +37,7 @@ public class DoctorController : ControllerBase
         _supervisionService = supervisionService;
         _doctorRatingService = doctorRatingService;
         _pictureService = pictureService;
+        _doctorVerificationService = doctorVerificationService;
         _userContext = userContext;
     }
 
@@ -152,6 +156,24 @@ public class DoctorController : ControllerBase
             message = "Profile picture uploaded successfully.",
             url = result.Url
         });
+    }
+
+    [HttpPost("{id}/documents")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> SubmitDocuments(string id, [FromForm] SubmitDocumentsRequest request)
+    {
+        var userId = _userContext.UserId;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated." });
+
+        if (id != userId)
+            return Forbid();
+
+        var result = await _doctorVerificationService.SubmitDoctorDocumentsAsync(userId, request);
+        if (result.IsFailure)
+            return BadRequest(new { message = result.Error });
+
+        return Ok(result.Value);
     }
 
 
