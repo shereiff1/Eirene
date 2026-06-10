@@ -49,6 +49,10 @@ namespace Eirene.BLL.Mappers
                 .ForMember(dest => dest.DateOfBirth, opt => opt.MapFrom(src => src.Patient.DateOfBirth))
                 .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.Patient.ProfilePhotoUrl))
                 .ForMember(dest => dest.AcceptedAt, opt => opt.MapFrom(src => src.RespondedAt ?? src.CreatedAt));
+
+            CreateMap<DoctorVerification, Eirene.BLL.Models.Core.Doctor.Verification.DoctorVerificationModel>();
+            CreateMap<DoctorDocument, Eirene.BLL.Models.Core.Doctor.Verification.DoctorDocumentModel>();
+            CreateMap<DoctorAuditLog, Eirene.BLL.Models.Core.Admin.Verification.DoctorAuditLogModel>();
         }
     }
 }

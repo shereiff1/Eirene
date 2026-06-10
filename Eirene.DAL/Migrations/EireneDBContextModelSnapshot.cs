@@ -356,6 +356,80 @@ namespace Eirene.DAL.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorAuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AdminId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("DoctorId");
+
+                    b.ToTable("DoctorAuditLogs");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNotes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ReviewStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.ToTable("DoctorDocuments");
+                });
+
             modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorProfile", b =>
                 {
                     b.Property<string>("Id")
@@ -438,6 +512,55 @@ namespace Eirene.DAL.Migrations
                     b.HasIndex("PatientProfileId");
 
                     b.ToTable("DoctorRatings");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorVerification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CurrentStageNote")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("HospitalAffiliation")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IssuingAuthority")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LicenseExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LicenseNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SyndicateMembershipId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("VerificationStatus")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId")
+                        .IsUnique();
+
+                    b.ToTable("DoctorVerifications");
                 });
 
             modelBuilder.Entity("Eirene.DAL.Entities.Core.ModeratorProfile", b =>
@@ -983,6 +1106,36 @@ namespace Eirene.DAL.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorAuditLog", b =>
+                {
+                    b.HasOne("Eirene.DAL.Entities.Core.ApplicationUser", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Eirene.DAL.Entities.Core.DoctorProfile", "Doctor")
+                        .WithMany("DoctorAuditLogs")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorDocument", b =>
+                {
+                    b.HasOne("Eirene.DAL.Entities.Core.DoctorProfile", "Doctor")
+                        .WithMany("DoctorDocuments")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
             modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorProfile", b =>
                 {
                     b.HasOne("Eirene.DAL.Entities.Core.ApplicationUser", "User")
@@ -1011,6 +1164,17 @@ namespace Eirene.DAL.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorVerification", b =>
+                {
+                    b.HasOne("Eirene.DAL.Entities.Core.DoctorProfile", "Doctor")
+                        .WithOne("DoctorVerification")
+                        .HasForeignKey("Eirene.DAL.Entities.Core.DoctorVerification", "DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("Eirene.DAL.Entities.Core.ModeratorProfile", b =>
@@ -1255,7 +1419,13 @@ namespace Eirene.DAL.Migrations
 
             modelBuilder.Entity("Eirene.DAL.Entities.Core.DoctorProfile", b =>
                 {
+                    b.Navigation("DoctorAuditLogs");
+
+                    b.Navigation("DoctorDocuments");
+
                     b.Navigation("DoctorRatings");
+
+                    b.Navigation("DoctorVerification");
 
                     b.Navigation("Patients");
 
