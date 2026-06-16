@@ -9,6 +9,7 @@ using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 
 namespace Eirene.BLL.Services.Implementation.Core
@@ -20,12 +21,14 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AdminProfileService> _logger;
         private readonly IMapper _mapper;
+        private readonly HybridCache _cache;
 
         public AdminProfileService(
             UserManager<ApplicationUser> userManager,
             IAdminProfileRepository adminProfileRepository,
             IUnitOfWork unitOfWork,
             ILogger<AdminProfileService> logger,
+            HybridCache cache, 
             IMapper mapper)
         {
             _userManager = userManager;
@@ -33,21 +36,43 @@ namespace Eirene.BLL.Services.Implementation.Core
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _cache = cache;
         }
 
         public async Task<Result<List<AdminModel>>> GetAllAsync()
         {
             try
             {
-                var profiles = await _adminProfileRepository.GetAllAsync();
-                if (profiles == null)
+                var adminModels = await _cache.GetOrCreateAsync(
+                    key: "admins:all",
+                    factory: async (ct) =>
+                    {
+                        _logger.LogInformation("Cache miss for admin profiles.");
+                        var profiles = await _adminProfileRepository.GetAllAsync();
+
+                        if (profiles == null)
+                        {
+                            return new List<AdminModel>();
+                        }
+
+                        return _mapper.Map<List<AdminModel>>(profiles);
+                    },
+                    options: new HybridCacheEntryOptions
+                    {
+                        Expiration = TimeSpan.FromMinutes(10)
+                    },
+                    cancellationToken: CancellationToken.None);
+
+                if (!adminModels.Any())
                 {
-                    _logger.LogError("No admin profiles found.");
+                    _logger.LogWarning("No admin profiles found.");
                     return Result.Failure<List<AdminModel>>("No admin profiles found.");
                 }
 
-                var adminModels = _mapper.Map<List<AdminModel>>(profiles);
-                _logger.LogInformation("Retrieved {Count} admin profiles.", adminModels.Count);
+                _logger.LogInformation(
+                    "Retrieved {Count} admin profiles.",
+                    adminModels.Count);
+
                 return Result.Success(adminModels);
             }
             catch (Exception ex)
@@ -61,14 +86,29 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var profile = await _adminProfileRepository.GetByIdAsync(adminId);
-                if (profile == null)
+                
+                var adminModel = await _cache.GetOrCreateAsync(
+                    key: $"admin:{adminId}",
+                    factory: async (ct) =>
+                    {
+                        _logger.LogInformation("Cache miss for admin profile {AdminId}.", adminId);
+                        var profile = await _adminProfileRepository.GetByIdAsync(adminId);
+                        if (profile == null)
+                        {
+                            return null;
+                        }
+                        return _mapper.Map<AdminModel>(profile);
+                    },
+                    options: new HybridCacheEntryOptions
+                    {
+                        Expiration = TimeSpan.FromMinutes(10)
+                    },
+                    cancellationToken: CancellationToken.None);
+                if (adminModel == null)
                 {
                     _logger.LogError("Admin profile with id {AdminId} not found.", adminId);
                     return Result.Failure<AdminModel>("Admin profile not found.");
                 }
-
-                var adminModel = _mapper.Map<AdminModel>(profile);
                 _logger.LogInformation("Admin profile {AdminId} retrieved.", adminId);
                 return Result.Success(adminModel);
             }
