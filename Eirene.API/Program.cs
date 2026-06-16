@@ -16,6 +16,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using System.Text;
 using Eirene.API.Filters;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -152,7 +153,10 @@ builder.Services.AddHangfireServer();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.ConfigurationOptions =
+        ConfigurationOptions.Parse(
+            builder.Configuration["Redis:ConnectionString"]!
+        );
     options.InstanceName = "Eirene:";
 });
 builder.Services.AddHybridCache();
