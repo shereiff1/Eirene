@@ -151,11 +151,17 @@ builder.Services.AddHangfire(config =>
 
 builder.Services.AddHangfireServer();
 
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+if (redisConnectionString != null && redisConnectionString.StartsWith("redis://"))
+{
+    redisConnectionString = redisConnectionString.Substring(8);
+}
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.ConfigurationOptions =
         ConfigurationOptions.Parse(
-            builder.Configuration["Redis:ConnectionString"]!
+            redisConnectionString!
         );
     options.InstanceName = "Eirene:";
 });
