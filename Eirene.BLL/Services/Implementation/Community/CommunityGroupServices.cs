@@ -8,6 +8,7 @@ using Eirene.DAL.Repository.Abstraction.Community;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Eirene.BLL.Services.Implementation.Community
 {
@@ -20,6 +21,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserContext _userContext;
+        private readonly HybridCache _cache;
 
         public CommunityGroupServices(
             ILogger<CommunityGroupServices> logger,
@@ -28,7 +30,8 @@ namespace Eirene.BLL.Services.Implementation.Community
             IUserCommunityGroupRepository userCommunityGroupRepository,
             IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
-            IUserContext userContext)
+            IUserContext userContext,
+            HybridCache cache)
         {
             _logger = logger;
             _mapper = mapper;
@@ -37,21 +40,32 @@ namespace Eirene.BLL.Services.Implementation.Community
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _userContext = userContext;
+            _cache = cache;
         }
 
         public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
         {
             try
             {
-                var groups = await _communityGroupRepository.GetAllWithDetailsAsync();
+                var cacheKey = "all-community-groups";
+                var groupDTOs = await _cache.GetOrCreateAsync(
+                    cacheKey,
+                    async token =>
+                    {
+                        var groups = await _communityGroupRepository.GetAllWithDetailsAsync();
+                        if (groups == null || !groups.Any())
+                        {
+                            return new List<CommunityGroupDTO>();
+                        }
+                        return _mapper.Map<List<CommunityGroupDTO>>(groups);
+                    }
+                );
 
-                if (groups == null || !groups.Any())
+                if (groupDTOs == null || !groupDTOs.Any())
                 {
                     _logger.LogInformation("No community groups found");
                     return (true, new List<CommunityGroupDTO>());
                 }
-
-                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
 
                 if (!IsPrivilegedUser())
                     groupDTOs.ForEach(SanitizeGroupPersonalData);
@@ -70,15 +84,21 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var group = await _communityGroupRepository.GetByIdWithDetailsAsync(id);
+                var cacheKey = $"community-group-{id}";
+                var groupDTO = await _cache.GetOrCreateAsync(
+                    cacheKey,
+                    async token =>
+                    {
+                        var group = await _communityGroupRepository.GetByIdWithDetailsAsync(id);
+                        return _mapper.Map<CommunityGroupDTO>(group);
+                    }
+                );
 
-                if (group == null)
+                if (groupDTO == null)
                 {
                     _logger.LogWarning("Community group with ID {GroupId} not found", id);
                     return (false, null);
                 }
-
-                var groupDTO = _mapper.Map<CommunityGroupDTO>(group);
 
                 if (!IsPrivilegedUser())
                     SanitizeGroupPersonalData(groupDTO);
@@ -167,6 +187,8 @@ namespace Eirene.BLL.Services.Implementation.Community
                     var groupWithDetails = await _communityGroupRepository.GetByIdWithDetailsAsync(createdGroup.Id);
                     var groupDTO = _mapper.Map<CommunityGroupDTO>(groupWithDetails);
 
+                    await _cache.RemoveAsync("all-community-groups");
+
                     if (!IsPrivilegedUser())
                         SanitizeGroupPersonalData(groupDTO);
 
@@ -219,6 +241,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 if (result)
                 {
+                    await _cache.RemoveAsync("all-community-groups");
+                    await _cache.RemoveAsync($"community-group-{model.Id}");
+                    await _cache.RemoveAsync($"community-group-details-{model.Id}");
                     _logger.LogInformation("Community group {GroupId} updated successfully", model.Id);
                 }
 
@@ -235,15 +260,21 @@ namespace Eirene.BLL.Services.Implementation.Community
         {
             try
             {
-                var group = await _communityGroupRepository.GetByIdWithDetailsAsync(id);
+                var cacheKey = $"community-group-details-{id}";
+                var groupWithDetails = await _cache.GetOrCreateAsync(
+                    cacheKey,
+                    async token =>
+                    {
+                        var group = await _communityGroupRepository.GetByIdWithDetailsAsync(id);
+                        return _mapper.Map<CommunityGroupWithDetails>(group);
+                    }
+                );
 
-                if (group == null)
+                if (groupWithDetails == null)
                 {
                     _logger.LogWarning("Community group with ID {GroupId} not found", id);
                     return (false, null);
                 }
-
-                var groupWithDetails = _mapper.Map<CommunityGroupWithDetails>(group);
 
                 if (!IsPrivilegedUser())
                     SanitizeGroupWithDetailsPersonalData(groupWithDetails);
@@ -281,6 +312,9 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 if (result)
                 {
+                    await _cache.RemoveAsync("all-community-groups");
+                    await _cache.RemoveAsync($"community-group-{id}");
+                    await _cache.RemoveAsync($"community-group-details-{id}");
                     _logger.LogInformation("Community group {GroupId} deleted successfully", id);
                 }
 
@@ -328,6 +362,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 await _communityGroupRepository.UpdateAsync(group);
                 await _unitOfWork.SaveChangesAsync();
 
+                await _cache.RemoveAsync($"community-joined-groups-{userId}");
+                await _cache.RemoveAsync($"community-unjoined-groups-{userId}");
+
                 _logger.LogInformation("User {UserId} joined group {GroupId}", userId, groupId);
                 return (true, "Successfully joined the group.");
             }
@@ -365,6 +402,9 @@ namespace Eirene.BLL.Services.Implementation.Community
                 await _communityGroupRepository.UpdateAsync(group);
                 await _unitOfWork.SaveChangesAsync();
 
+                await _cache.RemoveAsync($"community-joined-groups-{userId}");
+                await _cache.RemoveAsync($"community-unjoined-groups-{userId}");
+
                 _logger.LogInformation("User {UserId} left group {GroupId}", userId, groupId);
                 return (true, "Successfully left the group.");
             }
@@ -385,23 +425,35 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (false, null);
                 }
 
-                List<CommunityGroup> groups;
-                if (IsAdmin())
-                {
-                    groups = await _communityGroupRepository.GetAllWithDetailsAsync();
-                }
-                else
-                {
-                    groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
-                }
+                var cacheKey = $"community-joined-groups-{userId}";
+                var groupDTOs = await _cache.GetOrCreateAsync(
+                    cacheKey,
+                    async token =>
+                    {
+                        List<CommunityGroup> groups;
+                        if (IsAdmin())
+                        {
+                            groups = await _communityGroupRepository.GetAllWithDetailsAsync();
+                        }
+                        else
+                        {
+                            groups = await _communityGroupRepository.GetJoinedGroupsByUserIdAsync(userId);
+                        }
 
-                if (groups == null || !groups.Any())
+                        if (groups == null || !groups.Any())
+                        {
+                            return new List<CommunityGroupDTO>();
+                        }
+
+                        return _mapper.Map<List<CommunityGroupDTO>>(groups);
+                    }
+                );
+
+                if (groupDTOs == null || !groupDTOs.Any())
                 {
                     _logger.LogInformation("No joined community groups found for user {UserId}", userId);
                     return (true, new List<CommunityGroupDTO>());
                 }
-
-                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
 
                 if (!IsPrivilegedUser())
                     groupDTOs.ForEach(SanitizeGroupPersonalData);
@@ -431,15 +483,25 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (true, new List<CommunityGroupDTO>());
                 }
 
-                var groups = await _communityGroupRepository.GetUnjoinedGroupsByUserIdAsync(userId);
+                var cacheKey = $"community-unjoined-groups-{userId}";
+                var groupDTOs = await _cache.GetOrCreateAsync(
+                    cacheKey,
+                    async token =>
+                    {
+                        var groups = await _communityGroupRepository.GetUnjoinedGroupsByUserIdAsync(userId);
+                        if (groups == null || !groups.Any())
+                        {
+                            return new List<CommunityGroupDTO>();
+                        }
+                        return _mapper.Map<List<CommunityGroupDTO>>(groups);
+                    }
+                );
 
-                if (groups == null || !groups.Any())
+                if (groupDTOs == null || !groupDTOs.Any())
                 {
                     _logger.LogInformation("No available community groups found for user {UserId}", userId);
                     return (true, new List<CommunityGroupDTO>());
                 }
-
-                var groupDTOs = _mapper.Map<List<CommunityGroupDTO>>(groups);
 
                 if (!IsPrivilegedUser())
                     groupDTOs.ForEach(SanitizeGroupPersonalData);

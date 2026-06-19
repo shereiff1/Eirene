@@ -9,6 +9,7 @@ using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Core;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Core;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 
 namespace Eirene.BLL.Services.Implementation.Core
@@ -18,18 +19,21 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly ILogger<DoctorProfileService> _logger;
         private readonly IMapper _mapper;
         private readonly IDoctorProfileRepository _doctorProfileRepository;
+        private readonly HybridCache _cache;
         private readonly IUnitOfWork _unitOfWork;
 
         public DoctorProfileService(
             ILogger<DoctorProfileService> logger,
             IMapper mapper,
             IDoctorProfileRepository doctorProfileRepository,
+            HybridCache cache,
             IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _doctorProfileRepository = doctorProfileRepository;
             _unitOfWork = unitOfWork;
+            _cache = cache;
         }
 
         public async Task<Result<List<DoctorModel>>> GetAllAsync()
@@ -58,16 +62,32 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var doctor = await _doctorProfileRepository.GetByIdAsync(id);
-                if (doctor == null)
+                var doctorModel = await _cache.GetOrCreateAsync(
+                    key: $"doctor:{id}",
+                    factory: async (ct) =>
+                    {
+                        _logger.LogInformation("Cache miss for doctor {id}", id);
+                        var doctor = await _doctorProfileRepository.GetByIdAsync(id);
+                        if (doctor is null)
+                        {
+                            return null;
+                        }
+                        return _mapper.Map<DoctorModel>(doctor);
+                    },
+                    options: new HybridCacheEntryOptions
+                    {
+                        Expiration = TimeSpan.FromMinutes(10)
+                    },
+                    cancellationToken: CancellationToken.None
+                );
+                if (doctorModel == null)
                 {
                     _logger.LogError("No doctors found");
                     return Result.Failure<DoctorModel>("Doctor not found.");
                 }
 
-                var doctorDto = _mapper.Map<DoctorModel>(doctor);
                 _logger.LogInformation("Doctor by id {ID} is Found and retrieved.", id);
-                return Result.Success(doctorDto);
+                return Result.Success(doctorModel);
             }
             catch (Exception ex)
             {
@@ -85,6 +105,7 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 if (existingProfile != null)
                 {
+                    _logger.LogError("Doctor profile already exists for user {UserId}.", userId);
                     return Result.Failure<DoctorModel>("Doctor profile already exists for this user.");
                 }
 
@@ -96,7 +117,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                 await _unitOfWork.SaveChangesAsync();
                 var createdDoctor = await _doctorProfileRepository.GetByIdAsync(doctorEntity.Id);
                 var doctorDto = _mapper.Map<DoctorModel>(createdDoctor);
-
+                _logger.LogInformation("Created doctor profile for user {UserId}.", userId);
                 return Result.Success(doctorDto);
             }
             catch (Exception ex)
@@ -115,14 +136,17 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 if (existingProfile == null)
                 {
+                    _logger.LogError("Doctor profile not found for user {UserId}.", userId);
                     return Result.Failure<DoctorModel>("Doctor profile not found.");
                 }
 
                 _mapper.Map(model, existingProfile);
                 existingProfile.Update();
-
                 await _doctorProfileRepository.UpdateAsync(existingProfile);
+                await _cache.RemoveAsync($"doctor:{userId}");
                 await _unitOfWork.SaveChangesAsync();
+                
+                _logger.LogInformation("Updated doctor profile for user {UserId}.", userId);
 
                 var doctorDto = _mapper.Map<DoctorModel>(existingProfile);
                 return Result.Success(doctorDto);
@@ -141,10 +165,13 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                 {
+                    _logger.LogError("Doctor profile not found for user {UserId}.", doctorId);
                     return Result.Failure("Doctor profile not found.");
                 }
                 await _doctorProfileRepository.DeleteAsync(doctor);
+                await _cache.RemoveAsync($"doctor:{doctorId}");
                 await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("Deleted doctor profile for user {UserId}.", doctorId);
                 return Result.Success();
             }
             catch (Exception ex)
@@ -161,8 +188,10 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                 {
+                    _logger.LogError("Doctor Not Found");
                     return Result.Failure<bool>("Doctor Not Found");
                 }
+                _logger.LogInformation("Doctor Found");
                 return Result.Success(doctor.IsVerified);
             }
             catch (Exception ex)

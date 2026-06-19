@@ -16,6 +16,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using System.Text;
 using Eirene.API.Filters;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -154,6 +155,38 @@ builder.Services.AddHangfire(config =>
 );
 
 builder.Services.AddHangfireServer();
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+ConfigurationOptions redisOptions;
+if (redisConnectionString != null && redisConnectionString.StartsWith("redis://"))
+{
+    var uri = new Uri(redisConnectionString);
+    var host = uri.Host;
+    var redisPort = uri.Port;
+    var userInfo = uri.UserInfo.Split(':');
+    var password = userInfo.Length > 1 ? userInfo[1] : userInfo[0];
+    var user = userInfo.Length > 1 ? userInfo[0] : null;
+
+    redisOptions = new ConfigurationOptions
+    {
+        EndPoints = { { host, redisPort } },
+        Password = password,
+        User = user,
+        AbortOnConnectFail = false,
+        Ssl = uri.Scheme == "rediss"
+    };
+}
+else
+{
+    redisOptions = ConfigurationOptions.Parse(redisConnectionString!);
+}
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.ConfigurationOptions = redisOptions;
+    options.InstanceName = "Eirene:";
+});
+builder.Services.AddHybridCache();
 
 var app = builder.Build();
 
