@@ -79,6 +79,17 @@ public class AuthServices : IAuthServices
                 };
             }
 
+            var existingUsername = await _userManager.FindByNameAsync(registerDto.UserName);
+            if (existingUsername != null)
+            {
+                return new RegistrationDTO
+                {
+                    Success = false,
+                    Error = "User with this username already exists",
+                    ErrorCode = "USERNAME_CONFLICT"
+                };
+            }
+
             var user = _mapper.Map<ApplicationUser>(registerDto);
             var code = GenerateOtp();
             user.EmailVerificationCode = HashOtp(code, _otpSecret);

@@ -32,6 +32,9 @@ public class AuthController : ControllerBase
             if (result.ErrorCode == "CONFLICT")
                 return Conflict(ErrorResponse("Email", result.Error));
 
+            if (result.ErrorCode == "USERNAME_CONFLICT")
+                return Conflict(ErrorResponse("UserName", result.Error));
+
             if (result.ErrorCode == "INVALID_ROLE")
                 return BadRequest(ErrorResponse("Role", result.Error));
 
