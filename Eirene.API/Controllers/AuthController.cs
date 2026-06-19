@@ -23,16 +23,19 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterDTO registerDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.RegisterAsync(registerDto);
 
         if (!result.Success)
         {
             if (result.ErrorCode == "CONFLICT")
-                return Conflict(new { message = result.Error });
+                return Conflict(ErrorResponse("Email", result.Error));
 
-            return BadRequest(new { message = result.Error });
+            if (result.ErrorCode == "INVALID_ROLE")
+                return BadRequest(ErrorResponse("Role", result.Error));
+
+            return BadRequest(ErrorResponse("General", result.Error));
         }
 
         return Ok(result);
@@ -42,12 +45,21 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.LoginAsync(loginDto);
 
         if (!result.Success)
-            return Unauthorized(new { message = result.Error });
+        {
+            if (result.Error.Contains("email", StringComparison.OrdinalIgnoreCase) &&
+                result.Error.Contains("not confirmed", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(ErrorResponse("Email", result.Error));
+
+            if (result.Error.Contains("locked out", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(ErrorResponse("Account", result.Error));
+
+            return Unauthorized(ErrorResponse("Credentials", result.Error));
+        }
 
         return Ok(result);
     }
@@ -56,12 +68,12 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDTO googleLoginDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.GoogleLoginAsync(googleLoginDto);
 
         if (!result.Success)
-            return Unauthorized(new { message = result.Error });
+            return Unauthorized(ErrorResponse("IdToken", result.Error));
 
         return Ok(result);
     }
@@ -71,7 +83,7 @@ public class AuthController : ControllerBase
     {
         var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
-            return Unauthorized(new { message = "User not authenticated" });
+            return Unauthorized(ErrorResponse("Authentication", "User not authenticated"));
 
         await _authService.LogoutAsync(userId);
         return Ok(new { message = "Logged out successfully" });
@@ -85,10 +97,15 @@ public class AuthController : ControllerBase
         if (!result.Success)
         {
             if (result.ErrorCode == "NOT_FOUND")
-                return NotFound(new { message = result.Message });
+                return NotFound(ErrorResponse("Email", result.Message));
 
-            // INVALID_CODE or EXPIRED_CODE
-            return UnprocessableEntity(new { message = result.Message });
+            if (result.ErrorCode == "INVALID_CODE")
+                return UnprocessableEntity(ErrorResponse("Code", result.Message));
+
+            if (result.ErrorCode == "EXPIRED_CODE")
+                return UnprocessableEntity(ErrorResponse("Code", result.Message));
+
+            return BadRequest(ErrorResponse("General", result.Message));
         }
 
         return Ok(result);
@@ -102,11 +119,11 @@ public class AuthController : ControllerBase
         if (!result.Success)
         {
             if (result.ErrorCode == "NOT_FOUND")
-                return NotFound(new { message = result.Error });
+                return NotFound(ErrorResponse("Email", result.Error));
             if (result.ErrorCode == "CONFLICT")
-                return Conflict(new { message = result.Error });
+                return Conflict(ErrorResponse("Email", result.Error));
 
-            return BadRequest(new { message = result.Error });
+            return BadRequest(ErrorResponse("General", result.Error));
         }
 
         return Ok(result);
@@ -116,12 +133,17 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO tokenRequestDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.RefreshTokenAsync(tokenRequestDto.AccessToken, tokenRequestDto.RefreshToken);
 
         if (!result.Success)
-            return Unauthorized(new { message = result.Error });
+        {
+            if (result.Error.Contains("access token", StringComparison.OrdinalIgnoreCase))
+                return Unauthorized(ErrorResponse("AccessToken", result.Error));
+
+            return Unauthorized(ErrorResponse("RefreshToken", result.Error));
+        }
 
         return Ok(result);
     }
@@ -130,16 +152,19 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO forgotPasswordDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
 
         if (!result.Success)
         {
             if (result.ErrorCode == "NOT_FOUND")
-                return NotFound(new { message = result.Error });
+                return NotFound(ErrorResponse("Email", result.Error));
 
-            return BadRequest(new { message = result.Error });
+            if (result.ErrorCode == "UNCONFIRMED")
+                return BadRequest(ErrorResponse("Email", result.Error));
+
+            return BadRequest(ErrorResponse("General", result.Error));
         }
 
         return Ok(result);
@@ -149,20 +174,32 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPasswordDto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
 
         var result = await _authService.ResetPasswordAsync(resetPasswordDto);
 
         if (!result.Success)
         {
             if (result.ErrorCode == "NOT_FOUND")
-                return NotFound(new { message = result.Error });
-            if (result.ErrorCode == "EXPIRED_CODE" || result.ErrorCode == "INVALID_CODE")
-                return UnprocessableEntity(new { message = result.Error });
+                return NotFound(ErrorResponse("Email", result.Error));
+            if (result.ErrorCode == "EXPIRED_CODE")
+                return UnprocessableEntity(ErrorResponse("Code", result.Error));
+            if (result.ErrorCode == "INVALID_CODE")
+                return UnprocessableEntity(ErrorResponse("Code", result.Error));
 
-            return BadRequest(new { message = result.Error });
+            return BadRequest(ErrorResponse("Password", result.Error));
         }
 
         return Ok(result);
+    }
+    private static object ErrorResponse(string field, string message)
+    {
+        return new
+        {
+            errors = new Dictionary<string, string[]>
+            {
+                { field, new[] { message } }
+            }
+        };
     }
 }
