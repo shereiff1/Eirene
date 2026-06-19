@@ -38,6 +38,7 @@ public static class BllServicesExtensions
         services.AddScoped<ITreatmentPlanServices, TreatmentPlanServices>();
         services.AddScoped<IPatientTaskServices, PatientTaskServices>();
         services.AddScoped<IChatServices, ChatServices>();
+        services.AddScoped<IChatbotService, ChatbotService>();
         services.AddScoped<IDoctorProfileService, DoctorProfileService>();
         services.AddScoped<ISupervisionService, SupervisionService>();
         services.AddScoped<IDoctorRatingService, DoctorRatingService>();

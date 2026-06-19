@@ -39,6 +39,8 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<DoctorVerification> DoctorVerifications { get; set; }
     public DbSet<DoctorDocument> DoctorDocuments { get; set; }
     public DbSet<DoctorAuditLog> DoctorAuditLogs { get; set; }
+    public DbSet<ChatbotSession> ChatbotSessions { get; set; }
+    public DbSet<ChatbotMessage> ChatbotMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -210,5 +212,17 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .WithMany()
             .HasForeignKey(l => l.AdminId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<ChatbotSession>()
+            .HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ChatbotMessage>()
+            .HasOne(m => m.Session)
+            .WithMany(s => s.Messages)
+            .HasForeignKey(m => m.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

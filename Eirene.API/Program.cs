@@ -32,13 +32,13 @@ builder.Services.AddDbContext<EireneDBContext>(options =>
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 6;
-    options.User.RequireUniqueEmail = false;
-    options.SignIn.RequireConfirmedEmail = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+    options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<EireneDBContext>()
 .AddDefaultTokenProviders();
@@ -85,6 +85,11 @@ builder.Services.AddHttpClient<IToxicityService, ToxicityService>(client =>
 builder.Services.AddHttpClient<IAIModelService, AIModelService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+builder.Services.AddHttpClient<IChatbotApiClient, ChatbotApiClient>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(90);
 });
 
 builder.Services.AddAuthentication(options =>
