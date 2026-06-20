@@ -7,6 +7,9 @@ COPY ["Eirene.API/Eirene.API.csproj", "Eirene.API/"]
 COPY ["Eirene.BLL/Eirene.BLL.csproj", "Eirene.BLL/"]
 COPY ["Eirene.DAL/Eirene.DAL.csproj", "Eirene.DAL/"]
 COPY ["EireneMVC/EireneMVC.csproj", "EireneMVC/"]
+COPY ["Tests/Eirene.UnitTests/Eirene.UnitTests.csproj", "Tests/Eirene.UnitTests/"]
+COPY ["Tests/Eirene.IntegrationTests/Eirene.IntegrationTests.csproj", "Tests/Eirene.IntegrationTests/"]
+COPY ["Tests/Eirene.Tests.Shared/Eirene.Tests.Shared.csproj", "Tests/Eirene.Tests.Shared/"] 
 
 # Restore dependencies
 RUN dotnet restore "Eirene.sln"

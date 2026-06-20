@@ -158,6 +158,43 @@ public class SupervisionServiceTests
     }
 
     [Fact]
+    public async Task RespondToSupervisionRequestAsync_PatientNotFound_ReturnsFailure()
+    {
+        // Arrange
+        var doctorId = "doc-1";
+        var patientId = "pat-1";
+        var request = _fixture.Build<SupervisionRequest>()
+            .With(r => r.DoctorProfileId, doctorId)
+            .With(r => r.PatientProfileId, patientId)
+            .With(r => r.Status, SupervisionRequestStatus.Pending)
+            .Create();
+
+        _requestRepoMock.Setup(x => x.GetByIdAsync("req-1")).ReturnsAsync(request);
+        _patientRepoMock.Setup(x => x.GetByIdAsync(patientId)).ReturnsAsync((PatientProfile)null!);
+
+        // Act
+        var result = await _sut.RespondToSupervisionRequestAsync("req-1", true, doctorId);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("Patient profile not found.");
+    }
+
+    [Fact]
+    public async Task RespondToSupervisionRequestAsync_UnexpectedException_ReturnsFailure()
+    {
+        // Arrange
+        _requestRepoMock.Setup(x => x.GetByIdAsync("req-1")).ThrowsAsync(new Exception("DB Error"));
+
+        // Act
+        var result = await _sut.RespondToSupervisionRequestAsync("req-1", true, "doc-1");
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Be("An error occurred while responding to the request.");
+    }
+
+    [Fact]
     public async Task RemoveSupervisionOnPatient_ValidPatient_RemovesSupervision()
     {
         // Arrange

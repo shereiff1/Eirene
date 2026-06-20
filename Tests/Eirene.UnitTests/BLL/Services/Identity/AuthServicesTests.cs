@@ -246,4 +246,41 @@ public class AuthServicesTests
         result.Success.Should().BeFalse();
         result.Error.Should().Be("Invalid email or password");
     }
+
+    [Fact]
+    public async Task ConfirmEmailCodeAsync_UserNotFound_ReturnsFailure()
+    {
+        // Arrange
+        var email = "nonexistent@test.com";
+        _userManagerMock.Setup(x => x.FindByEmailAsync(email)).ReturnsAsync((ApplicationUser)null!);
+
+        // Act
+        var result = await _sut.ConfirmEmailCodeAsync(email, "123456");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("User not found");
+        result.ErrorCode.Should().Be("NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task ConfirmEmailCodeAsync_CodeExpired_ReturnsFailure()
+    {
+        // Arrange
+        var email = "test@test.com";
+        var user = new ApplicationUser 
+        { 
+            Email = email, 
+            EmailVerificationCodeExpiration = DateTime.UtcNow.AddMinutes(-1) 
+        };
+        _userManagerMock.Setup(x => x.FindByEmailAsync(email)).ReturnsAsync(user);
+
+        // Act
+        var result = await _sut.ConfirmEmailCodeAsync(email, "123456");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("The confirmation code has expired");
+        result.ErrorCode.Should().Be("EXPIRED_CODE");
+    }
 }
