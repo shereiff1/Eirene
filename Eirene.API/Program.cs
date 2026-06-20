@@ -157,6 +157,10 @@ builder.Services.AddHangfire(config =>
 builder.Services.AddHangfireServer();
 
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+if (string.IsNullOrEmpty(redisConnectionString))
+{
+    redisConnectionString = "localhost:6379"; // Default for development if not provided
+}
 ConfigurationOptions redisOptions;
 if (redisConnectionString != null && redisConnectionString.StartsWith("redis://"))
 {
@@ -193,16 +197,19 @@ var app = builder.Build();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://*:{port}");
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles = new[] { "Patient", "Doctor", "Moderator", "Admin" };
-
-    foreach (var role in roles)
+    using (var scope = app.Services.CreateScope())
     {
-        if (!await roleManager.RoleExistsAsync(role))
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var roles = new[] { "Patient", "Doctor", "Moderator", "Admin" };
+
+        foreach (var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+            }
         }
     }
 }
@@ -231,3 +238,5 @@ app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();
+
+public partial class Program { }

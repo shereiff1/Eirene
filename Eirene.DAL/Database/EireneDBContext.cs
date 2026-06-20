@@ -123,6 +123,9 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Entity<TreatmentPlan>().ToTable("TreatmentPlan");
+        builder.Entity<PatientTask>().ToTable("PatientTasks");
+
         builder.Entity<CommunityPost>()
             .HasOne(p => p.CommunityGroup)
             .WithMany(g => g.Posts)

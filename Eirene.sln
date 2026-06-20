@@ -11,6 +11,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eirene.BLL", "Eirene.BLL\Ei
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EireneMVC", "EireneMVC\EireneMVC.csproj", "{D581EA88-BC0E-42F2-9081-1138A91BA925}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7BCB8F89-1207-43AA-8A7B-30B5EFCFEDB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eirene.UnitTests", "Tests\Eirene.UnitTests\Eirene.UnitTests.csproj", "{D9BA6417-5064-4835-873F-D9283760A33A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eirene.IntegrationTests", "Tests\Eirene.IntegrationTests\Eirene.IntegrationTests.csproj", "{B7556417-2565-4EC7-807B-0BEF84FA4B1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eirene.Tests.Shared", "Tests\Eirene.Tests.Shared\Eirene.Tests.Shared.csproj", "{29FD81B0-C736-4B59-88C2-03444C6B5997}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,11 +41,28 @@ Global
 		{D581EA88-BC0E-42F2-9081-1138A91BA925}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D581EA88-BC0E-42F2-9081-1138A91BA925}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D581EA88-BC0E-42F2-9081-1138A91BA925}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9BA6417-5064-4835-873F-D9283760A33A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9BA6417-5064-4835-873F-D9283760A33A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9BA6417-5064-4835-873F-D9283760A33A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9BA6417-5064-4835-873F-D9283760A33A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7556417-2565-4EC7-807B-0BEF84FA4B1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7556417-2565-4EC7-807B-0BEF84FA4B1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7556417-2565-4EC7-807B-0BEF84FA4B1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7556417-2565-4EC7-807B-0BEF84FA4B1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29FD81B0-C736-4B59-88C2-03444C6B5997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29FD81B0-C736-4B59-88C2-03444C6B5997}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29FD81B0-C736-4B59-88C2-03444C6B5997}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29FD81B0-C736-4B59-88C2-03444C6B5997}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2A46C35-E1E2-4BF3-82C6-A965E5A7E6CC}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D9BA6417-5064-4835-873F-D9283760A33A} = {7BCB8F89-1207-43AA-8A7B-30B5EFCFEDB0}
+		{B7556417-2565-4EC7-807B-0BEF84FA4B1E} = {7BCB8F89-1207-43AA-8A7B-30B5EFCFEDB0}
+		{29FD81B0-C736-4B59-88C2-03444C6B5997} = {7BCB8F89-1207-43AA-8A7B-30B5EFCFEDB0}
 	EndGlobalSection
 EndGlobal
