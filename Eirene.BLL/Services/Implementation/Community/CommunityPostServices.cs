@@ -60,14 +60,12 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (true, new List<CommunityPostDTO>());
                 }
 
-                var activePosts = new List<CommunityPost>();
-                foreach (var post in posts.Where(p => !p.IsDeleted))
-                {
-                    if (await CanAccessGroupContentAsync(post.CommunityGroupId, userId))
-                    {
-                        activePosts.Add(post);
-                    }
-                }
+                // Batch-load accessible group IDs to avoid N+1 queries
+                var accessibleGroupIds = await GetAccessibleGroupIdsAsync(userId);
+
+                var activePosts = posts
+                    .Where(p => !p.IsDeleted && accessibleGroupIds.Contains(p.CommunityGroupId))
+                    .ToList();
 
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
@@ -183,14 +181,12 @@ namespace Eirene.BLL.Services.Implementation.Community
                     return (true, new List<CommunityPostDTO>());
                 }
 
-                var activePosts = new List<CommunityPost>();
-                foreach (var post in posts.Where(p => !p.IsDeleted))
-                {
-                    if (await CanAccessGroupContentAsync(post.CommunityGroupId, currentUserId))
-                    {
-                        activePosts.Add(post);
-                    }
-                }
+                // Batch-load accessible group IDs to avoid N+1 queries
+                var accessibleGroupIds = await GetAccessibleGroupIdsAsync(currentUserId);
+
+                var activePosts = posts
+                    .Where(p => !p.IsDeleted && accessibleGroupIds.Contains(p.CommunityGroupId))
+                    .ToList();
 
                 var postDTOs = _mapper.Map<List<CommunityPostDTO>>(activePosts);
 
@@ -305,6 +301,21 @@ namespace Eirene.BLL.Services.Implementation.Community
             }
 
             return (true, string.Empty);
+        }
+
+        private async Task<HashSet<Guid>> GetAccessibleGroupIdsAsync(string userId)
+        {
+            if (IsCurrentUserAdmin())
+            {
+                // Admins can access all groups — load all group IDs in one query
+                var allGroups = await _communityGroupRepository.GetAllAsync();
+                return new HashSet<Guid>(allGroups.Select(g => g.Id));
+            }
+
+            // Load all the user's non-banned memberships in a single query
+            var memberships = await _userCommunityGroupRepository.FindAsync(
+                ug => ug.UserId == userId && !ug.IsBanned);
+            return new HashSet<Guid>(memberships.Select(ug => ug.CommunityGroupId));
         }
 
         private async Task<bool> CanAccessGroupContentAsync(Guid groupId, string userId)

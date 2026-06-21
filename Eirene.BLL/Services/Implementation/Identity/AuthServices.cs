@@ -175,8 +175,8 @@ public class AuthServices : IAuthServices
                 return failResponse;
             }
 
-            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
             var roles = await _userManager.GetRolesAsync(user);
+            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user, roles);
             var refreshToken = _tokenService.GenerateRefreshToken();
             var refreshTokenHash = _tokenService.ComputeSha256Hash(refreshToken);
             var dbToken = new RefreshToken
@@ -257,8 +257,8 @@ public class AuthServices : IAuthServices
                 await _userManager.UpdateAsync(user);
             }
 
-            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user);
             var roles = await _userManager.GetRolesAsync(user);
+            var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user, roles);
             var refreshToken = _tokenService.GenerateRefreshToken();
             var refreshTokenHash = _tokenService.ComputeSha256Hash(refreshToken);
             var dbToken = new RefreshToken

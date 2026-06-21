@@ -6,6 +6,7 @@ namespace Eirene.BLL.Services.Abstraction.Identity
     public interface ITokenService
     {
         Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user);
+        Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles);
         ClaimsPrincipal? GetPrincipalFromToken(string token);
         string? GetClaimValue(ClaimsPrincipal principal, string claimType);
         string? GetJtiFromPrincipal(ClaimsPrincipal principal);

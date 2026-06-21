@@ -19,6 +19,8 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.Posts)
                 .Include(g => g.Members)
                 .OrderByDescending(g => g.CreatedAt)
+                .AsSplitQuery()
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -28,12 +30,15 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.CreatedBy)
                 .Include(g => g.Posts)
                 .Include(g => g.Members)
+                .AsSplitQuery()
+                .AsNoTracking()
                 .FirstOrDefaultAsync(g => g.Id == id);
         }
 
         public async Task<CommunityGroup?> GetByNameAsync(string name)
         {
             return await _context.Set<CommunityGroup>()
+                .AsNoTracking()
                 .FirstOrDefaultAsync(g => g.Name == name);
         }
 
@@ -44,6 +49,8 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.Posts)
                 .Where(g => g.CreatedByUserId == userId)
                 .OrderByDescending(g => g.CreatedAt)
+                .AsSplitQuery()
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -51,6 +58,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
         {
             return await _context.Set<CommunityGroup>()
                 .Include(g => g.Members)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(g => g.Id == id);
         }
 
@@ -60,6 +68,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.Posts)
                 .Where(g => g.UserCommunityGroups!.Any(ucg => ucg.UserId == userId))
                 .OrderByDescending(g => g.CreatedAt)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -69,6 +78,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(g => g.Posts)
                 .Where(g => !g.UserCommunityGroups!.Any(ucg => ucg.UserId == userId))
                 .OrderByDescending(g => g.CreatedAt)
+                .AsNoTracking()
                 .ToListAsync();
         }
     }

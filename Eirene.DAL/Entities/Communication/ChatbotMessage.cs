@@ -8,6 +8,5 @@ public class ChatbotMessage
     public string Role { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public DateTime SentAt { get; set; } = DateTime.UtcNow;
-
     public ChatbotSession Session { get; set; } = null!;
 }

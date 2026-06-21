@@ -18,6 +18,8 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
                 .ThenInclude(p => p.User)
             .Include(r => r.Doctor)
                 .ThenInclude(d => d.User)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -28,6 +30,8 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
                 .ThenInclude(p => p.User)
             .Include(r => r.Doctor)
                 .ThenInclude(d => d.User)
+            .AsSplitQuery()
+            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == (string)id);
     }
     public async Task<List<SupervisionRequest>> GetDoctorPatientsAsync(string doctorId)
@@ -36,6 +40,8 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
             .Where(r => r.DoctorProfileId == doctorId && r.Status == Eirene.DAL.Enumerators.SupervisionRequestStatus.Accepted)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -45,6 +51,8 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
             .Where(r => r.DoctorProfileId == doctorId)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
     }
 }

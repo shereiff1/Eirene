@@ -18,11 +18,11 @@ namespace Eirene.DAL.Repository.Implementation
 
         public virtual async Task<List<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet.AsNoTracking().ToListAsync();
         }
         public virtual async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
+            return await _dbSet.Where(predicate).AsNoTracking().ToListAsync();
         }
 
         public virtual async Task<T?> GetByIdAsync(object id)

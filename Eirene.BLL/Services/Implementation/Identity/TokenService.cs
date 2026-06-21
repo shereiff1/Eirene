@@ -37,11 +37,17 @@ public class TokenService : ITokenService
     }
 
     public async Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user)
+    {
+        var roles = await _userManager.GetRolesAsync(user);
+        return await GenerateJwtTokenAsync(user, roles);
+    }
+
+    public async Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles)
     { 
         try
         {
             var jti = Guid.NewGuid().ToString();
-            var claims = await BuildClaimsAsync(user, jti);
+            var claims = BuildClaims(user, jti, roles);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -135,7 +141,7 @@ public class TokenService : ITokenService
         }
     }
 
-    private async Task<List<Claim>> BuildClaimsAsync(ApplicationUser user, string jti)
+    private List<Claim> BuildClaims(ApplicationUser user, string jti, IList<string> roles)
     { 
         if (string.IsNullOrEmpty(user.UserName))
         {
@@ -157,7 +163,6 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, jti)
         };
 
-        var roles = await _userManager.GetRolesAsync(user);
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));

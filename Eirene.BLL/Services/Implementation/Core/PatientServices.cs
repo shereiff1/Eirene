@@ -57,8 +57,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patient = (await _patientRepository.GetAllAsync())
-                    .FirstOrDefault(p => p.Id == patientUserId);
+                var patient = await _patientRepository.GetByIdAsync(patientUserId);
 
                 if (patient == null)
                     return (false, "Patient profile not found. Please create a profile first.");
@@ -155,8 +154,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var existingProfile = (await _patientRepository.GetAllAsync())
-                    .FirstOrDefault(p => p.Id == userId);
+                var existingProfile = await _patientRepository.GetByIdAsync(userId);
 
                 if (existingProfile != null)
                 {

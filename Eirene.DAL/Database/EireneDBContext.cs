@@ -227,5 +227,55 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
             .WithMany(s => s.Messages)
             .HasForeignKey(m => m.SessionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<CommunityPost>()
+            .HasIndex(p => p.CommunityGroupId);
+        builder.Entity<CommunityPost>()
+            .HasIndex(p => p.UserId);
+        builder.Entity<CommunityPost>()
+            .HasIndex(p => p.PostedOn);
+        builder.Entity<CommunityPost>()
+            .HasIndex(p => p.IsDeleted);
+
+        builder.Entity<CommunityComment>()
+            .HasIndex(c => c.PostId);
+        builder.Entity<CommunityComment>()
+            .HasIndex(c => c.ParentCommentId);
+
+        builder.Entity<CommunityGroup>()
+            .HasIndex(g => g.Name);
+        builder.Entity<CommunityGroup>()
+            .HasIndex(g => g.CreatedByUserId);
+
+        builder.Entity<ChatMessage>()
+            .HasIndex(m => m.ConversationId);
+
+        builder.Entity<Conversation>()
+            .HasIndex(c => new { c.DoctorId, c.PatientId });
+
+        builder.Entity<ChatbotSession>()
+            .HasIndex(s => s.UserId);
+
+        builder.Entity<ChatbotMessage>()
+            .HasIndex(m => m.SessionId);
+
+        builder.Entity<Journal>()
+            .HasIndex(j => new { j.PatientId, j.CreatedAt });
+
+        builder.Entity<SupervisionRequest>()
+            .HasIndex(r => r.PatientProfileId);
+        builder.Entity<SupervisionRequest>()
+            .HasIndex(r => r.DoctorProfileId);
+
+        builder.Entity<DoctorRating>()
+            .HasIndex(r => r.DoctorProfileId);
+        builder.Entity<DoctorRating>()
+            .HasIndex(r => r.PatientProfileId);
+
+        builder.Entity<MoodTracker>()
+            .HasIndex(m => m.UserId);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(t => t.UserId);
     }
 }

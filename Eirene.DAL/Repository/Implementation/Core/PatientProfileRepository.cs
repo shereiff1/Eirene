@@ -17,6 +17,8 @@ internal class PatientProfileRepository :  GenericRepository<PatientProfile>, IP
         return await _context.Set<PatientProfile>()
             .Include(x => x.User)
             .Include(x => x.Doctor)
+            .AsSplitQuery()
+            .AsNoTracking()
             .ToListAsync();
     }
 
