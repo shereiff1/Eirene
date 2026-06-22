@@ -57,15 +57,18 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patient = await _patientRepository.GetByIdAsync(patientUserId);
+                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
+                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
+                await Task.WhenAll(patientTask, doctorTask);
 
+                var patient = await patientTask;
                 if (patient == null)
                     return (false, "Patient profile not found. Please create a profile first.");
 
                 if (patient.DoctorProfileId != null)
                     return (false, "You are already under a doctor's supervision.");
 
-                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+                var doctor = await doctorTask;
                 if (doctor == null)
                     return (false, "Doctor not found.");
 
@@ -238,14 +241,18 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patient = await _patientRepository.GetByIdAsync(patientUserId);
+                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
+                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
+                await Task.WhenAll(patientTask, doctorTask);
+
+                var patient = await patientTask;
                 if (patient == null)
                 {
                     _logger.LogError("Patient profile not found for user {UserId}", patientUserId);
                     return (false, "Patient profile not found.");
                 }
                 
-                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+                var doctor = await doctorTask;
                 if (doctor == null)
                 {
                     _logger.LogError("doctor profile not found for user {UserId}", doctorId);
@@ -317,14 +324,19 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patient = await _patientRepository.GetByIdAsync(patientUserId);
+                // Fire independent DB reads in parallel
+                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
+                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
+                await Task.WhenAll(patientTask, doctorTask);
+
+                var patient = await patientTask;
                 if (patient == null)
                     return (false, "Patient profile not found.");
 
                 if (patient.DoctorProfileId != doctorId)
                     return (false, "You can only rate your assigned supervisor.");
 
-                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+                var doctor = await doctorTask;
                 if (doctor == null)
                     return (false, "Doctor not found.");
 
@@ -351,13 +363,21 @@ namespace Eirene.BLL.Services.Implementation.Core
                     };
                     await _ratingRepository.AddAsync(newRating);
                 }
-                await _unitOfWork.SaveChangesAsync();
 
                 var allRatings = await _ratingRepository.FindAsync(r => r.DoctorProfileId == doctorId);
-                doctor.ReviewCount = allRatings.Count();
+                var ratingsList = allRatings.ToList();
+
+                if (existingRating != null)
+                {
+                    var staleEntry = ratingsList.FirstOrDefault(r => r.PatientProfileId == patientUserId);
+                    if (staleEntry != null)
+                        staleEntry.Rating = model.Rating;
+                }
+
+                doctor.ReviewCount = ratingsList.Count;
                 if (doctor.ReviewCount > 0)
                 {
-                     double avg = allRatings.Average(r => r.Rating);
+                     double avg = ratingsList.Average(r => r.Rating);
                      doctor.Rating = Math.Round(avg, 1);
                 }
                 else

@@ -162,18 +162,25 @@ public class AuthServices : IAuthServices
             if (!user.EmailConfirmed)
                 return Fail("Email not confirmed");
 
-            var result = await _signInManager.PasswordSignInAsync(
-                user, loginDto.Password, loginDto.RememberMe, true);
-
-            if (!result.Succeeded)
+            if (await _userManager.IsLockedOutAsync(user))
             {
-                var failResponse = result.IsLockedOut ? Fail("Account is locked out") :
-                                 result.IsNotAllowed ? Fail("Login not allowed") :
-                                 Fail("Invalid email or password");
-                
+                var lockedResponse = Fail("Account is locked out");
+                lockedResponse.EmailConfirmed = user.EmailConfirmed;
+                return lockedResponse;
+            }
+
+            var passwordValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+            if (!passwordValid)
+            {
+                await _userManager.AccessFailedAsync(user);
+                var failResponse = await _userManager.IsLockedOutAsync(user)
+                    ? Fail("Account is locked out")
+                    : Fail("Invalid email or password");
                 failResponse.EmailConfirmed = user.EmailConfirmed;
                 return failResponse;
             }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
 
             var roles = await _userManager.GetRolesAsync(user);
             var (accessToken, jti, expiry) = await _tokenService.GenerateJwtTokenAsync(user, roles);
@@ -370,17 +377,7 @@ public class AuthServices : IAuthServices
         try
         {
             await _signInManager.SignOutAsync();
-
-            var tokens = await _refreshTokenRepository
-                .FindAsync(rt => rt.UserId == userId && !rt.IsRevoked && !rt.IsUsed);
-
-            foreach (var token in tokens)
-            {
-                token.IsRevoked = true;
-                token.RevokedDate = DateTime.UtcNow;
-                await _refreshTokenRepository.UpdateAsync(token);
-            }
-            await _unitOfWork.SaveChangesAsync();
+            await _refreshTokenRepository.RevokeActiveTokensForUserAsync(userId);
         }
         catch (Exception ex)
         {
@@ -423,13 +420,14 @@ public class AuthServices : IAuthServices
                 return Fail("Invalid refresh token");
             }
 
+            var userTask = _userManager.FindByIdAsync(userId);
+
             storedToken.IsUsed = true;
             storedToken.IsRevoked = true;
             storedToken.RevokedDate = DateTime.UtcNow;
             await _refreshTokenRepository.UpdateAsync(storedToken);
-            await _unitOfWork.SaveChangesAsync();
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await userTask;
             if (user == null)
                 return Fail("User not found");
 
@@ -595,15 +593,7 @@ public class AuthServices : IAuthServices
     {
         try
         {
-            var tokens = await _refreshTokenRepository
-                .FindAsync(rt => rt.UserId == userId && (!rt.IsRevoked || !rt.IsUsed));
-
-            foreach (var token in tokens)
-            {
-                token.IsRevoked = true;
-                await _refreshTokenRepository.UpdateAsync(token);
-            }
-            await _unitOfWork.SaveChangesAsync();
+            await _refreshTokenRepository.RevokeAllTokensForUserAsync(userId);
         }
         catch (Exception ex)
         {

@@ -277,5 +277,11 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<RefreshToken>()
             .HasIndex(t => t.UserId);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(t => t.TokenHash);
+
+        builder.Entity<RefreshToken>()
+            .HasIndex(t => new { t.UserId, t.IsRevoked, t.IsUsed });
     }
 }

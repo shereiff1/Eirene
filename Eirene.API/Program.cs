@@ -28,7 +28,7 @@ builder.Services.Configure<SendGridSettings>(
 
 builder.Services.AddAutoMapper(typeof(AuthProfile));
 
-builder.Services.AddDbContext<EireneDBContext>(options =>
+builder.Services.AddDbContextPool<EireneDBContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -170,14 +170,16 @@ public class AuthServicesTests
         var request = _fixture.Create<LoginDTO>();
         var user = _fixture.Build<ApplicationUser>().With(x => x.EmailConfirmed, true).Create();
         var authResultDto = _fixture.Build<AuthResultDTO>().With(x => x.Success, true).Create();
+        var roles = new List<string> { "Patient" };
         
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _signInManagerMock.Setup(x => x.PasswordSignInAsync(user, request.Password, request.RememberMe, true))
-            .ReturnsAsync(SignInResult.Success);
+        _userManagerMock.Setup(x => x.IsLockedOutAsync(user)).ReturnsAsync(false);
+        _userManagerMock.Setup(x => x.CheckPasswordAsync(user, request.Password)).ReturnsAsync(true);
+        _userManagerMock.Setup(x => x.ResetAccessFailedCountAsync(user)).ReturnsAsync(IdentityResult.Success);
+        _userManagerMock.Setup(x => x.GetRolesAsync(user)).ReturnsAsync(roles);
         
-        _tokenServiceMock.Setup(x => x.GenerateJwtTokenAsync(user))
+        _tokenServiceMock.Setup(x => x.GenerateJwtTokenAsync(user, roles))
             .ReturnsAsync(("access_token", "jti", DateTime.UtcNow.AddHours(1)));
-        _userManagerMock.Setup(x => x.GetRolesAsync(user)).ReturnsAsync(new List<string> { "Patient" });
         _tokenServiceMock.Setup(x => x.GenerateRefreshToken()).Returns("refresh_token");
         _tokenServiceMock.Setup(x => x.ComputeSha256Hash("refresh_token")).Returns("hashed_rt");
         
@@ -194,6 +196,8 @@ public class AuthServicesTests
         
         _refreshTokenRepoMock.Verify(x => x.AddAsync(It.Is<RefreshToken>(rt => rt.TokenHash == "hashed_rt" && rt.UserId == user.Id)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+        _userManagerMock.Verify(x => x.CheckPasswordAsync(user, request.Password), Times.Once);
+        _userManagerMock.Verify(x => x.ResetAccessFailedCountAsync(user), Times.Once);
     }
 
     [Fact]
@@ -236,8 +240,9 @@ public class AuthServicesTests
         var user = _fixture.Build<ApplicationUser>().With(x => x.EmailConfirmed, true).Create();
         
         _userManagerMock.Setup(x => x.FindByEmailAsync(request.Email)).ReturnsAsync(user);
-        _signInManagerMock.Setup(x => x.PasswordSignInAsync(user, request.Password, request.RememberMe, true))
-            .ReturnsAsync(SignInResult.Failed);
+        _userManagerMock.Setup(x => x.IsLockedOutAsync(user)).ReturnsAsync(false);
+        _userManagerMock.Setup(x => x.CheckPasswordAsync(user, request.Password)).ReturnsAsync(false);
+        _userManagerMock.Setup(x => x.AccessFailedAsync(user)).ReturnsAsync(IdentityResult.Success);
 
         // Act
         var result = await _sut.LoginAsync(request);
@@ -245,6 +250,7 @@ public class AuthServicesTests
         // Assert
         result.Success.Should().BeFalse();
         result.Error.Should().Be("Invalid email or password");
+        _userManagerMock.Verify(x => x.AccessFailedAsync(user), Times.Once);
     }
 
     [Fact]
