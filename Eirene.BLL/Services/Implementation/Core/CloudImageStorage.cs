@@ -18,7 +18,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             _logger = logger;
 
-            var settings = configuration.GetSection("CloudinarySettings");
+            var settings = configuration.GetSection("Storage:CloudinarySettings");
 
             var account = new Account(
                 settings["CloudName"],

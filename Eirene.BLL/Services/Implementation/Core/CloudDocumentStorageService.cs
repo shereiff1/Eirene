@@ -15,9 +15,9 @@ namespace Eirene.BLL.Services.Implementation.Core
         public CloudDocumentStorageService(IConfiguration config, ILogger<CloudDocumentStorageService> logger)
         {
             _logger = logger;
-            var cloudName = config["CloudinarySettings:CloudName"];
-            var apiKey = config["CloudinarySettings:ApiKey"];
-            var apiSecret = config["CloudinarySettings:ApiSecret"];
+            var cloudName = config["Storage:CloudinarySettings:CloudName"];
+            var apiKey = config["Storage:CloudinarySettings:ApiKey"];
+            var apiSecret = config["Storage:CloudinarySettings:ApiSecret"];
 
             if (string.IsNullOrEmpty(cloudName) || string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(apiSecret))
             {
