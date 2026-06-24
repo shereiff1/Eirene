@@ -176,6 +176,29 @@ public class DoctorController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("{id}/documents")]
+    [Authorize(Roles = Roles.Doctor)]
+    public async Task<IActionResult> DoctorUploadedDocuments(string id)
+    {
+        var userId = _userContext.UserId;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(new { message = "User not authenticated." });
+        if (id != userId)
+            return Forbid();
+
+        var result = await _doctorVerificationService.DoctorUploadedDocuments(id);
+        if (result.IsFailure)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        var message = new
+        {
+            isDocumentUploaded = result.Value
+        };
+        return Ok(message);
+    }
+
 
     [HttpGet("ratings/{doctorId}")]
     [Authorize(Roles = Roles.AllUsers)]

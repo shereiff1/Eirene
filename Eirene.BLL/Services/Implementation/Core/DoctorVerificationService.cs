@@ -231,5 +231,27 @@ namespace Eirene.BLL.Services.Implementation.Core
                 return Result.Failure<List<DoctorAuditLogModel>>("An error occurred while getting audit logs.");
             }
         }
+
+        public async Task<Result<bool>> DoctorUploadedDocuments(string doctorId)
+        {
+            try
+            {
+                var verifications = await _verificationRepository.FindAsync(v => v.DoctorId == doctorId);
+                var verification = verifications.FirstOrDefault();
+                if (verification is null)
+                {
+                    _logger.LogInformation("Doctor {DoctorId} has not uploaded any documents", doctorId);
+                    return Result.Success(false);
+                }
+
+                _logger.LogInformation("Doctor {DoctorId} has uploaded documents", doctorId);
+                return Result.Success(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if doctor {DoctorId} has uploaded documents", doctorId);
+                return Result.Failure<bool>("An error occurred while checking if doctor has uploaded documents.");
+            }
+        }
     }
 }
