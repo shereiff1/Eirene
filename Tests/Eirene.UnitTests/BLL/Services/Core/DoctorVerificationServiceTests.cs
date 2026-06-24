@@ -64,9 +64,12 @@ public class DoctorVerificationServiceTests
     {
         // Arrange
         var doctorId = "doc-123";
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("test.pdf");
+
         var request = _fixture.Build<SubmitDocumentsRequest>()
-            .With(x => x.Files, new List<IFormFile>())
-            .With(x => x.DocumentTypes, new List<DocumentType>())
+            .With(x => x.Files, new List<IFormFile> { fileMock.Object })
+            .With(x => x.DocumentTypes, new List<DocumentType> { DocumentType.NationalId })
             .Create();
         
         var doctor = _fixture.Create<DoctorProfile>();
@@ -81,6 +84,9 @@ public class DoctorVerificationServiceTests
             .ReturnsAsync(new List<DoctorDocument>());
         _mapperMock.Setup(x => x.Map<List<DoctorDocumentModel>>(It.IsAny<List<DoctorDocument>>()))
             .Returns(new List<DoctorDocumentModel>());
+
+        _documentStorageMock.Setup(x => x.UploadDocumentAsync(It.IsAny<IFormFile>(), doctorId))
+            .ReturnsAsync((true, "https://cloudinary.com/test.pdf", null));
 
         // Act
         var result = await _sut.SubmitDoctorDocumentsAsync(doctorId, request);
@@ -98,9 +104,12 @@ public class DoctorVerificationServiceTests
     {
         // Arrange
         var doctorId = "doc-123";
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("test.pdf");
+
         var request = _fixture.Build<SubmitDocumentsRequest>()
-            .With(x => x.Files, new List<IFormFile>())
-            .With(x => x.DocumentTypes, new List<DocumentType>())
+            .With(x => x.Files, new List<IFormFile> { fileMock.Object })
+            .With(x => x.DocumentTypes, new List<DocumentType> { DocumentType.NationalId })
             .Create();
         
         var doctor = _fixture.Create<DoctorProfile>();
@@ -114,6 +123,9 @@ public class DoctorVerificationServiceTests
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>())).Returns(mappedModel);
         _documentRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorDocument, bool>>>()))
             .ReturnsAsync(new List<DoctorDocument>());
+
+        _documentStorageMock.Setup(x => x.UploadDocumentAsync(It.IsAny<IFormFile>(), doctorId))
+            .ReturnsAsync((true, "https://cloudinary.com/test.pdf", null));
 
         // Act
         var result = await _sut.SubmitDoctorDocumentsAsync(doctorId, request);

@@ -81,6 +81,11 @@ namespace Eirene.BLL.Services.Implementation.Core
                     await _verificationRepository.UpdateAsync(verification);
                 }
 
+                if (request.Files == null || request.Files.Count == 0)
+                {
+                    return Result.Failure<DoctorVerificationModel>("No documents were provided. Please ensure files are attached with the key 'Files'.");
+                }
+
                 for (int i = 0; i < request.Files.Count; i++)
                 {
                     var file = request.Files[i];
