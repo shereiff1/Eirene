@@ -1,6 +1,7 @@
 using Eirene.BLL.Models.Identity;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Eirene.Controllers;
 
@@ -172,12 +173,11 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
-
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPasswordDto)
     {
         if (!ModelState.IsValid)
-            return ValidationProblem(ModelState);
+            return BadRequest(ModelStateErrorResponse(ModelState));
 
         var result = await _authService.ResetPasswordAsync(resetPasswordDto);
 
@@ -194,6 +194,17 @@ public class AuthController : ControllerBase
         }
 
         return Ok(result);
+    }
+    private static object ModelStateErrorResponse(ModelStateDictionary modelState)
+    {
+        var errors = modelState
+            .Where(kvp => kvp.Value!.Errors.Count > 0)
+            .ToDictionary(
+                kvp => kvp.Key == "NewPassword" ? "Password" : kvp.Key,
+                kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+            );
+
+        return new { errors };
     }
     private static object ErrorResponse(string field, string message)
     {
