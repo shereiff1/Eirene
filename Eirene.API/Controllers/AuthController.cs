@@ -197,11 +197,17 @@ public class AuthController : ControllerBase
     }
     private static object ErrorResponse(string field, string message)
     {
+        var messages = message
+            .Split(new[] { ". ", ";", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(m => m.Trim())
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .ToArray();
+
         return new
         {
             errors = new Dictionary<string, string[]>
             {
-                { field, new[] { message } }
+                { field, messages }
             }
         };
     }
