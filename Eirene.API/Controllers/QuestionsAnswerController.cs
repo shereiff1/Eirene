@@ -58,11 +58,12 @@ public class QuestionsAnswerController : ControllerBase
 
         var (IsSuccess, Answers) = await _questionAnswerServices.GetAnswersForUserAsync(userId);
 
+        if (Answers == null || !Answers.Any())
+            return Ok(new { message = "No answers found for this user." });
+
         if (!IsSuccess)
             return StatusCode(500, new { message = "An error occurred while retrieving answers." });
 
-        if (Answers == null || !Answers.Any())
-            return Ok(new { message = "No answers found for this user." });
 
         return Ok(Answers);
     }
