@@ -14,6 +14,7 @@ namespace Eirene.UnitTests.BLL.Services.Treatment;
 public class QuestionServicesTests
 {
     private readonly Mock<IQuestionRepository> _questionRepoMock;
+    private readonly Mock<IQuestionChoiceRepository> _questionChoiceRepoMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<ILogger<QuestionServices>> _loggerMock;
@@ -22,6 +23,7 @@ public class QuestionServicesTests
     public QuestionServicesTests()
     {
         _questionRepoMock = new Mock<IQuestionRepository>();
+        _questionChoiceRepoMock = new Mock<IQuestionChoiceRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<QuestionServices>>();
@@ -30,6 +32,7 @@ public class QuestionServicesTests
             _loggerMock.Object,
             _mapperMock.Object,
             _questionRepoMock.Object,
+            _questionChoiceRepoMock.Object,
             _unitOfWorkMock.Object
         );
     }
@@ -62,7 +65,7 @@ public class QuestionServicesTests
         var entities = new List<Question> { new Question { QuestionContent = "Q1" } };
         var dtos = new List<QuestionDTO> { new QuestionDTO { QuestionContent = "Q1" } };
 
-        _questionRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(entities);
+        _questionRepoMock.Setup(x => x.GetAllWithChoicesAsync()).ReturnsAsync(entities);
         _mapperMock.Setup(x => x.Map<List<QuestionDTO>>(entities)).Returns(dtos);
 
         // Act
@@ -97,7 +100,7 @@ public class QuestionServicesTests
         var model = new EditQuestion { Id = Guid.NewGuid(), QuestionContent = "Updated" };
         var entity = new Question { Id = model.Id, QuestionContent = "Old" };
 
-        _questionRepoMock.Setup(x => x.GetByIdAsync(model.Id)).ReturnsAsync(entity);
+        _questionRepoMock.Setup(x => x.GetByIdWithChoicesAsync(model.Id)).ReturnsAsync(entity);
         _questionRepoMock.Setup(x => x.UpdateAsync(entity)).ReturnsAsync(true);
         _mapperMock.Setup(x => x.Map<EditQuestion>(entity)).Returns(model);
 

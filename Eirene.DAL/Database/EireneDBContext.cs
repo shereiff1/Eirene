@@ -39,6 +39,7 @@ public class EireneDBContext : IdentityDbContext<ApplicationUser>
     public DbSet<DoctorVerification> DoctorVerifications { get; set; }
     public DbSet<DoctorDocument> DoctorDocuments { get; set; }
     public DbSet<DoctorAuditLog> DoctorAuditLogs { get; set; }
+    public DbSet<QuestionChoice> QuestionChoices { get; set; }
     public DbSet<ChatbotSession> ChatbotSessions { get; set; }
     public DbSet<ChatbotMessage> ChatbotMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)

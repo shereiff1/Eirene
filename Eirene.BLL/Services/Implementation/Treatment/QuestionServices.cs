@@ -14,12 +14,16 @@ namespace Eirene.BLL.Services.Implementation.Treatment
         private readonly ILogger<QuestionServices> _logger;
         private readonly IMapper _mapper;
         private readonly IQuestionRepository _questionRepository;
+        private readonly IQuestionChoiceRepository _questionChoiceRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public QuestionServices(ILogger<QuestionServices> logger, IMapper mapper, IQuestionRepository questionRepository, IUnitOfWork unitOfWork)
+        public QuestionServices(ILogger<QuestionServices> logger, IMapper mapper,
+            IQuestionRepository questionRepository, IQuestionChoiceRepository questionChoiceRepository,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _mapper = mapper;
             _questionRepository = questionRepository;
+            _questionChoiceRepository = questionChoiceRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<(bool IsSuccess, QuestionDTO? AddedQuestion)> CreateAsync(AddQuestion model)
@@ -27,6 +31,14 @@ namespace Eirene.BLL.Services.Implementation.Treatment
             try
             {
                 var questionEntity = _mapper.Map<Question>(model);
+
+                // Map and attach choices
+                foreach (var choiceItem in model.Choices)
+                {
+                    var choice = _mapper.Map<QuestionChoice>(choiceItem);
+                    questionEntity.Choices.Add(choice);
+                }
+
                 var addedQuestion = await _questionRepository.AddAsync(questionEntity);
                 await _unitOfWork.SaveChangesAsync();
                 if (addedQuestion == null)
@@ -68,7 +80,7 @@ namespace Eirene.BLL.Services.Implementation.Treatment
         {
             try
             {
-                var getAllQuestions = await _questionRepository.GetAllAsync();
+                var getAllQuestions = await _questionRepository.GetAllWithChoicesAsync();
                 if (getAllQuestions == null || !getAllQuestions.Any())
                 {
                     _logger.LogError("No questions found");
@@ -88,7 +100,7 @@ namespace Eirene.BLL.Services.Implementation.Treatment
         {
             try
             {
-                var questionEntity = await _questionRepository.GetByIdAsync(id);
+                var questionEntity = await _questionRepository.GetByIdWithChoicesAsync(id);
                 if (questionEntity == null)
                 {
                     _logger.LogError("Question not found");
@@ -108,14 +120,56 @@ namespace Eirene.BLL.Services.Implementation.Treatment
         {
             try
             {
-                var existingQuestion = await _questionRepository.GetByIdAsync(model.Id);
+                var existingQuestion = await _questionRepository.GetByIdWithChoicesAsync(model.Id);
                 if (existingQuestion == null)
                 {
                     _logger.LogError("Question not found");
                     return (false, null);
                 }
 
-                _mapper.Map(model, existingQuestion);
+                // Update question content
+                existingQuestion.QuestionContent = model.QuestionContent;
+
+                // Reconcile choices: add new, update existing, delete removed
+                var incomingChoiceIds = model.Choices
+                    .Where(c => c.Id.HasValue)
+                    .Select(c => c.Id!.Value)
+                    .ToHashSet();
+
+                // Delete choices not present in the request
+                var choicesToDelete = existingQuestion.Choices
+                    .Where(c => !incomingChoiceIds.Contains(c.Id))
+                    .ToList();
+
+                foreach (var choice in choicesToDelete)
+                {
+                    await _questionChoiceRepository.DeleteAsync(choice);
+                }
+
+                // Update existing and add new choices
+                foreach (var choiceItem in model.Choices)
+                {
+                    if (choiceItem.Id.HasValue)
+                    {
+                        // Update existing choice
+                        var existingChoice = existingQuestion.Choices
+                            .FirstOrDefault(c => c.Id == choiceItem.Id.Value);
+                        if (existingChoice != null)
+                        {
+                            existingChoice.ChoiceText = choiceItem.ChoiceText;
+                        }
+                    }
+                    else
+                    {
+                        // Add new choice
+                        var newChoice = new QuestionChoice
+                        {
+                            ChoiceText = choiceItem.ChoiceText,
+                            QuestionId = existingQuestion.Id
+                        };
+                        existingQuestion.Choices.Add(newChoice);
+                    }
+                }
 
                 var result = await _questionRepository.UpdateAsync(existingQuestion);
                 await _unitOfWork.SaveChangesAsync();
@@ -125,7 +179,17 @@ namespace Eirene.BLL.Services.Implementation.Treatment
                     return (false, null);
                 }
 
-                var updatedDto = _mapper.Map<EditQuestion>(existingQuestion);
+                // Map back to EditQuestion for response
+                var updatedDto = new EditQuestion
+                {
+                    Id = existingQuestion.Id,
+                    QuestionContent = existingQuestion.QuestionContent,
+                    Choices = existingQuestion.Choices.Select(c => new EditQuestionChoiceItem
+                    {
+                        Id = c.Id,
+                        ChoiceText = c.ChoiceText
+                    }).ToList()
+                };
                 return (true, updatedDto);
             }
             catch (Exception ex)

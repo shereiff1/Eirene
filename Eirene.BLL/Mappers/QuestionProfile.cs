@@ -9,8 +9,12 @@ internal class QuestionProfile : Profile
 {
     public QuestionProfile()
     {
-        CreateMap<AddQuestion, Question>().ReverseMap();
-        CreateMap<EditQuestion, Question>().ReverseMap();
+        CreateMap<AddQuestion, Question>()
+            .ForMember(dest => dest.Choices, opt => opt.Ignore());
+        CreateMap<EditQuestion, Question>()
+            .ForMember(dest => dest.Choices, opt => opt.Ignore());
         CreateMap<Question, QuestionDTO>().ReverseMap();
+        CreateMap<QuestionChoice, QuestionChoiceDTO>().ReverseMap();
+        CreateMap<AddQuestionChoiceItem, QuestionChoice>();
     }
 }
