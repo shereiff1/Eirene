@@ -17,6 +17,7 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
         return await _context.Set<DoctorProfile>()
             .Include(x => x.User)
             .Include(x => x.Patients)
+            .Include(x => x.DoctorVerification)
             .AsSplitQuery()
             .AsNoTracking()
             .ToListAsync();
@@ -27,6 +28,7 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
         return await _context.Set<DoctorProfile>()
             .Include(x => x.User)
             .Include(x => x.Patients)
+            .Include(x => x.DoctorVerification)
             .FirstOrDefaultAsync(x => x.Id == (string)id);
     }
 
@@ -35,6 +37,7 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
         return await _context.Set<DoctorProfile>()
             .Include(x => x.User)
             .Include(x => x.Patients)
+            .Include(x => x.DoctorVerification)
             .Where(predicate)
             .AsSplitQuery()
             .AsNoTracking()
