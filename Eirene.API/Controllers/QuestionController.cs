@@ -19,16 +19,6 @@ public class QuestionController : ControllerBase
         _logger = logger;
         _questionServices = questionServices;
     }
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var result = await _questionServices.GetAllAsync();
-        if (result.questions == null || !result.IsSuccess)
-        {
-            return BadRequest(new { message = "Could not retrieve Questions." });
-        }
-        return Ok(result.questions);
-    }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
