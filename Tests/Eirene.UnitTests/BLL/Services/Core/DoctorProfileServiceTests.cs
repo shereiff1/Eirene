@@ -4,6 +4,7 @@ using AutoMapper;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Implementation.Core;
 using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Enumerators;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Core;
 using FluentAssertions;
@@ -205,49 +206,53 @@ public class DoctorProfileServiceTests
         result.Error.Should().Contain("not found");
     }
 
-    // ========== CheckIfVerified ==========
+    // ========== CheckVerificationStatus ==========
 
     [Fact]
-    public async Task CheckIfVerified_VerifiedDoctor_ReturnsTrue()
+    public async Task CheckVerificationStatus_DoctorFoundWithVerification_ReturnsStatus()
     {
         // Arrange
-        var doctor = new DoctorProfile { Id = "doc-1", IsVerified = true };
+        var doctor = new DoctorProfile 
+        { 
+            Id = "doc-1", 
+            DoctorVerification = new DoctorVerification { VerificationStatus = VerificationStatus.Approved } 
+        };
         _doctorRepoMock.Setup(x => x.GetByIdAsync("doc-1")).ReturnsAsync(doctor);
 
         // Act
-        var result = await _sut.CheckIfVerified("doc-1");
+        var result = await _sut.CheckVerificationStatus("doc-1");
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeTrue();
+        result.Value.Should().Be(VerificationStatus.Approved);
     }
 
     [Fact]
-    public async Task CheckIfVerified_UnverifiedDoctor_ReturnsFalse()
+    public async Task CheckVerificationStatus_DoctorFoundWithoutVerification_ReturnsFailure()
     {
         // Arrange
-        var doctor = new DoctorProfile { Id = "doc-1", IsVerified = false };
+        var doctor = new DoctorProfile { Id = "doc-1", DoctorVerification = null };
         _doctorRepoMock.Setup(x => x.GetByIdAsync("doc-1")).ReturnsAsync(doctor);
 
         // Act
-        var result = await _sut.CheckIfVerified("doc-1");
+        var result = await _sut.CheckVerificationStatus("doc-1");
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeFalse();
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().Contain("Doctor verification data not found");
     }
 
     [Fact]
-    public async Task CheckIfVerified_DoctorNotFound_ReturnsFailure()
+    public async Task CheckVerificationStatus_DoctorNotFound_ReturnsFailure()
     {
         // Arrange
         _doctorRepoMock.Setup(x => x.GetByIdAsync("no-id")).ReturnsAsync((DoctorProfile?)null);
 
         // Act
-        var result = await _sut.CheckIfVerified("no-id");
+        var result = await _sut.CheckVerificationStatus("no-id");
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Contain("Not Found");
+        result.Error.Should().Contain("not found");
     }
 }

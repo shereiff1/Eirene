@@ -7,6 +7,7 @@ using Eirene.BLL.Models.Common;
 using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Core;
 using Eirene.DAL.Entities.Core;
+using Eirene.DAL.Enumerators;
 using Eirene.DAL.Repository.Abstraction;
 using Eirene.DAL.Repository.Abstraction.Core;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -181,23 +182,29 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
-        public async Task<Result<bool>> CheckIfVerified(string doctorId)
+        public async Task<Result<VerificationStatus>> CheckVerificationStatus(string doctorId)
         {
             try
             {
                 var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                 {
-                    _logger.LogError("Doctor Not Found");
-                    return Result.Failure<bool>("Doctor Not Found");
+                    _logger.LogWarning("Doctor profile not found for user {UserId}.", doctorId);
+                    return Result.Failure<VerificationStatus>("Doctor not found.");
                 }
-                _logger.LogInformation("Doctor Found");
-                return Result.Success(doctor.IsVerified);
+
+                if (doctor.DoctorVerification == null)
+                {
+                    _logger.LogWarning("Verification data for doctor {DoctorId} not found.", doctorId);
+                    return Result.Failure<VerificationStatus>("Doctor verification data not found.");
+                }
+
+                return Result.Success(doctor.DoctorVerification.VerificationStatus);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching data for doctor {DoctorId}", doctorId);
-                return Result.Failure<bool>("An error happened while fetching doctor data");
+                _logger.LogError(ex, "Error fetching verification status for doctor {DoctorId}", doctorId);
+                return Result.Failure<VerificationStatus>("An error occurred while fetching verification status.");
             }
         }
     }

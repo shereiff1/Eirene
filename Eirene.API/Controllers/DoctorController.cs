@@ -274,7 +274,7 @@ public class DoctorController : ControllerBase
             return BadRequest(new { message = result.Error });
         return Ok(new { message = "Doctor profile deleted successfully." });
     }
-    [HttpGet("is-verified")]
+    [HttpGet("verification-status")]
     [Authorize(Roles = Roles.Doctor)]
     public async Task<IActionResult> CheckIfVerified()
     {
@@ -286,7 +286,7 @@ public class DoctorController : ControllerBase
                 message = "User not authenticated.",
             });
         }
-        var result = await _doctorProfileService.CheckIfVerified(userId);
+        var result = await _doctorProfileService.CheckVerificationStatus(userId);
         if (result.IsFailure)
         {
             return BadRequest(new { message = result.Error });

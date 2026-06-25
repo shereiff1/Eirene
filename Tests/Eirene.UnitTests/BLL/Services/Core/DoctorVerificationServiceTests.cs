@@ -73,11 +73,10 @@ public class DoctorVerificationServiceTests
             .Create();
         
         var doctor = _fixture.Create<DoctorProfile>();
+        doctor.DoctorVerification = null;
         var mappedModel = _fixture.Create<DoctorVerificationModel>();
 
         _doctorProfileRepoMock.Setup(x => x.GetByIdAsync(doctorId)).ReturnsAsync(doctor);
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(new List<DoctorVerification>()); // No existing verification
 
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>())).Returns(mappedModel);
         _documentRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorDocument, bool>>>()))
@@ -114,11 +113,10 @@ public class DoctorVerificationServiceTests
         
         var doctor = _fixture.Create<DoctorProfile>();
         var existingVerification = _fixture.Create<DoctorVerification>();
+        doctor.DoctorVerification = existingVerification;
         var mappedModel = _fixture.Create<DoctorVerificationModel>();
 
         _doctorProfileRepoMock.Setup(x => x.GetByIdAsync(doctorId)).ReturnsAsync(doctor);
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(new List<DoctorVerification> { existingVerification });
 
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>())).Returns(mappedModel);
         _documentRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorDocument, bool>>>()))
@@ -169,9 +167,8 @@ public class DoctorVerificationServiceTests
         };
         
         var doctor = _fixture.Create<DoctorProfile>();
+        doctor.DoctorVerification = null;
         _doctorProfileRepoMock.Setup(x => x.GetByIdAsync(doctorId)).ReturnsAsync(doctor);
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(new List<DoctorVerification>());
 
         _documentStorageMock.Setup(x => x.UploadDocumentAsync(It.IsAny<IFormFile>(), doctorId))
             .ReturnsAsync((false, null!, "Upload error"));
@@ -205,9 +202,8 @@ public class DoctorVerificationServiceTests
             .With(v => v.VerificationStatus, currentStatus)
             .Create();
         var doctor = _fixture.Create<DoctorProfile>();
+        doctor.DoctorVerification = verification;
 
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(new List<DoctorVerification> { verification });
         _doctorProfileRepoMock.Setup(x => x.GetByIdAsync(doctorId)).ReturnsAsync(doctor);
         
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>()))
@@ -247,8 +243,9 @@ public class DoctorVerificationServiceTests
     public async Task ReviewDoctorAsync_VerificationNotFound_ReturnsFailure()
     {
         // Arrange
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(new List<DoctorVerification>());
+        var doctor = _fixture.Create<DoctorProfile>();
+        doctor.DoctorVerification = null;
+        _doctorProfileRepoMock.Setup(x => x.GetByIdAsync("doc")).ReturnsAsync(doctor);
 
         // Act
         var result = await _sut.ReviewDoctorAsync("admin", "doc", new ReviewDoctorRequest());

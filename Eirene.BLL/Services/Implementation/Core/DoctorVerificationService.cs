@@ -50,8 +50,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                 if (doctor == null)
                     return Result.Failure<DoctorVerificationModel>("Doctor profile not found.");
 
-                var verifications = await _verificationRepository.FindAsync(v => v.DoctorId == doctorId);
-                var verification = verifications.FirstOrDefault();
+                var verification = doctor.DoctorVerification;
 
                 if (verification == null)
                 {
@@ -135,15 +134,14 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var verifications = await _verificationRepository.FindAsync(v => v.DoctorId == doctorId);
-                var verification = verifications.FirstOrDefault();
-
-                if (verification == null)
-                    return Result.Failure<DoctorVerificationModel>("Doctor verification record not found.");
-
                 var doctor = await _doctorProfileRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                     return Result.Failure<DoctorVerificationModel>("Doctor profile not found.");
+
+                var verification = doctor.DoctorVerification;
+
+                if (verification == null)
+                    return Result.Failure<DoctorVerificationModel>("Doctor verification record not found.");
 
                 var currentStatus = verification.VerificationStatus;
                 var newStatus = request.NewStatus;
