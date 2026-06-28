@@ -38,7 +38,7 @@ namespace Eirene.DAL.Repository.Implementation
 
         public Task<bool> UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
+            _context.Entry(entity).State = EntityState.Modified;
             return Task.FromResult(true);
         }
 
