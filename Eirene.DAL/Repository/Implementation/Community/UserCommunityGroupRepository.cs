@@ -15,7 +15,6 @@ internal class UserCommunityGroupRepository : GenericRepository<UserCommunityGro
     public async Task<UserCommunityGroup?> GetByGroupAndUserAsync(Guid groupId, string userId)
     {
         return await _context.Set<UserCommunityGroup>()
-            .AsNoTracking()
             .FirstOrDefaultAsync(ug => ug.CommunityGroupId == groupId && ug.UserId == userId);
     }
 
