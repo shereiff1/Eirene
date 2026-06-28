@@ -71,13 +71,15 @@ namespace Eirene.BLL.Services.Implementation.Core
                     var patient = await _patientProfileRepository.GetByIdAsync(request.PatientProfileId);
                     if (patient == null)
                         return Result.Failure("Patient profile not found.");
-
-                    patient.DoctorProfileId = doctorUserId;
-                    await _patientProfileRepository.UpdateAsync(patient);
                     var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
+                    if (doctor == null)
+                        return Result.Failure("Doctor profile not found.");
+                    
                     var doctorFullName = doctor?.User?.FullName ?? string.Empty;
                     var patientFullName = patient?.User?.FullName ?? string.Empty;
                     
+                    patient.DoctorProfileId = doctorUserId;
+                    await _patientProfileRepository.UpdateAsync(patient);
                     _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
                     _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
 
