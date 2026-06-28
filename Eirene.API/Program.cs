@@ -44,23 +44,23 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<EireneDBContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8080",
-                "http://localhost:4200",
-                "http://localhost:19006"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowFrontend", policy =>
+//    {
+//        policy
+//            .WithOrigins(
+//                "http://localhost:3000",
+//                "http://localhost:5173",
+//                "http://localhost:8080",
+//                "http://localhost:4200",
+//                "http://localhost:19006"
+//            )
+//            .AllowAnyHeader()
+//            .AllowAnyMethod()
+//            .AllowCredentials();
+//    });
+//});
 
 builder.Services.AddDataAccessServices()
                 .AddBusinessLogicServices(builder.Configuration);
@@ -115,7 +115,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
         ClockSkew = TimeSpan.Zero
     };
-
+    // for signalR (signalR do not have haeders)
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -132,7 +132,7 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
-})
+}) // use cookie-based login instead of JWT, username/password page rather than JWT token.
 .AddCookie("HangfireCookie", options =>
 {
     options.LoginPath = "/hangfire-login";
