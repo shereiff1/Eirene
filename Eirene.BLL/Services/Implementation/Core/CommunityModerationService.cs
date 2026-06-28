@@ -59,6 +59,12 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 var membership = await _userCommunityGroupRepository.GetByGroupAndUserAsync(groupId, userId);
 
+                if (assign && membership != null && membership.IsBanned)
+                {
+                    _logger.LogWarning("Banned user {UserId} attempted to rejoin group {GroupId}.", userId, groupId);
+                    return Result.Failure("You are banned from this community group and cannot rejoin.");
+                }
+
                 if (assign && membership == null)
                 {
                     await _userCommunityGroupRepository.AddAsync(new UserCommunityGroup
