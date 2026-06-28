@@ -112,7 +112,6 @@ namespace Eirene.BLL.Services.Implementation.Core
                     _logger.LogWarning("Cannot ban user {UserId} from group {GroupId}: membership not found.", userId, groupId);
                     return Result.Failure("User is not a member of this community group.");
                 }
-
                 if (membership.IsBanned)
                 {
                     return Result.Failure("User is already banned from this community group.");

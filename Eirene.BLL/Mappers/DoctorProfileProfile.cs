@@ -29,13 +29,24 @@ namespace Eirene.BLL.Mappers
 
             // Map EditModel -> Entity (update)
             CreateMap<EditDoctorProfile, DoctorProfile>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.User, opt => opt.Ignore())
-                .ForMember(dest => dest.Rating, opt => opt.Ignore())
-                .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
-                .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                 .ForMember(dest => dest.Id, opt => opt.Ignore())
+                 .ForMember(dest => dest.User, opt => opt.Ignore())
+                 .ForMember(dest => dest.Rating, opt => opt.Ignore())
+                 .ForMember(dest => dest.ReviewCount, opt => opt.Ignore())
+                 .ForMember(dest => dest.JoinedAt, opt => opt.Ignore())
+                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                 .ForMember(dest => dest.YearsOfExperience,
+                     opt => opt.Condition((src, dest, srcMember) => src.YearsOfExperience.HasValue))
+                 .ForMember(dest => dest.Specialization,
+                     opt => opt.Condition((src, dest, srcMember) => srcMember != null))
+                 .ForMember(dest => dest.Biography,
+                     opt => opt.Condition((src, dest, srcMember) => srcMember != null))
+                 .ForMember(dest => dest.PhoneNumber,
+                     opt => opt.Condition((src, dest, srcMember) => srcMember != null))
+                 .ForMember(dest => dest.Qualifications,
+                     opt => opt.Condition((src, dest, srcMember) => srcMember != null))
+                 .ForMember(dest => dest.ProfilePhotoUrl,
+                     opt => opt.Condition((src, dest, srcMember) => srcMember != null)); ;
 
             CreateMap<SupervisionRequest, SupervisionRequestDTO>()
                 .ForMember(dest => dest.PatientFullName, opt => opt.MapFrom(src => src.Patient.User.FullName))
