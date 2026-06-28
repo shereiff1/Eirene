@@ -132,9 +132,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var existingProfile = (await _doctorProfileRepository.GetAllAsync())
-                    .FirstOrDefault(d => d.Id == userId);
-
+                var existingProfile = await _doctorProfileRepository.GetByIdAsync(userId);
                 if (existingProfile == null)
                 {
                     _logger.LogError("Doctor profile not found for user {UserId}.", userId);
