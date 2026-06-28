@@ -134,7 +134,6 @@ namespace Eirene.BLL.Services.Implementation.Core
             {
                 var existingProfile = (await _doctorProfileRepository.GetAllAsync())
                     .FirstOrDefault(d => d.Id == userId);
-
                 if (existingProfile == null)
                 {
                     _logger.LogError("Doctor profile not found for user {UserId}.", userId);
@@ -146,7 +145,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                 await _doctorProfileRepository.UpdateAsync(existingProfile);
                 await _cache.RemoveAsync($"doctor:{userId}");
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 _logger.LogInformation("Updated doctor profile for user {UserId}.", userId);
 
                 var doctorDto = _mapper.Map<DoctorModel>(existingProfile);
