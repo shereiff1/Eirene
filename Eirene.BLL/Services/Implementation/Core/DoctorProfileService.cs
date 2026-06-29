@@ -116,6 +116,7 @@ namespace Eirene.BLL.Services.Implementation.Core
 
                 await _doctorProfileRepository.AddAsync(doctorEntity);
                 await _unitOfWork.SaveChangesAsync();
+                await _cache.RemoveAsync($"doctor:{userId}");
                 var createdDoctor = await _doctorProfileRepository.GetByIdAsync(doctorEntity.Id);
                 var doctorDto = _mapper.Map<DoctorModel>(createdDoctor);
                 _logger.LogInformation("Created doctor profile for user {UserId}.", userId);

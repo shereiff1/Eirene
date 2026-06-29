@@ -80,7 +80,7 @@ public class DoctorController : ControllerBase
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
-        var result = await _doctorProfileService.UpdateDoctorProfileAsync(model, userId);
+        var result = await _doctorProfileService.UpdateDoctorProfileAsync (model, userId);
         if (result.IsFailure)
             return BadRequest(new { message = result.Error });
 
