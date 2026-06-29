@@ -199,23 +199,29 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var result = await _verificationRepository.FindPagedAsync(v => v.VerificationStatus == VerificationStatus.Pending || v.VerificationStatus == VerificationStatus.UnderReview, page, pageSize);
-                
-                var models = new List<DoctorVerificationModel>();
-                foreach (var verification in result.Items)
+                var result = await _verificationRepository.FindPagedAsync(
+                    v => v.VerificationStatus == VerificationStatus.Pending
+                      || v.VerificationStatus == VerificationStatus.UnderReview,
+                    page, pageSize);
+                var doctorIds = result.Items.Select(v => v.DoctorId).ToList();
+                var allDocs   = await _documentRepository.FindAsync(d => doctorIds.Contains(d.DoctorId));
+                var docsByDoctorId = allDocs
+                    .GroupBy(d => d.DoctorId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+                var models = result.Items.Select(verification =>
                 {
                     var model = _mapper.Map<DoctorVerificationModel>(verification);
-                    var docs = await _documentRepository.FindAsync(d => d.DoctorId == verification.DoctorId);
+                    var docs  = docsByDoctorId.TryGetValue(verification.DoctorId, out var d) ? d : [];
                     model.Documents = _mapper.Map<List<DoctorDocumentModel>>(docs);
-                    models.Add(model);
-                }
+                    return model;
+                }).ToList();
 
                 var pagedResult = new PagedResult<DoctorVerificationModel>
                 {
-                    Items = models,
+                    Items      = models,
                     TotalCount = result.TotalCount,
-                    Page = page,
-                    PageSize = pageSize
+                    Page       = page,
+                    PageSize   = pageSize
                 };
 
                 return Result.Success(pagedResult);

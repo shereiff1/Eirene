@@ -19,5 +19,7 @@ namespace Eirene.DAL.Repository.Abstraction
         Task<bool> UpdateAsync(T entity);
 
         Task<bool> DeleteAsync(T entity);
+
+        void DeleteRange(IEnumerable<T> entities);
     }
 }

@@ -64,5 +64,10 @@ namespace Eirene.DAL.Repository.Implementation
             _dbSet.Remove(entity);
             return Task.FromResult(true);
         }
+
+        public void DeleteRange(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
+        }
     }
 }

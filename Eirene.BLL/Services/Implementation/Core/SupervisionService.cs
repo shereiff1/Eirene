@@ -75,21 +75,25 @@ namespace Eirene.BLL.Services.Implementation.Core
                     if (doctor == null)
                         return Result.Failure("Doctor profile not found.");
                     
-                    var doctorFullName = doctor?.User?.FullName ?? string.Empty;
-                    var patientFullName = patient?.User?.FullName ?? string.Empty;
+                    var doctorFullName = doctor.User?.FullName ?? string.Empty;
+                    var patientFullName = patient.User?.FullName ?? string.Empty;
                     
                     patient.DoctorProfileId = doctorUserId;
                     await _patientProfileRepository.UpdateAsync(patient);
-                    _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
-                    _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
+
+                    var patientEmail = patient.User?.Email;
+                    var doctorEmail = doctor.User?.Email;
+                    if (!string.IsNullOrEmpty(patientEmail))
+                        _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(patientEmail, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
+                    if (!string.IsNullOrEmpty(doctorEmail))
+                        _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(doctorEmail, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
 
                     var otherRequests = await _requestRepository.FindAsync(
                         r => r.PatientProfileId == request.PatientProfileId &&
                              r.Id != requestId &&
                              r.Status == SupervisionRequestStatus.Pending);
 
-                    foreach (var other in otherRequests)
-                        await _requestRepository.DeleteAsync(other);
+                    _requestRepository.DeleteRange(otherRequests);
                 }
 
                 await _requestRepository.UpdateAsync(request);

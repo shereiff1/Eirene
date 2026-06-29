@@ -42,7 +42,7 @@ public class TokenService : ITokenService
         return await GenerateJwtTokenAsync(user, roles);
     }
 
-    public async Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles)
+    public Task<(string Token, string Jti, DateTime Expiry)> GenerateJwtTokenAsync(ApplicationUser user, IList<string> roles)
     { 
         try
         {
@@ -61,11 +61,11 @@ public class TokenService : ITokenService
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return (
+            return Task.FromResult((
                 tokenHandler.WriteToken(token),
                 jti,
                 token.ValidTo
-            );
+            ));
         }
         catch (Exception ex)
         {
