@@ -6,7 +6,11 @@ namespace Eirene.DAL.Repository.Abstraction
     {
         Task<List<T>> GetAllAsync();
 
+        Task<(List<T> Items, int TotalCount)> GetAllPagedAsync(int page, int pageSize);
+
         Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate);
+
+        Task<(List<T> Items, int TotalCount)> FindPagedAsync(Expression<Func<T, bool>> predicate, int page, int pageSize);
 
         Task<T?> GetByIdAsync(object id);
 
@@ -15,5 +19,7 @@ namespace Eirene.DAL.Repository.Abstraction
         Task<bool> UpdateAsync(T entity);
 
         Task<bool> DeleteAsync(T entity);
+
+        void DeleteRange(IEnumerable<T> entities);
     }
 }

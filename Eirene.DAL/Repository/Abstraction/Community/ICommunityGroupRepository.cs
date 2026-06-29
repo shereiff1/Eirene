@@ -5,6 +5,7 @@ namespace Eirene.DAL.Repository.Abstraction.Community
     public interface ICommunityGroupRepository : IGenericRepository<CommunityGroup>
     {
         Task<List<CommunityGroup>> GetAllWithDetailsAsync();
+        Task<(List<CommunityGroup> Items, int TotalCount)> GetAllWithDetailsPagedAsync(int page, int pageSize);
         Task<CommunityGroup?> GetByIdWithDetailsAsync(Guid id);
         Task<CommunityGroup?> GetByNameAsync(string name);
         Task<List<CommunityGroup>> GetByUserIdAsync(string userId);

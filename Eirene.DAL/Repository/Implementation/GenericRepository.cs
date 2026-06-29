@@ -20,9 +20,26 @@ namespace Eirene.DAL.Repository.Implementation
         {
             return await _dbSet.AsNoTracking().ToListAsync();
         }
+
+        public virtual async Task<(List<T> Items, int TotalCount)> GetAllPagedAsync(int page, int pageSize)
+        {
+            var query = _dbSet.AsNoTracking();
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (items, totalCount);
+        }
+
         public virtual async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.Where(predicate).AsNoTracking().ToListAsync();
+        }
+
+        public virtual async Task<(List<T> Items, int TotalCount)> FindPagedAsync(Expression<Func<T, bool>> predicate, int page, int pageSize)
+        {
+            var query = _dbSet.Where(predicate).AsNoTracking();
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (items, totalCount);
         }
 
         public virtual async Task<T?> GetByIdAsync(object id)
@@ -38,7 +55,7 @@ namespace Eirene.DAL.Repository.Implementation
 
         public Task<bool> UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
+            _context.Entry(entity).State = EntityState.Modified;
             return Task.FromResult(true);
         }
 
@@ -46,6 +63,11 @@ namespace Eirene.DAL.Repository.Implementation
         {
             _dbSet.Remove(entity);
             return Task.FromResult(true);
+        }
+
+        public void DeleteRange(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
         }
     }
 }

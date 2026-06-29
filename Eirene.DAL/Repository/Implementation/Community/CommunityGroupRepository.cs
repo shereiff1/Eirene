@@ -24,6 +24,21 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .ToListAsync();
         }
 
+        public async Task<(List<CommunityGroup> Items, int TotalCount)> GetAllWithDetailsPagedAsync(int page, int pageSize)
+        {
+            var query = _context.Set<CommunityGroup>()
+                .Include(g => g.CreatedBy)
+                .Include(g => g.Posts)
+                .Include(g => g.Members)
+                .OrderByDescending(g => g.CreatedAt)
+                .AsSplitQuery()
+                .AsNoTracking();
+                
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (items, totalCount);
+        }
+
         public async Task<CommunityGroup?> GetByIdWithDetailsAsync(Guid id)
         {
             return await _context.Set<CommunityGroup>()

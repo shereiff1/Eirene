@@ -25,9 +25,9 @@ public class BlogController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = Roles.AllUsers)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _blogServices.GetAllAsync();
+        var result = await _blogServices.GetAllAsync(page, pageSize);
         if (!result.IsSuccess)
             return BadRequest(new { message = "Could not retrieve blogs." });
 

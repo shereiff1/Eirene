@@ -164,9 +164,9 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("doctors/pending")]
-    public async Task<IActionResult> GetPendingDoctors()
+    public async Task<IActionResult> GetPendingDoctors([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _doctorVerificationService.GetPendingDoctorsAsync();
+        var result = await _doctorVerificationService.GetPendingDoctorsAsync(page, pageSize);
         if (result.IsFailure)
             return BadRequest(new { message = result.Error });
 

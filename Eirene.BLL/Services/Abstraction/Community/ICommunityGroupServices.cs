@@ -1,3 +1,4 @@
+using Eirene.BLL.Models.Common;
 using Eirene.BLL.Models.Community.Group;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ namespace Eirene.BLL.Services.Abstraction.Community
 {
     public interface ICommunityGroupServices
     {
-        Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync();
+        Task<(bool IsSuccess, PagedResult<CommunityGroupDTO>? Groups)> GetAllAsync(int page = 1, int pageSize = 10);
         Task<(bool IsSuccess, CommunityGroupDTO? Group)> GetByIdAsync(Guid id);
         Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetByUserIdAsync(string userId);
         Task<(bool IsSuccess, CommunityGroupDTO? CreatedGroup)> CreateAsync(AddCommunityGroup model);

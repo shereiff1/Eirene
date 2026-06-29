@@ -57,18 +57,15 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
-                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
-                await Task.WhenAll(patientTask, doctorTask);
+                var patient = await _patientRepository.GetByIdAsync(patientUserId);
+                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
 
-                var patient = await patientTask;
                 if (patient == null)
                     return (false, "Patient profile not found. Please create a profile first.");
 
                 if (patient.DoctorProfileId != null)
                     return (false, "You are already under a doctor's supervision.");
 
-                var doctor = await doctorTask;
                 if (doctor == null)
                     return (false, "Doctor not found.");
 

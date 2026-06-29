@@ -1,4 +1,5 @@
 using AutoMapper;
+using Eirene.BLL.Models.Common;
 using Eirene.BLL.Models.Community.Group;
 using Eirene.BLL.Services.Abstraction.Community;
 using Eirene.DAL.Entities.Community;
@@ -43,34 +44,31 @@ namespace Eirene.BLL.Services.Implementation.Community
             _cache = cache;
         }
 
-        public async Task<(bool IsSuccess, List<CommunityGroupDTO>? Groups)> GetAllAsync()
+        public async Task<(bool IsSuccess, PagedResult<CommunityGroupDTO>? Groups)> GetAllAsync(int page = 1, int pageSize = 10)
         {
             try
             {
-                var cacheKey = "all-community-groups";
-                var groupDTOs = await _cache.GetOrCreateAsync(
-                    cacheKey,
-                    async token =>
-                    {
-                        var groups = await _communityGroupRepository.GetAllWithDetailsAsync();
-                        if (groups == null || !groups.Any())
-                        {
-                            return new List<CommunityGroupDTO>();
-                        }
-                        return _mapper.Map<List<CommunityGroupDTO>>(groups);
-                    }
-                );
+                var result = await _communityGroupRepository.GetAllWithDetailsPagedAsync(page, pageSize);
+                var dtos = _mapper.Map<List<CommunityGroupDTO>>(result.Items);
+                
+                var groupDTOs = new PagedResult<CommunityGroupDTO>
+                {
+                    Items = dtos,
+                    TotalCount = result.TotalCount,
+                    Page = page,
+                    PageSize = pageSize
+                };
 
-                if (groupDTOs == null || !groupDTOs.Any())
+                if (groupDTOs == null || !groupDTOs.Items.Any())
                 {
                     _logger.LogInformation("No community groups found");
-                    return (true, new List<CommunityGroupDTO>());
+                    return (true, new PagedResult<CommunityGroupDTO> { Page = page, PageSize = pageSize });
                 }
 
                 if (!IsPrivilegedUser())
-                    groupDTOs.ForEach(SanitizeGroupPersonalData);
+                    groupDTOs.Items.ForEach(SanitizeGroupPersonalData);
 
-                _logger.LogInformation("Retrieved {Count} community groups", groupDTOs.Count);
+                _logger.LogInformation("Retrieved {Count} community groups", groupDTOs.Items.Count);
                 return (true, groupDTOs);
             }
             catch (Exception ex)
@@ -187,7 +185,7 @@ namespace Eirene.BLL.Services.Implementation.Community
                     var groupWithDetails = await _communityGroupRepository.GetByIdWithDetailsAsync(createdGroup.Id);
                     var groupDTO = _mapper.Map<CommunityGroupDTO>(groupWithDetails);
 
-                    await _cache.RemoveAsync("all-community-groups");
+
 
                     if (!IsPrivilegedUser())
                         SanitizeGroupPersonalData(groupDTO);
@@ -241,7 +239,7 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 if (result)
                 {
-                    await _cache.RemoveAsync("all-community-groups");
+
                     await _cache.RemoveAsync($"community-group-{model.Id}");
                     await _cache.RemoveAsync($"community-group-details-{model.Id}");
                     _logger.LogInformation("Community group {GroupId} updated successfully", model.Id);
@@ -312,7 +310,7 @@ namespace Eirene.BLL.Services.Implementation.Community
 
                 if (result)
                 {
-                    await _cache.RemoveAsync("all-community-groups");
+
                     await _cache.RemoveAsync($"community-group-{id}");
                     await _cache.RemoveAsync($"community-group-details-{id}");
                     _logger.LogInformation("Community group {GroupId} deleted successfully", id);

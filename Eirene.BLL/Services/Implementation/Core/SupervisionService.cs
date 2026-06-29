@@ -71,23 +71,29 @@ namespace Eirene.BLL.Services.Implementation.Core
                     var patient = await _patientProfileRepository.GetByIdAsync(request.PatientProfileId);
                     if (patient == null)
                         return Result.Failure("Patient profile not found.");
-
+                    var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
+                    if (doctor == null)
+                        return Result.Failure("Doctor profile not found.");
+                    
+                    var doctorFullName = doctor.User?.FullName ?? string.Empty;
+                    var patientFullName = patient.User?.FullName ?? string.Empty;
+                    
                     patient.DoctorProfileId = doctorUserId;
                     await _patientProfileRepository.UpdateAsync(patient);
-                    var doctor = await _doctorProfileRepository.GetByIdAsync(doctorUserId);
-                    var doctorFullName = doctor?.User?.FullName ?? string.Empty;
-                    var patientFullName = patient?.User?.FullName ?? string.Empty;
-                    
-                    _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(patient.User.Email, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
-                    _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(doctor.User.Email, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
+
+                    var patientEmail = patient.User?.Email;
+                    var doctorEmail = doctor.User?.Email;
+                    if (!string.IsNullOrEmpty(patientEmail))
+                        _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(patientEmail, "Supervision Request Update", $"Your supervision request to Doctor {doctorFullName} has been accepted."));
+                    if (!string.IsNullOrEmpty(doctorEmail))
+                        _backgroundJobService.Enqueue(() => _emailSender.SendEmailAsync(doctorEmail, "Supervision Update", $"You are now {patientFullName}'s Supervisor."));
 
                     var otherRequests = await _requestRepository.FindAsync(
                         r => r.PatientProfileId == request.PatientProfileId &&
                              r.Id != requestId &&
                              r.Status == SupervisionRequestStatus.Pending);
 
-                    foreach (var other in otherRequests)
-                        await _requestRepository.DeleteAsync(other);
+                    _requestRepository.DeleteRange(otherRequests);
                 }
 
                 await _requestRepository.UpdateAsync(request);
@@ -118,19 +124,27 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
-        public async Task<Result<List<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId)
+        public async Task<Result<PagedResult<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId, int page = 1, int pageSize = 10)
         {
             try
             {
-                var requests = await _requestRepository.GetDoctorPatientsAsync(doctorUserId);
-                var models = _mapper.Map<List<DoctorPatientDTO>>(requests);
+                var result = await _requestRepository.GetDoctorPatientsPagedAsync(doctorUserId, page, pageSize);
+                var models = _mapper.Map<List<DoctorPatientDTO>>(result.Items);
 
-                return Result.Success(models);
+                var pagedResult = new PagedResult<DoctorPatientDTO>
+                {
+                    Items = models,
+                    TotalCount = result.TotalCount,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                return Result.Success(pagedResult);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching doctor's patients for doctor {DoctorProfileId}", doctorUserId);
-                return Result.Failure<List<DoctorPatientDTO>>("An error occurred while fetching patients.");
+                return Result.Failure<PagedResult<DoctorPatientDTO>>("An error occurred while fetching patients.");
             }
         }
 

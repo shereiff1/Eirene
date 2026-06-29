@@ -8,7 +8,7 @@ namespace Eirene.BLL.Services.Abstraction.Core
     {
         Task<Result> RespondToSupervisionRequestAsync(string requestId, bool accept, string doctorUserId);
         Task<Result<List<SupervisionRequestDTO>>> GetSupervisionRequestsAsync(string doctorUserId);
-        Task<Result<List<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId);
+        Task<Result<PagedResult<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId, int page = 1, int pageSize = 10);
         Task<Result> RemoveSupervisionOnPatient(string patientUserId);
     }
 }
