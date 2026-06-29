@@ -265,8 +265,8 @@ public class DoctorVerificationServiceTests
             _fixture.Build<DoctorVerification>().With(v => v.VerificationStatus, VerificationStatus.UnderReview).Create()
         };
 
-        _verificationRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>()))
-            .ReturnsAsync(verifications);
+        _verificationRepoMock.Setup(x => x.FindPagedAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>(), 1, 10))
+            .ReturnsAsync((verifications, verifications.Count));
         
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>()))
             .Returns(new DoctorVerificationModel());
@@ -276,6 +276,7 @@ public class DoctorVerificationServiceTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.TotalCount.Should().Be(2);
     }
 }

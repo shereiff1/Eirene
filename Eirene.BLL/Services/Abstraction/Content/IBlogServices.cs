@@ -1,12 +1,13 @@
 
 
+using Eirene.BLL.Models.Common;
 using Eirene.BLL.ModelVMs.Content;
 
 namespace Eirene.BLL.Services.Abstraction.Content
 {
     public interface IBlogServices
     {
-        Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetAllAsync();
+        Task<(bool IsSuccess, PagedResult<BlogDTO>? Posts)> GetAllAsync(int page = 1, int pageSize = 10);
 
         Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetByDoctorIdAsync(string doctorId);
 

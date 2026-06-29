@@ -249,13 +249,13 @@ public class DoctorController : ControllerBase
     [HttpGet("patients")]
     [Authorize(Roles = Roles.Doctor)]
     [VerifiedDoctor]
-    public async Task<IActionResult> GetDoctorsPatients()
+    public async Task<IActionResult> GetDoctorsPatients([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var userId = _userContext.UserId;
         if (string.IsNullOrEmpty(userId))
             return Unauthorized(new { message = "User not authenticated." });
 
-        var result = await _supervisionService.GetDoctorsPatientsAsync(userId);
+        var result = await _supervisionService.GetDoctorsPatientsAsync(userId, page, pageSize);
         if (result.IsFailure)
             return BadRequest(new { message = "Could not retrieve patients." });
 

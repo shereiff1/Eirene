@@ -195,14 +195,14 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
-        public async Task<Result<List<DoctorVerificationModel>>> GetPendingDoctorsAsync()
+        public async Task<Result<PagedResult<DoctorVerificationModel>>> GetPendingDoctorsAsync(int page = 1, int pageSize = 10)
         {
             try
             {
-                var verifications = await _verificationRepository.FindAsync(v => v.VerificationStatus == VerificationStatus.Pending || v.VerificationStatus == VerificationStatus.UnderReview);
+                var result = await _verificationRepository.FindPagedAsync(v => v.VerificationStatus == VerificationStatus.Pending || v.VerificationStatus == VerificationStatus.UnderReview, page, pageSize);
                 
                 var models = new List<DoctorVerificationModel>();
-                foreach (var verification in verifications)
+                foreach (var verification in result.Items)
                 {
                     var model = _mapper.Map<DoctorVerificationModel>(verification);
                     var docs = await _documentRepository.FindAsync(d => d.DoctorId == verification.DoctorId);
@@ -210,12 +210,20 @@ namespace Eirene.BLL.Services.Implementation.Core
                     models.Add(model);
                 }
 
-                return Result.Success(models);
+                var pagedResult = new PagedResult<DoctorVerificationModel>
+                {
+                    Items = models,
+                    TotalCount = result.TotalCount,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                return Result.Success(pagedResult);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting pending doctors");
-                return Result.Failure<List<DoctorVerificationModel>>("An error occurred while getting pending doctors.");
+                return Result.Failure<PagedResult<DoctorVerificationModel>>("An error occurred while getting pending doctors.");
             }
         }
 

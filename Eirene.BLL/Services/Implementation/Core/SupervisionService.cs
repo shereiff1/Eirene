@@ -120,19 +120,27 @@ namespace Eirene.BLL.Services.Implementation.Core
             }
         }
 
-        public async Task<Result<List<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId)
+        public async Task<Result<PagedResult<DoctorPatientDTO>>> GetDoctorsPatientsAsync(string doctorUserId, int page = 1, int pageSize = 10)
         {
             try
             {
-                var requests = await _requestRepository.GetDoctorPatientsAsync(doctorUserId);
-                var models = _mapper.Map<List<DoctorPatientDTO>>(requests);
+                var result = await _requestRepository.GetDoctorPatientsPagedAsync(doctorUserId, page, pageSize);
+                var models = _mapper.Map<List<DoctorPatientDTO>>(result.Items);
 
-                return Result.Success(models);
+                var pagedResult = new PagedResult<DoctorPatientDTO>
+                {
+                    Items = models,
+                    TotalCount = result.TotalCount,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                return Result.Success(pagedResult);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching doctor's patients for doctor {DoctorProfileId}", doctorUserId);
-                return Result.Failure<List<DoctorPatientDTO>>("An error occurred while fetching patients.");
+                return Result.Failure<PagedResult<DoctorPatientDTO>>("An error occurred while fetching patients.");
             }
         }
 

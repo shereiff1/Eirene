@@ -45,6 +45,21 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .ToListAsync();
     }
 
+    public async Task<(List<SupervisionRequest> Items, int TotalCount)> GetDoctorPatientsPagedAsync(string doctorId, int page, int pageSize)
+    {
+        var query = _context.Set<SupervisionRequest>()
+            .Include(r => r.Patient)
+                .ThenInclude(p => p.User)
+            .Where(r => r.DoctorProfileId == doctorId && r.Status == Eirene.DAL.Enumerators.SupervisionRequestStatus.Accepted)
+            .AsSplitQuery()
+            .AsNoTracking();
+            
+        var totalCount = await query.CountAsync();
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        
+        return (items, totalCount);
+    }
+
     public async Task<List<SupervisionRequest>> GetRequestsByDoctorIdAsync(string doctorId)
     {
         return await _context.Set<SupervisionRequest>()

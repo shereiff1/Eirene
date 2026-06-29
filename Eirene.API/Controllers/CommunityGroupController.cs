@@ -25,9 +25,9 @@ public class CommunityGroupController : ControllerBase
     }
     [HttpGet]
     [Authorize(Roles = Roles.AllUsers)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await _communityGroupServices.GetAllAsync();
+        var result = await _communityGroupServices.GetAllAsync(page, pageSize);
         if (!result.IsSuccess)
             return StatusCode(500, new { message = "Could not retrieve community groups." });
         return Ok(result.Groups);

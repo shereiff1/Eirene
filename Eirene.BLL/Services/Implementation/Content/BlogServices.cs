@@ -1,4 +1,5 @@
 using AutoMapper;
+using Eirene.BLL.Models.Common;
 using Eirene.BLL.ModelVMs.Content;
 using Eirene.BLL.Services.Abstraction.Content;
 using Eirene.DAL.Entities.Content;
@@ -26,15 +27,24 @@ namespace Eirene.BLL.Services.Implementation.Content
             _cache = cache;
         }
 
-        public async Task<(bool IsSuccess, List<BlogDTO>? Posts)> GetAllAsync()
+        public async Task<(bool IsSuccess, PagedResult<BlogDTO>? Posts)> GetAllAsync(int page = 1, int pageSize = 10)
         {
             try
             {
-                var blogs = await _blogRepository.GetAllAsync();
-                if (blogs == null) return (false, null);
+                var result = await _blogRepository.GetAllPagedAsync(page, pageSize);
+                if (result.Items == null) return (false, null);
 
-                var blogDtOs = _mapper.Map<List<BlogDTO>>(blogs);
-                return (true, blogDtOs);
+                var blogDtOs = _mapper.Map<List<BlogDTO>>(result.Items);
+                
+                var pagedResult = new PagedResult<BlogDTO>
+                {
+                    Items = blogDtOs,
+                    TotalCount = result.TotalCount,
+                    Page = page,
+                    PageSize = pageSize
+                };
+                
+                return (true, pagedResult);
             }
             catch (Exception ex)
             {
