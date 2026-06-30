@@ -15,6 +15,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Caching.Hybrid;
 using Xunit;
 
 namespace Eirene.UnitTests.BLL.Services.Core;
@@ -33,6 +34,7 @@ public class PatientServicesTests
     private readonly Mock<IBackgroundJobService> _backgroundJobMock;
     private readonly Mock<IUserCommunityGroupRepository> _userCommunityGroupRepoMock;
     private readonly Mock<ILogger<PatientServices>> _loggerMock;
+    private readonly Mock<HybridCache> _cacheMock;
     private readonly PatientServices _sut;
 
     public PatientServicesTests()
@@ -53,6 +55,7 @@ public class PatientServicesTests
         _backgroundJobMock = new Mock<IBackgroundJobService>();
         _userCommunityGroupRepoMock = new Mock<IUserCommunityGroupRepository>();
         _loggerMock = new Mock<ILogger<PatientServices>>();
+        _cacheMock = new Mock<HybridCache>();
 
         _sut = new PatientServices(
             _loggerMock.Object,
@@ -65,7 +68,8 @@ public class PatientServicesTests
             _unitOfWorkMock.Object,
             _emailSenderMock.Object,
             _backgroundJobMock.Object,
-            _userCommunityGroupRepoMock.Object);
+            _userCommunityGroupRepoMock.Object, 
+            _cacheMock.Object);
     }
 
     // ========== RequestSupervisionAsync ==========
