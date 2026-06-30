@@ -18,16 +18,6 @@ public class CommunityPostController : ControllerBase
         _logger = logger;
         _communityPostServices = communityPostService;
     }
-    [HttpGet]
-    [Authorize(Roles = Roles.AllUsers)]
-    public async Task<IActionResult> GetAll()
-    {
-        var result = await _communityPostServices.GetAllAsync();
-        if (!result.IsSuccess)
-            return StatusCode(500, new { message = "Could not retrieve community posts." });
-        return Ok(result.Posts);
-    }
-
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {

@@ -97,7 +97,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                 _backgroundJobService.Enqueue(()=> _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",$"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience."));
                 // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
                 //     $"A new patient supervision request has been assigned to you; please log in to your dashboard to review the details and respond at your earliest convenience.");
-                
+
                 return (true, null);
             }
             catch (Exception ex)
@@ -238,24 +238,20 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
-                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
-                await Task.WhenAll(patientTask, doctorTask);
-
-                var patient = await patientTask;
+                var patient = await _patientRepository.GetByIdAsync(patientUserId);
                 if (patient == null)
                 {
                     _logger.LogError("Patient profile not found for user {UserId}", patientUserId);
                     return (false, "Patient profile not found.");
                 }
-                
-                var doctor = await doctorTask;
+
+                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                 {
                     _logger.LogError("doctor profile not found for user {UserId}", doctorId);
                     return (false, "doctor profile not found.");
                 }
-                
+
                 var existingRequest = (await _requestRepository.FindAsync(
                         r => r.PatientProfileId == patient.Id &&
                              r.DoctorProfileId == doctor.Id))
@@ -266,20 +262,20 @@ namespace Eirene.BLL.Services.Implementation.Core
                     return (false, "no supervision request found for this patient and doctor.");
                 }
                 await _requestRepository.DeleteAsync(existingRequest);
-                
+
                 if (patient.DoctorProfileId != null)
                 {
                     _logger.LogInformation("Removing doctor's id from patient {UserId} profile.", patientUserId);
                     patient.DoctorProfileId = null;
                     await _patientRepository.UpdateAsync(patient);
                 }
-                
+
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled", $"You removed the supervision request from Doctor {doctor.User.FullName}."));
                 // await _emailSender.SendEmailAsync($"{patient.User.Email}", "Supervision Canceled",
                 //     $"You removed the supervision request from Doctor {doctor.User.FullName}.");
-                
+
                 _backgroundJobService.Enqueue(()=>_emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request", $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience."));
                 // await _emailSender.SendEmailAsync($"{doctor.User.Email}", "Supervision Request",
                 //     $"Patient {patient.User.FullName}'s supervision has been canceled. Please log in to your dashboard to review the details and respond at your earliest convenience.");
@@ -321,23 +317,18 @@ namespace Eirene.BLL.Services.Implementation.Core
         {
             try
             {
-                // Fire independent DB reads in parallel
-                var patientTask = _patientRepository.GetByIdAsync(patientUserId);
-                var doctorTask = _doctorRepository.GetByIdAsync(doctorId);
-                await Task.WhenAll(patientTask, doctorTask);
-
-                var patient = await patientTask;
+                var patient = await _patientRepository.GetByIdAsync(patientUserId);
                 if (patient == null)
                     return (false, "Patient profile not found.");
 
                 if (patient.DoctorProfileId != doctorId)
                     return (false, "You can only rate your assigned supervisor.");
 
-                var doctor = await doctorTask;
+                var doctor = await _doctorRepository.GetByIdAsync(doctorId);
                 if (doctor == null)
                     return (false, "Doctor not found.");
 
-                var existingRatings = await _ratingRepository.FindAsync(r => 
+                var existingRatings = await _ratingRepository.FindAsync(r =>
                     r.PatientProfileId == patientUserId && r.DoctorProfileId == doctorId);
                 var existingRating = existingRatings.FirstOrDefault();
 
@@ -381,7 +372,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                 {
                      doctor.Rating = 0;
                 }
-                
+
                 await _doctorRepository.UpdateAsync(doctor);
                 await _unitOfWork.SaveChangesAsync();
 

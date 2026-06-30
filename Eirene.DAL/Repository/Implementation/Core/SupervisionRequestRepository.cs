@@ -31,7 +31,6 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .Include(r => r.Doctor)
                 .ThenInclude(d => d.User)
             .AsSplitQuery()
-            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == (string)id);
     }
     public async Task<List<SupervisionRequest>> GetDoctorPatientsAsync(string doctorId)
