@@ -355,13 +355,6 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var allRatings = await _ratingRepository.FindAsync(r => r.DoctorProfileId == doctorId);
                 var ratingsList = allRatings.ToList();
 
-                if (existingRating != null)
-                {
-                    var staleEntry = ratingsList.FirstOrDefault(r => r.PatientProfileId == patientUserId);
-                    if (staleEntry != null)
-                        staleEntry.Rating = model.Rating;
-                }
-
                 doctor.ReviewCount = ratingsList.Count;
                 if (doctor.ReviewCount > 0)
                 {

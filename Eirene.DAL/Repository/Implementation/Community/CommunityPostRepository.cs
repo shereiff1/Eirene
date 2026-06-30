@@ -23,8 +23,7 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(p => p.Comments)
                     .ThenInclude(c => c.Replies)
                         .ThenInclude(r => r.User)
-                .AsSplitQuery()
-                .AsNoTracking();
+                .AsSplitQuery();
         }
 
 

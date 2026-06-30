@@ -40,7 +40,6 @@ namespace Eirene.DAL.Repository.Implementation.Communication
         public async Task<Conversation?> GetConversationAsync(Guid conversationId)
         {
             return await _dbContext.Conversations
-                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == conversationId);
         }
 
@@ -49,7 +48,6 @@ namespace Eirene.DAL.Repository.Implementation.Communication
             return await _dbContext.ChatMessages
                 .Where(m => m.ConversationId == conversationId)
                 .OrderBy(m => m.SentAt)
-                .AsNoTracking()
                 .ToListAsync();
         }
 

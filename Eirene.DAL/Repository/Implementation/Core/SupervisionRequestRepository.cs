@@ -19,7 +19,6 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .Include(r => r.Doctor)
                 .ThenInclude(d => d.User)
             .AsSplitQuery()
-            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -40,7 +39,6 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
                 .ThenInclude(p => p.User)
             .Where(r => r.DoctorProfileId == doctorId && r.Status == Eirene.DAL.Enumerators.SupervisionRequestStatus.Accepted)
             .AsSplitQuery()
-            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -50,8 +48,7 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
             .Include(r => r.Patient)
                 .ThenInclude(p => p.User)
             .Where(r => r.DoctorProfileId == doctorId && r.Status == Eirene.DAL.Enumerators.SupervisionRequestStatus.Accepted)
-            .AsSplitQuery()
-            .AsNoTracking();
+            .AsSplitQuery();
             
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
@@ -66,7 +63,6 @@ internal class SupervisionRequestRepository : GenericRepository<SupervisionReque
                 .ThenInclude(p => p.User)
             .Where(r => r.DoctorProfileId == doctorId)
             .AsSplitQuery()
-            .AsNoTracking()
             .ToListAsync();
     }
 }

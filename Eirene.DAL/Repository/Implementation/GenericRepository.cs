@@ -18,12 +18,12 @@ namespace Eirene.DAL.Repository.Implementation
 
         public virtual async Task<List<T>> GetAllAsync()
         {
-            return await _dbSet.AsNoTracking().ToListAsync();
+            return await _dbSet.ToListAsync();
         }
 
         public virtual async Task<(List<T> Items, int TotalCount)> GetAllPagedAsync(int page, int pageSize)
         {
-            var query = _dbSet.AsNoTracking();
+            var query = _dbSet.AsQueryable();
             var totalCount = await query.CountAsync();
             var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             return (items, totalCount);
@@ -31,12 +31,12 @@ namespace Eirene.DAL.Repository.Implementation
 
         public virtual async Task<List<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.Where(predicate).AsNoTracking().ToListAsync();
+            return await _dbSet.Where(predicate).ToListAsync();
         }
 
         public virtual async Task<(List<T> Items, int TotalCount)> FindPagedAsync(Expression<Func<T, bool>> predicate, int page, int pageSize)
         {
-            var query = _dbSet.Where(predicate).AsNoTracking();
+            var query = _dbSet.Where(predicate).AsQueryable();
             var totalCount = await query.CountAsync();
             var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             return (items, totalCount);

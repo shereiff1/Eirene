@@ -32,7 +32,6 @@ internal class ChatbotRepository : IChatbotRepository
     public async Task<ChatbotSession?> GetSessionAsync(Guid sessionId)
     {
         return await _dbContext.ChatbotSessions
-            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == sessionId);
     }
 
@@ -41,7 +40,6 @@ internal class ChatbotRepository : IChatbotRepository
         return await _dbContext.ChatbotSessions
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.LastMessageAt ?? s.CreatedAt)
-            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -50,7 +48,6 @@ internal class ChatbotRepository : IChatbotRepository
         return await _dbContext.ChatbotMessages
             .Where(m => m.SessionId == sessionId)
             .OrderBy(m => m.SentAt)
-            .AsNoTracking()
             .ToListAsync();
     }
 

@@ -14,7 +14,6 @@ namespace Eirene.DAL.Repository.Implementation.Community
         {
             return await _context.Set<CommunityComment>()
                 .Include(c => c.User)
-                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -24,7 +23,6 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(c => c.User)
                 .Where(c => c.PostId == postId)
                 .OrderByDescending(c => c.PostedOn)
-                .AsNoTracking()
                 .ToListAsync();
         }
 
@@ -34,7 +32,6 @@ namespace Eirene.DAL.Repository.Implementation.Community
                 .Include(c => c.User)
                 .Where(c => c.ParentCommentId == commentId)
                 .OrderBy(c => c.PostedOn)
-                .AsNoTracking()
                 .ToListAsync();
         }
     }

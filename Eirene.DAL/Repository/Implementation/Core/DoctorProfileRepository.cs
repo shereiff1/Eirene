@@ -19,7 +19,6 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
             .Include(x => x.Patients)
             .Include(x => x.DoctorVerification)
             .AsSplitQuery()
-            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -40,7 +39,6 @@ internal class DoctorProfileRepository : GenericRepository<DoctorProfile>, IDoct
             .Include(x => x.DoctorVerification)
             .Where(predicate)
             .AsSplitQuery()
-            .AsNoTracking()
             .ToListAsync();
     }
 }

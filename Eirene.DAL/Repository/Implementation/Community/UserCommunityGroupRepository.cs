@@ -31,7 +31,6 @@ internal class UserCommunityGroupRepository : GenericRepository<UserCommunityGro
         return await _context.Set<UserCommunityGroup>()
             .Include(ug => ug.User)
             .Where(ug => ug.CommunityGroupId == groupId && ug.IsBanned)
-            .AsNoTracking()
             .ToListAsync();
     }
 
@@ -41,7 +40,6 @@ internal class UserCommunityGroupRepository : GenericRepository<UserCommunityGro
         return await _context.Set<UserCommunityGroup>()
             .Include(ug => ug.User)
             .Where(ug => ug.CommunityGroupId == groupId && ug.TimeoutUntil.HasValue && ug.TimeoutUntil.Value > now)
-            .AsNoTracking()
             .ToListAsync();
     }
 }
