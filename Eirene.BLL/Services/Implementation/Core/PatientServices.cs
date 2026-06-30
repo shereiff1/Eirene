@@ -10,6 +10,7 @@ using Eirene.BLL.Models.Core.Doctor;
 using Eirene.BLL.Services.Abstraction.Background_Jobs;
 using Eirene.BLL.Services.Abstraction.Identity;
 using Eirene.DAL.Repository.Abstraction.Community;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Eirene.BLL.Services.Implementation.Core
 {
@@ -26,6 +27,7 @@ namespace Eirene.BLL.Services.Implementation.Core
         private readonly IEmailSender _emailSender;
         private readonly IBackgroundJobService _backgroundJobService;
         private readonly IUserCommunityGroupRepository _userCommunityGroupRepository;
+        private readonly HybridCache _cache;
 
         public PatientServices(
             ILogger<PatientServices> logger,
@@ -38,7 +40,8 @@ namespace Eirene.BLL.Services.Implementation.Core
             IUnitOfWork unitOfWork,
             IEmailSender emailSender,
             IBackgroundJobService backgroundJobService,
-            IUserCommunityGroupRepository userCommunityGroupRepository)
+            IUserCommunityGroupRepository userCommunityGroupRepository,
+            HybridCache cache)
         {
             _patientRepository = patientRepository;
             _doctorRepository = doctorRepository;
@@ -51,6 +54,7 @@ namespace Eirene.BLL.Services.Implementation.Core
             _emailSender = emailSender;
             _backgroundJobService = backgroundJobService;
             _userCommunityGroupRepository = userCommunityGroupRepository;
+            _cache = cache;
         }
 
         public async Task<(bool IsSuccess, string? Error)> RequestSupervisionAsync(string patientUserId, string doctorId)
@@ -355,6 +359,13 @@ namespace Eirene.BLL.Services.Implementation.Core
                 var allRatings = await _ratingRepository.FindAsync(r => r.DoctorProfileId == doctorId);
                 var ratingsList = allRatings.ToList();
 
+                if (existingRating != null)
+                {
+                    var staleEntry = ratingsList.FirstOrDefault(r => r.PatientProfileId == patientUserId);
+                    if (staleEntry != null)
+                        staleEntry.Rating = model.Rating;
+                }
+
                 doctor.ReviewCount = ratingsList.Count;
                 if (doctor.ReviewCount > 0)
                 {
@@ -366,6 +377,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                      doctor.Rating = 0;
                 }
 
+                await _cache.RemoveAsync($"doctor:{doctorId}");
                 await _doctorRepository.UpdateAsync(doctor);
                 await _unitOfWork.SaveChangesAsync();
 
