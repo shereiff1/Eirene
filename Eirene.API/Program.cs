@@ -44,24 +44,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<EireneDBContext>()
 .AddDefaultTokenProviders();
 
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFrontend", policy =>
-//    {
-//        policy
-//            .WithOrigins(
-//                "http://localhost:3000",
-//                "http://localhost:5173",
-//                "http://localhost:8080",
-//                "http://localhost:4200",
-//                "http://localhost:19006"
-//            )
-//            .AllowAnyHeader()
-//            .AllowAnyMethod()
-//            .AllowCredentials();
-//    });
-//});
-
 builder.Services.AddDataAccessServices()
                 .AddBusinessLogicServices(builder.Configuration);
 
@@ -236,6 +218,24 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+
+app.MapGet("/api/daily-wisdom", async (IConfiguration config, IHttpClientFactory httpClientFactory) =>
+{
+    var apiKey = config["NinjaApiKey"];
+    if (string.IsNullOrEmpty(apiKey))
+        return Results.StatusCode(503);
+
+    var client = httpClientFactory.CreateClient();
+    var request = new HttpRequestMessage(HttpMethod.Get, "https://api.api-ninjas.com/v2/quoteoftheday");
+    request.Headers.Add("X-Api-Key", apiKey);
+
+    var response = await client.SendAsync(request);
+    if (!response.IsSuccessStatusCode)
+        return Results.StatusCode(502);
+
+    var content = await response.Content.ReadAsStringAsync();
+    return Results.Content(content, "application/json");
+}).RequireAuthorization();
 
 app.Run();
 
