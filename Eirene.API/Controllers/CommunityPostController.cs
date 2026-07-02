@@ -74,8 +74,8 @@ public class CommunityPostController : ControllerBase
     public async Task<IActionResult> Update([FromBody] EditCommunityPost post)
     {
         var updated = await _communityPostServices.UpdateAsync(post);
-        if (!updated)
-            return NotFound(new { message = "Post not found." });
+        if (!updated.IsAllowed)
+            return BadRequest(new { message = updated.Message });
         return NoContent();
     }
 

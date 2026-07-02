@@ -268,6 +268,9 @@ public class DoctorVerificationServiceTests
         _verificationRepoMock.Setup(x => x.FindPagedAsync(It.IsAny<Expression<Func<DoctorVerification, bool>>>(), 1, 10))
             .ReturnsAsync((verifications, verifications.Count));
         
+        _documentRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<DoctorDocument, bool>>>()))
+            .ReturnsAsync(new List<DoctorDocument>());
+
         _mapperMock.Setup(x => x.Map<DoctorVerificationModel>(It.IsAny<DoctorVerification>()))
             .Returns(new DoctorVerificationModel());
 

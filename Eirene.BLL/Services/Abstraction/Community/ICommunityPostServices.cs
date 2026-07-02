@@ -14,7 +14,7 @@ namespace Eirene.BLL.Services.Abstraction.Community
         Task<(bool IsSuccess, CommunityPostDTO? Post)> GetByIdAsync(Guid id);
         Task<(bool IsSuccess, List<CommunityPostDTO>? Posts)> GetByUserIdAsync(string userId);
         Task<(bool IsSuccess, string Message, CommunityPostDTO? CreatedPost)> CreateAsync(AddCommunityPost model);
-        Task<bool> UpdateAsync(EditCommunityPost model);
+        Task<(bool IsAllowed, string Message)> UpdateAsync(EditCommunityPost model);
         Task<bool> DeleteAsync(Guid id);
     }
 }

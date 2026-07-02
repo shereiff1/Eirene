@@ -370,7 +370,7 @@ namespace Eirene.BLL.Services.Implementation.Community
         }
 
 
-        public async Task<bool> UpdateAsync(EditCommunityPost model)
+        public async Task<(bool IsAllowed, string Message)> UpdateAsync(EditCommunityPost model)
         {
             try
             {
@@ -379,13 +379,13 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogWarning("Unauthorized user tried to update post {PostId}", model.Id);
-                    return false;
+                    return (false, "Unauthorized");
                 }
 
                 if (string.IsNullOrWhiteSpace(model.Content))
                 {
                     _logger.LogWarning("Invalid content for post {PostId}", model.Id);
-                    return false;
+                    return (false, "Invalid post content. Please provide a valid post content.");
                 }
 
                 var existingPost = await _communityPostRepository.GetByIdAsync(model.Id);
@@ -393,15 +393,24 @@ namespace Eirene.BLL.Services.Implementation.Community
                 if (existingPost == null || existingPost.IsDeleted)
                 {
                     _logger.LogWarning("Post with ID {PostId} not found or deleted", model.Id);
-                    return false;
+                    return (false, "Post not found");
                 }
 
                 if (existingPost.UserId != userId && !_userContext.IsInRole(Roles.Admin))
                 {
                     _logger.LogWarning("User {UserId} is not authorized to edit post {PostId}", userId, model.Id);
-                    return false;
+                    return (false, "You are not authorized to edit this post.");
                 }
 
+                var moderationResult = await _contentModerationService
+                    .ModerateAsync(model.Content, userId, model.Id);
+                if (!moderationResult.IsAllowed)
+                {
+                    _logger.LogWarning(
+                        "Post from user {UserId} rejected by moderation: {Reason}",
+                        userId, moderationResult.RejectionReason);
+                    return (false, moderationResult.RejectionReason!);
+                }
                 existingPost.Content = model.Content;
                 existingPost.UpdatedOn = DateTime.UtcNow;
                 existingPost.IsEdited = true;
@@ -414,12 +423,12 @@ namespace Eirene.BLL.Services.Implementation.Community
                     _logger.LogInformation("Post {PostId} updated successfully by user {UserId}", model.Id, userId);
                 }
 
-                return result;
+                return (result, "Post updated successfully.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating post {PostId}", model.Id);
-                return false;
+                return (false, "An error occurred while updating the post.");
             }
         }
 
