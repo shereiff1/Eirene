@@ -92,11 +92,8 @@ public class DiagnosisController : ControllerBase
             .Where(a => !string.IsNullOrWhiteSpace(a.Answer))
             .Select(a =>
             {
-                var question = a.Question?.QuestionContent?.Trim().TrimEnd('?', '.', '!') ?? "";
                 var answer = a.Answer.Trim();
-
-                var combined = $"{question}, {answer}";
-
+                var combined = $"{answer}";
                 return combined.EndsWith('.') || combined.EndsWith('!') || combined.EndsWith('?')
                     ? combined
                     : combined + ".";
