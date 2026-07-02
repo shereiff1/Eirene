@@ -7,8 +7,8 @@ namespace Eirene.BLL.Services.Implementation.Core;
 
 public class ContentModerationService : IContentModerationService
 {
-    private const double BanThreshold = 0.75;
-    private const double TimeoutThreshold = 0.45;
+    private const double BanThreshold = 0.9;
+    private const double TimeoutThreshold = 0.75;
     private static readonly TimeSpan DefaultTimeoutDuration = TimeSpan.FromHours(24);
 
     private readonly IToxicityService _toxicityService;
