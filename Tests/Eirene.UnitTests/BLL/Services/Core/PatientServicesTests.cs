@@ -92,8 +92,7 @@ public class PatientServicesTests
             Id = doctorId,
             User = new ApplicationUser { Email = "doc@test.com", FullName = "Dr. Smith" }
         };
-
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile> { patient });
+        _patientRepoMock.Setup(x => x.GetByIdAsync(patientId)).ReturnsAsync(patient);
         _doctorRepoMock.Setup(x => x.GetByIdAsync(doctorId)).ReturnsAsync(doctor);
         _requestRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<SupervisionRequest, bool>>>()))
             .ReturnsAsync(new List<SupervisionRequest>());
@@ -114,7 +113,7 @@ public class PatientServicesTests
     public async Task RequestSupervisionAsync_PatientNotFound_ReturnsFailure()
     {
         // Arrange
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile>());
+        _patientRepoMock.Setup(x => x.GetByIdAsync("no-patient")).ReturnsAsync((PatientProfile?)null);
 
         // Act
         var (isSuccess, error) = await _sut.RequestSupervisionAsync("no-patient", "doc-1");
@@ -129,7 +128,7 @@ public class PatientServicesTests
     {
         // Arrange
         var patient = new PatientProfile { Id = "pat-1", DoctorProfileId = "existing-doc" };
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile> { patient });
+        _patientRepoMock.Setup(x => x.GetByIdAsync("pat-1")).ReturnsAsync(patient);
 
         // Act
         var (isSuccess, error) = await _sut.RequestSupervisionAsync("pat-1", "doc-1");
@@ -144,7 +143,7 @@ public class PatientServicesTests
     {
         // Arrange
         var patient = new PatientProfile { Id = "pat-1", DoctorProfileId = null };
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile> { patient });
+        _patientRepoMock.Setup(x => x.GetByIdAsync("pat-1")).ReturnsAsync(patient);
         _doctorRepoMock.Setup(x => x.GetByIdAsync("doc-1")).ReturnsAsync((DoctorProfile?)null);
 
         // Act
@@ -163,7 +162,7 @@ public class PatientServicesTests
         var doctor = new DoctorProfile { Id = "doc-1" };
         var existingRequest = new SupervisionRequest { Status = SupervisionRequestStatus.Pending };
 
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile> { patient });
+        _patientRepoMock.Setup(x => x.GetByIdAsync("pat-1")).ReturnsAsync(patient);
         _doctorRepoMock.Setup(x => x.GetByIdAsync("doc-1")).ReturnsAsync(doctor);
         _requestRepoMock.Setup(x => x.FindAsync(It.IsAny<Expression<Func<SupervisionRequest, bool>>>()))
             .ReturnsAsync(new List<SupervisionRequest> { existingRequest });
@@ -188,7 +187,7 @@ public class PatientServicesTests
         var patientEntity = new PatientProfile { Id = userId };
         var patientModel = _fixture.Create<PatientModel>();
 
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile>());
+        _patientRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((PatientProfile?)null);
         _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
         _mapperMock.Setup(x => x.Map<PatientProfile>(model)).Returns(patientEntity);
         _mapperMock.Setup(x => x.Map<PatientModel>(patientEntity)).Returns(patientModel);
@@ -212,7 +211,7 @@ public class PatientServicesTests
         var model = _fixture.Create<AddPatientProfile>();
         var existingProfile = new PatientProfile { Id = userId };
 
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile> { existingProfile });
+        _patientRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(existingProfile);
 
         // Act
         var (isSuccess, error, patient) = await _sut.CreatePatientProfileAsync(model, userId);
@@ -230,7 +229,7 @@ public class PatientServicesTests
         var userId = "user-1";
         var model = _fixture.Create<AddPatientProfile>();
 
-        _patientRepoMock.Setup(x => x.GetAllAsync()).ReturnsAsync(new List<PatientProfile>());
+        _patientRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((PatientProfile?)null);
         _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync((ApplicationUser?)null);
 
         // Act
@@ -239,6 +238,7 @@ public class PatientServicesTests
         // Assert
         isSuccess.Should().BeFalse();
         error.Should().Contain("User account not found");
+        Assert.Null(patient);
     }
 
     // ========== RateSupervisorAsync ==========

@@ -89,7 +89,7 @@ public class SupervisionServiceTests
         request.Status.Should().Be(SupervisionRequestStatus.Accepted);
         patient.DoctorProfileId.Should().Be(doctorId);
         _patientRepoMock.Verify(x => x.UpdateAsync(patient), Times.Once);
-        _requestRepoMock.Verify(x => x.DeleteAsync(It.IsAny<SupervisionRequest>()), Times.Exactly(otherRequests.Count));
+        _requestRepoMock.Verify(x => x.DeleteRange(otherRequests), Times.Once);
         _backgroundJobServiceMock.Verify(x => x.Enqueue(It.IsAny<Expression<Func<Task>>>()), Times.Exactly(2));
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
