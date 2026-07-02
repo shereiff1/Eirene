@@ -37,7 +37,7 @@ public class DiagnosisController : ControllerBase
         _userContext = userContext;
     }
 
-    [HttpPost("analyze")]
+    [HttpGet("analyze")]
     public async Task<IActionResult> AnalyzeUserAnswers()
     {
         try
