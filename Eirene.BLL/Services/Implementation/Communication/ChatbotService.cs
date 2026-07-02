@@ -10,6 +10,7 @@ namespace Eirene.BLL.Services.Implementation.Communication;
 
 public class ChatbotService : IChatbotService
 {
+    private const int HistoryWindowSize = 2;
     private readonly IChatbotRepository _chatbotRepository;
     private readonly IChatbotApiClient _chatbotApiClient;
     private readonly IUnitOfWork _unitOfWork;
@@ -62,7 +63,9 @@ public class ChatbotService : IChatbotService
         {
             Role = m.Role,
             Content = m.Content
-        }).ToList();
+        })
+        .TakeLast(HistoryWindowSize * 2) // Only send the last N message pairs to save tokens
+        .ToList();
         var chatbotResponse = await _chatbotApiClient.ChatAsync(request.Message, history);
 
         if (string.IsNullOrEmpty(chatbotResponse))
