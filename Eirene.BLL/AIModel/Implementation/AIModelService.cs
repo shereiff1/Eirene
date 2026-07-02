@@ -24,7 +24,7 @@ public class AIModelService : IAIModelService
     public async Task<string> AnalyzeUserAnswersAsync(string inputText)
     {
         var url = $"{_settings.GeminiBaseUrl}/models/{MODEL_NAME}:generateContent?key={_settings.GeminiApiKey}";
-         
+
         Dictionary<string, double> modelPrediction =
             await _pythonModelService.PredictMentalHealthIssueAsync(inputText);
 
@@ -122,16 +122,18 @@ public class AIModelService : IAIModelService
 
 ## Your Task
 Based solely on the probability distribution above:
-1. Identify at most 3 specific psychological patterns or concerns likely associated with these results.
-2. Generate exactly 5 personalized, actionable tasks tailored to the dominant condition.
+search the web and focus on trusted mental health related documents to:
+1. Identify at most 3 specific psychological patterns or concerns likely associated with the highest probability condition.
+2. Get the most effective tasks that can help with overcoming the highest probability condition.
+3. Generate exactly 5 personalized, actionable tasks tailored to the dominant condition.
 
 ## Task Design Guidelines
 {conditionGuidance}
-- Tasks must be concrete and doable within a day or week — no vague advice like ""seek help"".
+- Tasks must be concrete and doable within a day no vague advice like ""seek help"".
 - Order tasks from easiest to most challenging.
-- Each task must include a brief ""why it helps"" rationale.
-- If confidence is below 60%, design tasks beneficial across multiple conditions.
+- If confidence is below 60%, design tasks beneficial across the two highest probability conditions.
 - Write directly to the patient: warm, clear, and free of clinical jargon.
+- make the task description concise.
 
 ## Response Format
 Respond ONLY in valid JSON — no markdown, no text outside the JSON:
@@ -184,7 +186,6 @@ Respond ONLY in valid JSON — no markdown, no text outside the JSON:
         _ => @"- Apply general CBT and well-being principles.
 - Balance emotional regulation, behavioral activation, and social connection."
     };
-
     private static async Task<string> ParseResponseAsync(HttpResponseMessage response)
     {
         var json = await response.Content.ReadAsStringAsync();
