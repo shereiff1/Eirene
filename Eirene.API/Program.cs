@@ -17,6 +17,7 @@ using Hangfire.PostgreSql;
 using System.Text;
 using Eirene.API.Filters;
 using StackExchange.Redis;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -236,6 +237,10 @@ app.MapGet("/api/daily-wisdom", async (IConfiguration config, IHttpClientFactory
     var content = await response.Content.ReadAsStringAsync();
     return Results.Content(content, "application/json");
 }).RequireAuthorization();
+
+app.MapGet("/endpoint", () => {
+    return Results.InternalServerError();
+});
 
 app.Run();
 
