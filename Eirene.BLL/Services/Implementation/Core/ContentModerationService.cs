@@ -62,7 +62,7 @@ public class ContentModerationService : IContentModerationService
                 toxicity);
         }
 
-        if (toxicity.ViolationScore >= TimeoutThreshold)
+        if (toxicity.ViolationScore / 10 >= TimeoutThreshold)
         {
             _logger.LogWarning(
                 "Moderate toxicity ({ViolationScore}) from user {UserId} in group {GroupId} – applying timeout",
