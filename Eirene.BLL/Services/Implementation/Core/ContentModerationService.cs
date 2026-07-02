@@ -42,7 +42,7 @@ public class ContentModerationService : IContentModerationService
             "Toxicity analysis for user {UserId}: ViolationScore={ViolationScore}, Action={Action}",
             userId, toxicity.ViolationScore, toxicity.Action);
 
-        if (toxicity.ViolationScore >= BanThreshold)
+        if (toxicity.ViolationScore / 10 >= BanThreshold)
         {
             _logger.LogWarning(
                 "High toxicity ({ViolationScore}) from user {UserId} in group {GroupId} – banning",
