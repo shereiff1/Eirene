@@ -108,13 +108,15 @@ public class CommunityPostServicesTests
 
         _postRepoMock.Setup(x => x.GetByIdAsync(postId)).ReturnsAsync(post);
         _userContextMock.Setup(x => x.UserId).Returns(userId);
+        _moderationMock.Setup(x => x.ModerateAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>()))
+            .ReturnsAsync(ContentModerationResult.Allowed());
         _postRepoMock.Setup(x => x.UpdateAsync(post)).ReturnsAsync(true);
 
         // Act
         var result = await _sut.UpdateAsync(model);
 
         // Assert
-        result.Should().BeTrue();
+        result.Item1.Should().BeTrue();
         post.Content.Should().Be("New");
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
@@ -136,6 +138,6 @@ public class CommunityPostServicesTests
         var result = await _sut.UpdateAsync(model);
 
         // Assert
-        result.Should().BeFalse();
+        result.Item1.Should().BeFalse();
     }
 }

@@ -29,8 +29,13 @@ builder.Services.Configure<SendGridSettings>(
 
 builder.Services.AddAutoMapper(typeof(AuthProfile));
 
-builder.Services.AddDbContextPool<EireneDBContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDbContextPool<EireneDBContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
+// Note: In Testing environment, AddDbContext<EireneDBContext> is registered by IntegrationTestFactory
+//       using an in-memory SQLite connection to avoid needing Docker.
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -129,15 +134,18 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSignalR();
 
-builder.Services.AddHangfire(config =>
-    config.UsePostgreSqlStorage(options =>
-        options.UseNpgsqlConnection(
-            builder.Configuration.GetConnectionString("DefaultConnection")
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddHangfire(config =>
+        config.UsePostgreSqlStorage(options =>
+            options.UseNpgsqlConnection(
+                builder.Configuration.GetConnectionString("DefaultConnection")
+            )
         )
-    )
-);
+    );
 
-builder.Services.AddHangfireServer();
+    builder.Services.AddHangfireServer();
+}
 
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 if (string.IsNullOrEmpty(redisConnectionString))
@@ -168,11 +176,14 @@ else
     redisOptions = ConfigurationOptions.Parse(redisConnectionString!);
 }
 
-builder.Services.AddStackExchangeRedisCache(options =>
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    options.ConfigurationOptions = redisOptions;
-    options.InstanceName = "Eirene:";
-});
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.ConfigurationOptions = redisOptions;
+        options.InstanceName = "Eirene:";
+    });
+}
 builder.Services.AddHybridCache();
 
 var app = builder.Build();
@@ -211,11 +222,14 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    Authorization = new[] { new HangfireAuthorizationFilter() },
-    IgnoreAntiforgeryToken = true
-});
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = new[] { new HangfireAuthorizationFilter() },
+        IgnoreAntiforgeryToken = true
+    });
+}
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");

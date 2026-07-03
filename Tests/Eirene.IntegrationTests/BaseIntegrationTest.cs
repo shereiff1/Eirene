@@ -3,8 +3,6 @@ using Eirene.BLL.Models.Identity;
 using Eirene.DAL.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
-using Respawn;
 using Xunit;
 
 namespace Eirene.IntegrationTests;
@@ -14,7 +12,6 @@ public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestFactory
     protected readonly IntegrationTestFactory Factory;
     protected readonly HttpClient Client;
     protected readonly IServiceScope Scope;
-    private Respawner? _respawner;
 
     protected BaseIntegrationTest(IntegrationTestFactory factory)
     {
@@ -25,17 +22,20 @@ public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestFactory
 
     public async Task InitializeAsync()
     {
-        using var connection = new NpgsqlConnection(Factory.DbConnectionString);
-        await connection.OpenAsync();
-        
-        _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
-        {
-            DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = new[] { "public" },
-            WithReseed = true
-        });
+        // For SQLite in-memory: reset the database by deleting and recreating all tables.
+        // This ensures test isolation without needing Respawner or a live Postgres connection.
+        using var scope = Factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EireneDBContext>();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.EnsureCreatedAsync();
 
-        await _respawner.ResetAsync(connection);
+        // Re-seed roles after reset
+        var roleManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>();
+        foreach (var role in new[] { "Patient", "Doctor", "Moderator", "Admin" })
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new Microsoft.AspNetCore.Identity.IdentityRole(role));
+        }
     }
 
     public Task DisposeAsync()

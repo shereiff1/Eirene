@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
-using Testcontainers.PostgreSql;
-using Testcontainers.Redis;
 using Xunit;
 
 namespace Eirene.IntegrationTests;
@@ -22,87 +22,88 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     public Mock<IAIModelService> AIModelServiceMock { get; } = new();
     public Mock<IBackgroundJobService> BackgroundJobServiceMock { get; } = new();
 
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("eirene_test")
-        .WithUsername("postgres")
-        .WithPassword("postgres")
-        .Build();
+    // Keep the connection alive for the factory lifetime so the in-memory SQLite DB persists
+    private readonly SqliteConnection _keepAliveConnection = new("DataSource=:memory:");
 
-    private readonly RedisContainer _redisContainer = new RedisBuilder()
-        .WithImage("redis:7-alpine")
-        .Build();
-
-    public string DbConnectionString => _dbContainer.GetConnectionString();
+    static IntegrationTestFactory()
+    {
+        Environment.SetEnvironmentVariable("Storage__Provider", "Local");
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        
-        // This is the earliest we can set the configuration for the TestHost
-        builder.UseConfiguration(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
+
+        // Supply configuration values.
+        builder.ConfigureAppConfiguration((context, conf) =>
+        {
+            conf.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString(),
-                ["Redis:ConnectionString"] = _redisContainer.GetConnectionString(),
+                ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Database=eirene_test;Username=postgres;Password=postgres",
+                ["Redis:ConnectionString"] = "localhost:6379",
                 ["JwtSettings:Secret"] = "super_secret_key_for_testing_purposes_only_12345",
                 ["JwtSettings:Issuer"] = "EireneTest",
                 ["JwtSettings:Audience"] = "EireneTestUsers",
-                ["CloudinarySettings:CloudName"] = "test-cloud",
-                ["CloudinarySettings:ApiKey"] = "test-key",
-                ["CloudinarySettings:ApiSecret"] = "test-secret"
-            })
-            .Build());
+                ["Storage:Provider"] = "Local"
+            });
+        });
 
         builder.ConfigureTestServices(services =>
         {
-            // Remove existing DbContext
-            services.RemoveAll(typeof(DbContextOptions<EireneDBContext>));
+            // Program.cs skips AddDbContextPool in Testing, so we just register our SQLite context.
+            // Open a persistent connection so the :memory: database survives across DbContext scopes.
+            _keepAliveConnection.Open();
 
-            // Add Test DbContext
             services.AddDbContext<EireneDBContext>(options =>
             {
-                options.UseNpgsql(_dbContainer.GetConnectionString());
-                options.ConfigureWarnings(x => x.Ignore(RelationalEventId.PendingModelChangesWarning));
+                options.UseSqlite(_keepAliveConnection);
+                options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             });
+
+            // Replace Redis distributed cache with an in-memory implementation
+            services.RemoveAll(typeof(IDistributedCache));
+            services.AddDistributedMemoryCache();
 
             // Mock external AI service
             services.RemoveAll(typeof(IAIModelService));
             services.AddSingleton(AIModelServiceMock.Object);
 
-            // Mock Background Job Service to avoid Hangfire connection issues
+            // Mock Background Job Service to avoid any job-scheduling side-effects
             services.RemoveAll(typeof(IBackgroundJobService));
             services.AddSingleton(BackgroundJobServiceMock.Object);
+
+            // Mock Storage Services to avoid needing real Cloudinary credentials
+            var mockPictureService = new Mock<Eirene.BLL.Services.Abstraction.Core.IPictureService>();
+            mockPictureService
+                .Setup(s => s.UploadPictureAsync(It.IsAny<Microsoft.AspNetCore.Http.IFormFile>()))
+                .ReturnsAsync((true, "http://dummy-url.com/picture.jpg", null));
+            services.RemoveAll(typeof(Eirene.BLL.Services.Abstraction.Core.IPictureService));
+            services.AddSingleton<Eirene.BLL.Services.Abstraction.Core.IPictureService>(mockPictureService.Object);
+
+            var mockDocService = new Mock<Eirene.BLL.Services.Abstraction.Core.IDocumentStorageService>();
+            services.RemoveAll(typeof(Eirene.BLL.Services.Abstraction.Core.IDocumentStorageService));
+            services.AddSingleton<Eirene.BLL.Services.Abstraction.Core.IDocumentStorageService>(mockDocService.Object);
         });
     }
 
     public async Task InitializeAsync()
     {
-        await _dbContainer.StartAsync();
-        await _redisContainer.StartAsync();
-        
-        // Ensure database is created
+        // Build the SQLite schema and seed required roles
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<EireneDBContext>();
-        
-        // Use MigrateAsync to ensure all tables (including Identity) are created
-        await db.Database.MigrateAsync();
+        await db.Database.EnsureCreatedAsync();
 
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var roles = new[] { "Patient", "Doctor", "Moderator", "Admin" };
-
-        foreach (var role in roles)
+        foreach (var role in new[] { "Patient", "Doctor", "Moderator", "Admin" })
         {
             if (!await roleManager.RoleExistsAsync(role))
-            {
                 await roleManager.CreateAsync(new IdentityRole(role));
-            }
         }
     }
 
     public new async Task DisposeAsync()
     {
-        await _dbContainer.StopAsync();
-        await _redisContainer.StopAsync();
+        await _keepAliveConnection.CloseAsync();
+        _keepAliveConnection.Dispose();
     }
 }

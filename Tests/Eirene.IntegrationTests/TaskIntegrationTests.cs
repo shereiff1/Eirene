@@ -54,7 +54,7 @@ public class TaskIntegrationTests : BaseIntegrationTest
             .ReturnsAsync(mockResponse);
 
         // 4. Trigger Analysis
-        var analyzeResponse = await Client.PostAsync("/api/Diagnosis/analyze", null);
+        var analyzeResponse = await Client.GetAsync("/api/Diagnosis/analyze");
         var content = await analyzeResponse.Content.ReadAsStringAsync();
         analyzeResponse.StatusCode.Should().Be(HttpStatusCode.OK, $"Content: {content}");
 
