@@ -139,7 +139,7 @@ namespace Eirene.BLL.Services.Implementation.Core
                     Id = userId,
                     LastLogin = DateTime.UtcNow
                 };
-
+                _cache.RemoveAsync($"admin: {userId}");
                 await _adminProfileRepository.AddAsync(newProfile);
                 await _unitOfWork.SaveChangesAsync();
 
