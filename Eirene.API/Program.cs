@@ -238,9 +238,6 @@ app.MapGet("/api/daily-wisdom", async (IConfiguration config, IHttpClientFactory
     return Results.Content(content, "application/json");
 }).RequireAuthorization();
 
-app.MapGet("/endpoint", () => {
-    return Results.InternalServerError();
-});
 
 app.Run();
 

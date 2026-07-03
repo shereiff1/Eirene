@@ -50,7 +50,8 @@ public class DiagnosisController : ControllerBase
             var answersResult = await _questionAnswerServices.GetAnswersForUserAsync(userId);
 
             if (!answersResult.IsSuccess || answersResult.Answers == null || !answersResult.Answers.Any())
-                return BadRequest(new { message = "No answers found for this user. Please submit your answers first." });
+                return BadRequest(new
+                    { message = "No answers found for this user. Please submit your answers first." });
 
             var inputText = FormatAnswersAsText(answersResult.Answers);
 
@@ -88,16 +89,22 @@ public class DiagnosisController : ControllerBase
 
     private static string FormatAnswersAsText(IEnumerable<Eirene.DAL.Entities.Treatment.QuestionAnswer> answers)
     {
-        var sentences = answers
-            .Where(a => !string.IsNullOrWhiteSpace(a.Answer))
-            .Select(a =>
+        var sentences = new List<string>();
+
+        foreach (var a in answers)
+        {
+            if (string.IsNullOrWhiteSpace(a.Answer))
+                continue;
+
+            var answer = a.Answer.Trim();
+
+            if (!answer.EndsWith('.') && !answer.EndsWith('!') && !answer.EndsWith('?'))
             {
-                var answer = a.Answer.Trim();
-                var combined = $"{answer}";
-                return combined.EndsWith('.') || combined.EndsWith('!') || combined.EndsWith('?')
-                    ? combined
-                    : combined + ".";
-            });
+                answer += ".";
+            }
+
+            sentences.Add(answer);
+        }
 
         return string.Join(" ", sentences);
     }

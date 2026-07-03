@@ -2,7 +2,7 @@ using Eirene.DAL.Entities.Core;
 
 namespace Eirene.DAL.Entities.Treatment;
 
-public class TreatmentPlan
+public class  TreatmentPlan
 {
     public Guid Id { get; set; }
     public string UserId { get; set; } = string.Empty;

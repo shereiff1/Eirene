@@ -11,5 +11,4 @@ public class Diagnosis
     public string PatientId { get; set; } = string.Empty;
     [ForeignKey(nameof(PatientId))]
     public ApplicationUser Patient { get; set; } = null!;
-
 }
